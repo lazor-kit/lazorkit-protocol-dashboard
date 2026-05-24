@@ -417,7 +417,7 @@ async function getSignaturesWithRetry(
       return await connection.getSignaturesForAddress(programId, options);
     } catch (error) {
       if (!isRateLimitError(error) || attempt === maxAttempts) throw error;
-      await sleep(750 * attempt);
+      await sleep(1_500 * attempt);
     }
   }
   return [];
@@ -436,7 +436,7 @@ async function getParsedTransactionWithRetry(
       });
     } catch (error) {
       if (!isRateLimitError(error) || attempt === maxAttempts) throw error;
-      await sleep(750 * attempt);
+      await sleep(1_500 * attempt);
     }
   }
   return null;

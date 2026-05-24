@@ -16,7 +16,7 @@ export function getBackfillDays(): number {
 }
 
 export function getIndexerMaxSignatures(): number {
-  return readPositiveInteger('INDEXER_MAX_SIGNATURES_PER_RUN', 100);
+  return readPositiveInteger('INDEXER_MAX_SIGNATURES_PER_RUN', 50);
 }
 
 export function getIndexerBackfillMaxPages(): number {
@@ -24,7 +24,7 @@ export function getIndexerBackfillMaxPages(): number {
 }
 
 export function getIndexerParseDelayMs(): number {
-  return readNonNegativeInteger('INDEXER_PARSE_DELAY_MS', 75);
+  return readNonNegativeInteger('INDEXER_PARSE_DELAY_MS', 200);
 }
 
 export function getIndexerMaxRuntimeMs(): number {

@@ -98,9 +98,9 @@ SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 CRON_SECRET=
 INDEXER_BACKFILL_DAYS=60
-INDEXER_MAX_SIGNATURES_PER_RUN=100
+INDEXER_MAX_SIGNATURES_PER_RUN=50
 INDEXER_BACKFILL_MAX_PAGES_PER_RUN=1
-INDEXER_PARSE_DELAY_MS=75
+INDEXER_PARSE_DELAY_MS=200
 INDEXER_MAX_RUNTIME_MS=45000
 API_PORT=8787
 ```
@@ -181,10 +181,11 @@ Backfill runs newest activity first, then walks older signature pages until the
 configured `INDEXER_BACKFILL_DAYS` cutoff. Keep
 `INDEXER_BACKFILL_MAX_PAGES_PER_RUN` low for public or rate-limited RPCs; the
 indexer stores progress in `protocol_snapshots` and continues on the next cron
-run. `INDEXER_PARSE_DELAY_MS` adds a small delay between transaction fetches to
-avoid RPC 429s. `INDEXER_MAX_RUNTIME_MS` keeps the cron inside the Vercel
-runtime budget; if the budget is reached, the run is recorded as partial and
-continues on the next pass.
+run. The default `INDEXER_MAX_SIGNATURES_PER_RUN=50` and
+`INDEXER_PARSE_DELAY_MS=200` are intentionally conservative for RPC plans around
+10 requests per second; raising them can trigger 429s. `INDEXER_MAX_RUNTIME_MS`
+keeps the cron inside the Vercel runtime budget; if the budget is reached, the
+run is recorded as partial and continues on the next pass.
 
 ## Deployment
 
