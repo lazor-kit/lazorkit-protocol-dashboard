@@ -310,23 +310,29 @@ export class SupabaseRestClient {
     cluster: ClusterId;
     cacheKey: string;
     nowMs: number;
+    allowStale?: boolean;
   }): Promise<DashboardStats | null> {
     const existing = await this.getProtocolSnapshot(params.cluster);
     const entry = existing?.snapshot.dashboard?.[params.cacheKey];
     if (!entry) return null;
 
     const expiresAt = new Date(entry.expiresAt).getTime();
-    if (!Number.isFinite(expiresAt) || expiresAt <= params.nowMs) return null;
+    if (
+      !params.allowStale &&
+      (!Number.isFinite(expiresAt) || expiresAt <= params.nowMs)
+    ) {
+      return null;
+    }
 
     return {
       ...entry.stats,
       health: {
         ...entry.stats.health,
         cacheHit: true,
-        cacheTtlSeconds: Math.max(
-          1,
-          Math.ceil((expiresAt - params.nowMs) / 1000),
-        ),
+        cacheTtlSeconds:
+          Number.isFinite(expiresAt) && expiresAt > params.nowMs
+            ? Math.max(1, Math.ceil((expiresAt - params.nowMs) / 1000))
+            : 0,
       },
     };
   }

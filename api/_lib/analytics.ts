@@ -91,7 +91,12 @@ export async function getDashboardStats(
   let db: SupabaseRestClient | null = null;
   try {
     db = new SupabaseRestClient();
-    const snapshot = await db.getDashboardSnapshot({ cluster, cacheKey, nowMs: now });
+    const snapshot = await db.getDashboardSnapshot({
+      cluster,
+      cacheKey,
+      nowMs: now,
+      allowStale: true,
+    });
     if (snapshot) {
       dashboardCache.set(cacheKey, {
         stats: snapshot,
