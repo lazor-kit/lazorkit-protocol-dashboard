@@ -385,12 +385,20 @@ a {
 }
 
 .skeletonText {
+  display: block;
   color: transparent !important;
   background: #24242d;
   border-radius: 6px;
   width: 112px;
-  min-height: 24px;
+  height: 1em;
+  min-height: 0;
+  line-height: 1;
+  overflow: hidden;
   animation: pulse 1100ms ease-in-out infinite;
+}
+
+.kpiCard .skeletonText {
+  width: min(68%, 180px);
 }
 
 @keyframes pulse {
