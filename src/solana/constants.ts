@@ -4,7 +4,7 @@ import {
   PROGRAM_ADDRESSES,
   programIdForCluster,
   type ClusterId,
-} from './shared.js';
+} from './shared';
 
 export const CLUSTERS: Record<
   ClusterId,

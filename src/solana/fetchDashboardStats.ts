@@ -2,8 +2,8 @@ import {
   isDashboardWindow,
   type DashboardStats,
   type DashboardWindow,
-} from './dashboardTypes.js';
-import { isClusterId, type ClusterId } from './shared.js';
+} from './dashboardTypes';
+import { isClusterId, type ClusterId } from './shared';
 
 export async function fetchDashboardStats(
   cluster: ClusterId,

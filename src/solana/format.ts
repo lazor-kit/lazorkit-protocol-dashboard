@@ -1,4 +1,4 @@
-import type { ClusterId } from './constants.js';
+import type { ClusterId } from './constants';
 
 const LAMPORTS_PER_SOL = 1_000_000_000n;
 

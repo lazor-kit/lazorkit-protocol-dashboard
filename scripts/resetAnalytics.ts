@@ -1,5 +1,5 @@
-import { loadApiEnv } from './loadApiEnv.js';
-import { getSupabaseConfig } from '../api/_lib/env.js';
+import { loadApiEnv } from './loadApiEnv';
+import { getSupabaseConfig } from '../api/_lib/env';
 
 loadApiEnv();
 

@@ -8,10 +8,10 @@ import type {
   LatestTransactionsPagination,
   NetworkComparison,
   SeriesPoint,
-} from '../../src/solana/dashboardTypes.js';
-import type { ProtocolStats } from '../../src/solana/protocolStatsTypes.js';
-import { isDashboardWindow } from '../../src/solana/dashboardTypes.js';
-import { type ClusterId } from '../../src/solana/shared.js';
+} from '../../src/solana/dashboardTypes';
+import type { ProtocolStats } from '../../src/solana/protocolStatsTypes';
+import { isDashboardWindow } from '../../src/solana/dashboardTypes';
+import { type ClusterId } from '../../src/solana/shared';
 import {
   SupabaseNotConfiguredError,
   SupabaseRestClient,
@@ -19,8 +19,8 @@ import {
   type IndexedTransactionBoundary,
   type IndexerCursorRow,
   type IndexerState,
-} from './database.js';
-import { getCachedProtocolStats } from './protocolStats.js';
+} from './database';
+import { getCachedProtocolStats } from './protocolStats';
 
 export const DASHBOARD_CACHE_TTL_SECONDS = 30;
 export const DEFAULT_TX_PAGE = 1;

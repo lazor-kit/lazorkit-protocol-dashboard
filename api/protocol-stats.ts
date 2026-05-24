@@ -1,5 +1,5 @@
-import { getCachedProtocolStats, CACHE_TTL_SECONDS } from './_lib/protocolStats.js';
-import { isClusterId } from '../src/solana/shared.js';
+import { getCachedProtocolStats, CACHE_TTL_SECONDS } from './_lib/protocolStats';
+import { isClusterId } from '../src/solana/shared';
 
 interface ApiRequest {
   method?: string;
