@@ -104,8 +104,19 @@ const server = createServer(async (request, response) => {
   }
 });
 
+server.on('error', (error: NodeJS.ErrnoException) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`[api] ${host}:${port} is already in use`);
+    console.error('[api] stop the existing API server or set API_PORT in .env.api.local');
+    process.exit(1);
+  }
+
+  throw error;
+});
+
 server.listen(port, host, () => {
   console.log(`[api] listening on http://${host}:${port}`);
+  console.log('[api] env: .env.api, .env.api.local');
   console.log('[api] routes: /api/dashboard, /api/protocol-stats, /api/cron/indexer');
 });
 
@@ -138,8 +149,8 @@ function headersToRecord(headers: IncomingHttpHeaders): Record<string, QueryValu
 
 function loadLocalEnv() {
   const loaded = {
-    ...readEnvFile('.env'),
-    ...readEnvFile('.env.local'),
+    ...readEnvFile('.env.api'),
+    ...readEnvFile('.env.api.local'),
   };
 
   for (const [key, value] of Object.entries(loaded)) {

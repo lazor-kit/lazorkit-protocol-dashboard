@@ -81,8 +81,14 @@ supabase/   Supabase migrations and local project config
 
 ## Environment
 
-Copy `.env.example` to `.env.local` for local development. RPC variables do
-not use the `VITE_` prefix because they are read only by the server-side API.
+Use separate local env files for backend and frontend. Do not put RPC,
+Supabase, or cron secrets in the web env file.
+
+Backend secrets:
+
+```bash
+cp .env.api.example .env.api.local
+```
 
 ```text
 MAINNET_RPC_URL=https://api.mainnet-beta.solana.com
@@ -94,6 +100,15 @@ CRON_SECRET=
 INDEXER_BACKFILL_DAYS=60
 INDEXER_MAX_SIGNATURES_PER_RUN=100
 API_PORT=8787
+```
+
+Frontend-only local config:
+
+```bash
+cp .env.web.example .env.web.local
+```
+
+```text
 API_DEV_TARGET=http://127.0.0.1:8787
 VITE_DEFAULT_CLUSTER=mainnet
 ```
