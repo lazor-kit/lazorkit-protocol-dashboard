@@ -147,7 +147,7 @@ export function buildYAxisDomain(
 ): [number, number] {
   const maxValue = Math.max(0, ...data.map((point) => point[metric]));
   if (metric === 'feesLamports') {
-    return [0, Math.max(4_000_000, niceMax(maxValue))];
+    return [0, niceMax(maxValue)];
   }
   return [0, Math.max(4, niceMax(maxValue))];
 }
@@ -248,6 +248,8 @@ function niceMax(value: number): number {
 
 function formatFeeAxisValue(lamports: number): string {
   if (lamports === 0) return '0';
+  if (lamports < 1_000) return `${Math.round(lamports)}`;
+  if (lamports < 1_000_000) return `${trimDecimals(lamports / 1_000, 1)}k`;
   const sol = lamports / 1_000_000_000;
   if (sol < 0.001) return trimDecimals(sol, 6);
   if (sol < 1) return trimDecimals(sol, 4);

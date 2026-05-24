@@ -40,7 +40,10 @@ describe('chart panel helpers', () => {
       0,
       10,
     ]);
-    expect(buildYAxisDomain([], 'feesLamports')).toEqual([0, 4_000_000]);
+    expect(buildYAxisDomain([], 'feesLamports')).toEqual([0, 1]);
+    expect(
+      buildYAxisDomain([toChartData([point({ feesLamports: '5000' })])[0]], 'feesLamports'),
+    ).toEqual([0, 5000]);
   });
 
   it('limits x-axis ticks to readable positions', () => {
@@ -55,6 +58,7 @@ describe('chart panel helpers', () => {
   });
 
   it('formats axis and tooltip labels compactly', () => {
+    expect(formatYAxisTick(5000, 'feesLamports')).toBe('5k');
     expect(formatYAxisTick(4_000_000, 'feesLamports')).toBe('0.004');
     expect(formatYAxisTick(4, 'txCount')).toBe('4');
     expect(formatXAxisTick('2026-05-24T13:00:00.000Z', '24h')).toContain('PM');
