@@ -86,6 +86,13 @@ export function App() {
     dashboardStats === null
       ? ''
       : buildKpiDetail(dashboardStats, window);
+  const walletKpiLabel = window === 'all' ? 'Wallet Accounts' : 'Wallets Created';
+  const walletKpiDetail =
+    dashboardStats === null
+      ? ''
+      : window === 'all'
+        ? 'Current total'
+        : buildKpiDetail(dashboardStats, window);
   const showKpiTrend =
     window !== 'all' &&
     dashboardStats?.health.analyticsStatus !== 'empty' &&
@@ -173,7 +180,7 @@ export function App() {
               showTrend={showKpiTrend}
             />
             <KpiCard
-              label="Wallet Accounts"
+              label={walletKpiLabel}
               value={
                 isLoading || !dashboardStats
                   ? 'Loading'
@@ -181,7 +188,7 @@ export function App() {
                     ? '--'
                   : formatInteger(dashboardStats.kpis.uniqueWallets.value)
               }
-              detail={kpiDetail}
+              detail={walletKpiDetail}
               percentChange={dashboardStats?.kpis.uniqueWallets.percentChange ?? 0}
               icon={Wallet}
               isLoading={isLoading}
@@ -450,12 +457,6 @@ function buildKpiDetail(
     stats.health.analyticsStatus === 'not_configured'
   ) {
     return 'Preparing data';
-  }
-  if (stats.health.analyticsStatus === 'error' || stats.health.analyticsStatus === 'stale') {
-    return 'Latest available data';
-  }
-  if (stats.health.analyticsStatus === 'partial' || stats.health.analyticsStatus === 'indexing') {
-    return window === 'all' ? 'Activity to date' : 'Latest available data';
   }
   return window === 'all' ? 'Activity to date' : `vs previous ${window}`;
 }

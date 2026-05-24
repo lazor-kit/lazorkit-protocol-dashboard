@@ -69,14 +69,26 @@ describe('analytics aggregation', () => {
     expect(kpis.totalTransactions.percentChange).toBe(200);
   });
 
-  it('aggregates KPIs from metric buckets and protocol wallet accounts', () => {
+  it('uses protocol wallet accounts for the all-history wallet KPI', () => {
     const kpis = buildKpisFromBuckets(
       [
-        bucket({ tx_count: 3, success_count: 2, failed_count: 1, fee_lamports: '10' }),
-        bucket({ tx_count: 2, success_count: 2, fee_lamports: '15' }),
+        bucket({
+          tx_count: 3,
+          success_count: 2,
+          failed_count: 1,
+          fee_lamports: '10',
+          create_wallet_count: 3,
+        }),
+        bucket({
+          tx_count: 2,
+          success_count: 2,
+          fee_lamports: '15',
+          create_wallet_count: 2,
+        }),
       ],
       [bucket({ tx_count: 1, success_count: 1, fee_lamports: '5' })],
       protocolStats,
+      'all',
     );
 
     expect(kpis.totalTransactions.value).toBe(5);
@@ -84,6 +96,22 @@ describe('analytics aggregation', () => {
     expect(kpis.totalFeesLamports.value).toBe('25');
     expect(kpis.successRate.value).toBe(0.8);
     expect(kpis.totalTransactions.percentChange).toBe(400);
+  });
+
+  it('uses wallets created for filtered wallet KPIs', () => {
+    const kpis = buildKpisFromBuckets(
+      [
+        bucket({ tx_count: 3, success_count: 3, create_wallet_count: 2 }),
+        bucket({ tx_count: 1, success_count: 1, create_wallet_count: 1 }),
+      ],
+      [bucket({ tx_count: 1, success_count: 1, create_wallet_count: 1 })],
+      protocolStats,
+      '7d',
+    );
+
+    expect(kpis.uniqueWallets.value).toBe(3);
+    expect(kpis.uniqueWallets.previousValue).toBe(1);
+    expect(kpis.uniqueWallets.percentChange).toBe(200);
   });
 
   it('buckets chart series for supported windows', () => {

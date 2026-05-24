@@ -202,7 +202,12 @@ async function buildDashboardStats(
       cacheHit: false,
       cacheTtlSeconds: DASHBOARD_CACHE_TTL_SECONDS,
     },
-    kpis: buildKpisFromBuckets(currentBuckets, previousBuckets, protocolStats),
+    kpis: buildKpisFromBuckets(
+      currentBuckets,
+      previousBuckets,
+      protocolStats,
+      window,
+    ),
     series: buildSeriesFromBuckets(
       currentBuckets,
       window,
@@ -344,12 +349,17 @@ export function buildKpisFromBuckets(
   currentBuckets: readonly ProtocolMetricBucketRow[],
   previousBuckets: readonly ProtocolMetricBucketRow[],
   protocolStats: ProtocolStats | null,
+  window: DashboardWindow = 'all',
 ): DashboardKpis {
   const current = summarizeBuckets(currentBuckets, protocolStats);
   const previous = summarizeBuckets(previousBuckets, protocolStats);
+  const walletMetric =
+    window === 'all'
+      ? kpi(current.walletAccountCount, previous.walletAccountCount)
+      : kpi(current.walletsCreated, previous.walletsCreated);
   return {
     totalTransactions: kpi(current.totalTransactions, previous.totalTransactions),
-    uniqueWallets: kpi(current.walletAccountCount, previous.walletAccountCount),
+    uniqueWallets: walletMetric,
     totalFeesLamports: kpi(current.totalFeesLamports, previous.totalFeesLamports),
     successRate: kpi(current.successRate, previous.successRate),
   };
@@ -563,6 +573,10 @@ function summarizeBuckets(
 ) {
   const totalTransactions = rows.reduce((sum, row) => sum + row.tx_count, 0);
   const successCount = rows.reduce((sum, row) => sum + row.success_count, 0);
+  const walletsCreated = rows.reduce(
+    (sum, row) => sum + row.create_wallet_count,
+    0,
+  );
   const totalFeesLamports = rows.reduce(
     (sum, row) => sum + BigInt(row.fee_lamports),
     0n,
@@ -570,6 +584,7 @@ function summarizeBuckets(
   return {
     totalTransactions,
     walletAccountCount: protocolStats?.walletAccountCount ?? 0,
+    walletsCreated,
     totalFeesLamports: totalFeesLamports.toString(),
     successRate: totalTransactions === 0 ? 0 : successCount / totalTransactions,
   };
