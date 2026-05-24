@@ -1,9 +1,26 @@
 name: LazorKit Dashboard Indexer
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/indexer.yml'
+      - 'api/**'
+      - 'scripts/**'
+      - 'supabase/**'
+      - 'package.json'
+      - 'package-lock.json'
   schedule:
     - cron: '*/10 * * * *'
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lazorkit-dashboard-indexer
+  cancel-in-progress: false
 
 jobs:
   indexer:
@@ -20,6 +37,7 @@ jobs:
       INDEXER_BACKFILL_MAX_PAGES_PER_RUN: ${{ vars.INDEXER_BACKFILL_MAX_PAGES_PER_RUN || '1' }}
       INDEXER_PARSE_DELAY_MS: ${{ vars.INDEXER_PARSE_DELAY_MS || '200' }}
       INDEXER_MAX_RUNTIME_MS: ${{ vars.INDEXER_MAX_RUNTIME_MS || '45000' }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout
@@ -33,6 +51,13 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Validate worker environment
+        run: |
+          test -n "$SUPABASE_URL"
+          test -n "$SUPABASE_SERVICE_ROLE_KEY"
+          test -n "$MAINNET_RPC_URL"
+          test -n "$DEVNET_RPC_URL"
 
       - name: Run indexer
         run: npm run indexer:all

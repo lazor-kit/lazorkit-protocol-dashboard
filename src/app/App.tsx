@@ -3,13 +3,11 @@ import {
   Activity,
   ChevronDown,
   CircleDollarSign,
-  Coins,
   Copy,
   Database,
   ExternalLink,
   Percent,
   RefreshCw,
-  ShieldCheck,
   Wallet,
 } from 'lucide-react';
 import { AppShell } from '../components/AppShell';
@@ -21,12 +19,9 @@ import { ErrorState } from '../components/ErrorState';
 import { FeeRecordTable } from '../components/FeeRecordTable';
 import { KpiCard } from '../components/KpiCard';
 import { LatestTransactionsTable } from '../components/LatestTransactionsTable';
-import { MetricCard } from '../components/MetricCard';
-import { NetworkComparison } from '../components/NetworkComparison';
-import { ProtocolStatus } from '../components/ProtocolStatus';
 import { ShardTable } from '../components/ShardTable';
 import { TimeWindowSelector } from '../components/TimeWindowSelector';
-import { CLUSTERS, DEFAULT_CLUSTER, type ClusterId } from '../solana/constants';
+import { DEFAULT_CLUSTER, type ClusterId } from '../solana/constants';
 import {
   type DashboardStats,
   type DashboardWindow,
@@ -78,10 +73,6 @@ export function App() {
     void loadStats();
   }, [loadStats]);
 
-  const status = useMemo(() => {
-    if (!stats?.initialized) return 'not-initialized';
-    return stats.config?.enabled ? 'enabled' : 'disabled';
-  }, [stats]);
   const kpiDetail =
     dashboardStats === null
       ? ''
@@ -280,8 +271,8 @@ export function App() {
                 <div className="technicalSummaryMain">
                   <Database size={18} />
                   <span>
-                    Technical protocol details
-                    <small>Protocol config, treasury shards, FeeRecord accounts</small>
+                    Developer details
+                    <small>Indexer health, raw counters, addresses, and account tables</small>
                   </span>
                 </div>
                 <div className="technicalSummaryAction">
@@ -290,72 +281,69 @@ export function App() {
                   <ChevronDown size={18} />
                 </div>
               </summary>
-              {dashboardStats && shouldShowActivitySections ? (
-                <NetworkComparison comparison={dashboardStats.networkComparison} />
+              {dashboardStats ? (
+                <section className="panel" aria-label="Indexer health">
+                  <div className="panelHeader">
+                    <div>
+                      <p className="eyebrow">Worker</p>
+                      <h2>Indexer health</h2>
+                    </div>
+                  </div>
+                  <div className="configGrid">
+                    <ConfigItem
+                      label="Analytics Status"
+                      value={formatAnalyticsStatus(dashboardStats.health.analyticsStatus)}
+                    />
+                    <ConfigItem
+                      label="Coverage"
+                      value={dashboardStats.health.dataCoverageLabel}
+                    />
+                    <ConfigItem
+                      label="Last Successful Run"
+                      value={formatOptionalDateTime(
+                        dashboardStats.health.lastSuccessfulRunAt,
+                      )}
+                    />
+                    <ConfigItem
+                      label="Last Indexed Slot"
+                      value={formatOptionalInteger(dashboardStats.health.lastIndexedSlot)}
+                    />
+                    <ConfigItem
+                      label="Last Indexed At"
+                      value={formatOptionalDateTime(dashboardStats.health.lastIndexedAt)}
+                    />
+                    <ConfigItem
+                      label="Backfill Complete"
+                      value={dashboardStats.health.backfillComplete ? 'Yes' : 'No'}
+                    />
+                    <ConfigItem
+                      label="Run Status"
+                      value={dashboardStats.health.lastRunStatus}
+                    />
+                    <ConfigItem
+                      label="Warnings"
+                      value={formatInteger(dashboardStats.health.lastRunWarningsCount)}
+                    />
+                    <ConfigItem
+                      label="Last Error"
+                      value={dashboardStats.health.lastRunError ?? '-'}
+                    />
+                    <ConfigItem
+                      label="API Cache"
+                      value={
+                        dashboardStats.health.cacheHit
+                          ? `Hit, ${dashboardStats.health.cacheTtlSeconds}s TTL`
+                          : 'Miss'
+                      }
+                    />
+                  </div>
+                </section>
               ) : null}
-              <section className="metricsGrid secondaryMetricsGrid" aria-label="Protocol metrics">
-                <ProtocolStatus status={status} isLoading={isLoading} />
-                <MetricCard
-                  label="Wallet Accounts"
-                  value={
-                    isLoading || !stats
-                      ? 'Loading'
-                      : formatInteger(stats.walletAccountCount)
-                  }
-                  detail="Current wallet PDAs"
-                  icon={Wallet}
-                  isLoading={isLoading}
-                />
-                <MetricCard
-                  label="Lifetime Fees Recorded"
-                  value={
-                    isLoading || !stats
-                      ? 'Loading'
-                      : formatLamportsShort(stats.feeTotals.lifetimeFeesLamports)
-                  }
-                  detail="Cumulative, not treasury balance"
-                  icon={CircleDollarSign}
-                  isLoading={isLoading}
-                />
-                <MetricCard
-                  label="Currently Collectible Fees"
-                  value={
-                    isLoading || !stats
-                      ? 'Loading'
-                      : formatLamportsShort(stats.collectibleFeesLamports)
-                  }
-                  detail="Shard balance minus rent"
-                  icon={Coins}
-                  isLoading={isLoading}
-                />
-                <MetricCard
-                  label="Fee Payer Records"
-                  value={
-                    isLoading || !stats
-                      ? 'Loading'
-                      : formatInteger(stats.feeTotals.recordCount)
-                  }
-                  detail="FeeRecord account count"
-                  icon={Database}
-                  isLoading={isLoading}
-                />
-                <MetricCard
-                  label="Fee-Paying Events"
-                  value={
-                    isLoading || !stats
-                      ? 'Loading'
-                      : formatInteger(stats.feeTotals.feePayingEvents)
-                  }
-                  detail="All-time wallets + txns"
-                  icon={ShieldCheck}
-                  isLoading={isLoading}
-                />
-              </section>
               <section className="panel" aria-label="Protocol configuration">
                 <div className="panelHeader">
                   <div>
-                    <p className="eyebrow">Protocol Config</p>
-                    <h2>Current fee surface</h2>
+                    <p className="eyebrow">Protocol</p>
+                    <h2>Addresses and fee config</h2>
                   </div>
                   {stats.skippedAccounts > 0 ? (
                     <span className="warningPill">
@@ -385,7 +373,6 @@ export function App() {
                     label="Treasury"
                     value={stats.config!.treasury}
                   />
-                  <ConfigItem label="Cluster" value={CLUSTERS[cluster].label} />
                   <ConfigItem
                     label="Creation Fee"
                     value={formatLamportsShort(stats.config!.creationFeeLamports)}
@@ -399,12 +386,55 @@ export function App() {
                     value={formatInteger(stats.config!.numShards)}
                   />
                   <ConfigItem
-                    label="Last Refresh"
-                    value={formatDateTime(stats.fetchedAt)}
+                    label="Snapshot Slot"
+                    value={formatInteger(stats.slot)}
+                  />
+                </div>
+              </section>
+
+              <section className="panel" aria-label="Raw on-chain counters">
+                <div className="panelHeader">
+                  <div>
+                    <p className="eyebrow">Raw Counters</p>
+                    <h2>FeeRecord and treasury state</h2>
+                  </div>
+                </div>
+                <div className="configGrid">
+                  <ConfigItem
+                    label="FeeRecord Accounts"
+                    value={formatInteger(stats.feeTotals.recordCount)}
+                  />
+                  <ConfigItem
+                    label="Wallets Recorded"
+                    value={formatInteger(stats.feeTotals.walletCount)}
+                  />
+                  <ConfigItem
+                    label="Txns Recorded"
+                    value={formatInteger(stats.feeTotals.txCount)}
+                  />
+                  <ConfigItem
+                    label="Fee-Paying Events"
+                    value={formatInteger(stats.feeTotals.feePayingEvents)}
+                  />
+                  <ConfigItem
+                    label="Lifetime Fees Recorded"
+                    value={formatLamportsShort(stats.feeTotals.lifetimeFeesLamports)}
+                  />
+                  <ConfigItem
+                    label="Collectible Fees"
+                    value={formatLamportsShort(stats.collectibleFeesLamports)}
                   />
                   <ConfigItem
                     label="Shard Balances Including Rent"
                     value={formatLamportsShort(stats.shardBalancesLamports)}
+                  />
+                  <ConfigItem
+                    label="Wallet Accounts"
+                    value={formatInteger(stats.walletAccountCount)}
+                  />
+                  <ConfigItem
+                    label="Snapshot Refresh"
+                    value={formatDateTime(stats.fetchedAt)}
                   />
                 </div>
               </section>
@@ -453,6 +483,26 @@ function formatProtocolStatus(
   if (status === 'paused') return 'Paused';
   if (status === 'not-initialized') return 'Not initialized';
   return 'Loading';
+}
+
+function formatAnalyticsStatus(
+  status: DashboardStats['health']['analyticsStatus'],
+): string {
+  if (status === 'not_configured') return 'Not configured';
+  if (status === 'empty') return 'No indexed rows';
+  if (status === 'indexing') return 'Running';
+  if (status === 'partial') return 'Partial';
+  if (status === 'fresh') return 'Fresh';
+  if (status === 'stale') return 'Stale';
+  return 'Error';
+}
+
+function formatOptionalDateTime(value: string | null): string {
+  return value ? formatDateTime(value) : '-';
+}
+
+function formatOptionalInteger(value: number | null): string {
+  return value === null ? '-' : formatInteger(value);
 }
 
 function buildKpiDetail(
