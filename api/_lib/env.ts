@@ -1,4 +1,4 @@
-import { type ClusterId } from '../../src/solana/shared';
+import { type ClusterId } from '../../src/solana/shared.js';
 
 const DEFAULT_RPC_URLS: Record<ClusterId, string> = {
   mainnet: 'https://api.mainnet-beta.solana.com',

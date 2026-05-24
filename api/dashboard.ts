@@ -2,9 +2,9 @@ import {
   getDashboardStats,
   parseDashboardPagination,
   parseDashboardWindow,
-} from './_lib/analytics';
-import { isDashboardWindow } from '../src/solana/dashboardTypes';
-import { isClusterId } from '../src/solana/shared';
+} from './_lib/analytics.js';
+import { isDashboardWindow } from '../src/solana/dashboardTypes.js';
+import { isClusterId } from '../src/solana/shared.js';
 
 interface ApiRequest {
   method?: string;

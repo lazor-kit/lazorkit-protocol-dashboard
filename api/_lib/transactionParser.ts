@@ -9,13 +9,13 @@ import {
 import type {
   LazorKitMethod,
   TransactionStatus,
-} from '../../src/solana/dashboardTypes';
+} from '../../src/solana/dashboardTypes.js';
 import {
   DISCRIMINATORS,
   programIdForCluster,
   type ClusterId,
-} from '../../src/solana/shared';
-import type { ProtocolTransactionRow } from './database';
+} from '../../src/solana/shared.js';
+import type { ProtocolTransactionRow } from './database.js';
 
 export interface ParsedLazorKitTransaction {
   row: ProtocolTransactionRow | null;

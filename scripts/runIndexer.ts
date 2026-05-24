@@ -1,6 +1,6 @@
-import { loadApiEnv } from './loadApiEnv';
-import { runIndexer } from '../api/_lib/indexer';
-import type { ClusterId } from '../src/solana/shared';
+import { loadApiEnv } from './loadApiEnv.js';
+import { runIndexer } from '../api/_lib/indexer.js';
+import type { ClusterId } from '../src/solana/shared.js';
 
 loadApiEnv();
 

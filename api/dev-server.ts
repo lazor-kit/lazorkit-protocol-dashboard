@@ -1,9 +1,9 @@
 import { createServer, type IncomingHttpHeaders } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import dashboardHandler from './dashboard';
-import protocolStatsHandler from './protocol-stats';
-import cronIndexerHandler from './cron/indexer';
+import dashboardHandler from './dashboard.js';
+import protocolStatsHandler from './protocol-stats.js';
+import cronIndexerHandler from './cron/indexer.js';
 
 type QueryValue = string | string[] | undefined;
 

@@ -1,4 +1,4 @@
-import type { ClusterId } from './shared';
+import type { ClusterId } from './shared.js';
 
 export interface ProtocolConfigJson {
   discriminator: number;

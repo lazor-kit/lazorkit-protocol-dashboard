@@ -7,25 +7,25 @@ import {
   decodeFeeRecord,
   decodeProtocolConfig,
   decodeTreasuryShard,
-} from '../../src/solana/decoders';
-import { findProtocolConfigPda, findTreasuryShardPda } from '../../src/solana/pdas';
+} from '../../src/solana/decoders.js';
+import { findProtocolConfigPda, findTreasuryShardPda } from '../../src/solana/pdas.js';
 import type {
   FeeRecordRow,
   ProtocolConfigJson,
   ProtocolStats,
   ShardRow,
-} from '../../src/solana/protocolStatsTypes';
+} from '../../src/solana/protocolStatsTypes.js';
 import {
   ACCOUNT_SIZES,
   DISCRIMINATORS,
   programIdForCluster,
   type ClusterId,
-} from '../../src/solana/shared';
+} from '../../src/solana/shared.js';
 import {
   aggregateFeeRecords,
   computeCollectibleLamports,
-} from '../../src/solana/statsMath';
-import { rpcUrlForCluster } from './env';
+} from '../../src/solana/statsMath.js';
+import { rpcUrlForCluster } from './env.js';
 
 export const CACHE_TTL_SECONDS = 30;
 

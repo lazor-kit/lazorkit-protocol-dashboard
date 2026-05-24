@@ -1,11 +1,11 @@
-import { isClusterId, type ClusterId } from './shared';
-import type { ProtocolStats } from './protocolStatsTypes';
+import { isClusterId, type ClusterId } from './shared.js';
+import type { ProtocolStats } from './protocolStatsTypes.js';
 export type {
   AggregatedFeeRecords,
   FeeRecordRow,
   ProtocolStats,
   ShardRow,
-} from './protocolStatsTypes';
+} from './protocolStatsTypes.js';
 
 export async function fetchProtocolStats(
   cluster: ClusterId,

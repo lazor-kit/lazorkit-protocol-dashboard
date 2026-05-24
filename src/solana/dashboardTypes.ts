@@ -1,5 +1,5 @@
-import type { ClusterId } from './shared';
-import type { ProtocolStats } from './protocolStatsTypes';
+import type { ClusterId } from './shared.js';
+import type { ProtocolStats } from './protocolStatsTypes.js';
 
 export type DashboardWindow = 'all' | '24h' | '7d' | '30d';
 export type LazorKitMethod = 'CreateWallet' | 'Execute' | 'ExecuteDeferred';

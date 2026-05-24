@@ -1,5 +1,5 @@
 import { Connection, type SignaturesForAddressOptions } from '@solana/web3.js';
-import { type ClusterId, programIdForCluster } from '../../src/solana/shared';
+import { type ClusterId, programIdForCluster } from '../../src/solana/shared.js';
 import {
   getBackfillDays,
   getIndexerBackfillMaxPages,
@@ -7,14 +7,14 @@ import {
   getIndexerMaxRuntimeMs,
   getIndexerParseDelayMs,
   rpcUrlForCluster,
-} from './env';
+} from './env.js';
 import {
   SupabaseRestClient,
   type IndexedTransactionBoundary,
   type IndexerState,
   type ProtocolTransactionRow,
-} from './database';
-import { parseLazorKitTransaction } from './transactionParser';
+} from './database.js';
+import { parseLazorKitTransaction } from './transactionParser.js';
 
 export interface IndexerRunResult {
   cluster: ClusterId;
