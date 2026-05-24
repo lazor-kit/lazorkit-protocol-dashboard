@@ -7,13 +7,14 @@ import type {
   NetworkComparison,
   SeriesPoint,
 } from '../../src/solana/dashboardTypes';
+import type { ProtocolStats } from '../../src/solana/protocolStatsTypes';
 import { isDashboardWindow } from '../../src/solana/dashboardTypes';
 import { type ClusterId } from '../../src/solana/shared';
 import {
   SupabaseNotConfiguredError,
   SupabaseRestClient,
+  type DashboardTransactionRow,
   type IndexerCursorRow,
-  type ProtocolTransactionRow,
 } from './database';
 import { getCachedProtocolStats } from './protocolStats';
 
@@ -88,6 +89,7 @@ async function buildDashboardStats(
               ? 'enabled'
               : 'paused'
           : 'not-initialized',
+        protocolStats,
       );
     }
     throw error;
@@ -98,29 +100,27 @@ async function buildDashboardStats(
   const previousStart = new Date(now - duration * 2).toISOString();
   const currentEnd = new Date(now).toISOString();
 
-  const [rows, comparisonRows, cursor, protocolStats] = await Promise.all([
-    db.selectProtocolTransactions({
-      cluster,
+  const [rows, cursor, protocolStats] = await Promise.all([
+    db.selectDashboardTransactions({
+      clusters: ['mainnet', 'devnet'],
       sinceIso: previousStart,
       untilIso: currentEnd,
       order: 'desc',
-      limit: 10000,
-    }),
-    db.selectProtocolTransactions({
-      clusters: ['mainnet', 'devnet'],
-      sinceIso: currentStart,
-      untilIso: currentEnd,
-      order: 'desc',
-      limit: 10000,
+      limit: 20000,
     }),
     db.getCursor(cluster),
     getCachedProtocolStats(cluster).catch(() => null),
   ]);
 
-  const currentRows = rows.filter((row) => row.block_time >= currentStart);
+  const selectedRows = rows.filter((row) => row.cluster === cluster);
+  const currentRows = selectedRows.filter((row) => row.block_time >= currentStart);
   const previousRows = rows.filter(
-    (row) => row.block_time >= previousStart && row.block_time < currentStart,
+    (row) =>
+      row.cluster === cluster &&
+      row.block_time >= previousStart &&
+      row.block_time < currentStart,
   );
+  const comparisonRows = rows.filter((row) => row.block_time >= currentStart);
 
   const protocolStatus =
     protocolStats?.initialized === false
@@ -134,6 +134,7 @@ async function buildDashboardStats(
     window,
     generatedAt: new Date(now).toISOString(),
     setupRequired: false,
+    protocolStats,
     health: {
       protocolStatus,
       lastIndexedSlot: cursor?.last_indexed_slot ?? null,
@@ -149,8 +150,8 @@ async function buildDashboardStats(
 }
 
 export function buildKpis(
-  currentRows: readonly ProtocolTransactionRow[],
-  previousRows: readonly ProtocolTransactionRow[],
+  currentRows: readonly DashboardTransactionRow[],
+  previousRows: readonly DashboardTransactionRow[],
 ): DashboardKpis {
   const current = summarizeRows(currentRows);
   const previous = summarizeRows(previousRows);
@@ -163,7 +164,7 @@ export function buildKpis(
 }
 
 export function buildSeries(
-  rows: readonly ProtocolTransactionRow[],
+  rows: readonly DashboardTransactionRow[],
   window: DashboardWindow,
   now = Date.now(),
 ): SeriesPoint[] {
@@ -201,7 +202,7 @@ export function buildSeries(
 }
 
 export function buildNetworkComparison(
-  rows: readonly ProtocolTransactionRow[],
+  rows: readonly DashboardTransactionRow[],
 ): NetworkComparison {
   return rows.reduce<NetworkComparison>(
     (acc, row) => {
@@ -213,7 +214,7 @@ export function buildNetworkComparison(
   );
 }
 
-function summarizeRows(rows: readonly ProtocolTransactionRow[]) {
+function summarizeRows(rows: readonly DashboardTransactionRow[]) {
   const successful = rows.filter((row) => row.status === 'success');
   const totalFeesLamports = successful.reduce(
     (sum, row) => sum + BigInt(row.protocol_fee_lamports),
@@ -245,7 +246,7 @@ function kpi(
   };
 }
 
-function toLatestTransaction(row: ProtocolTransactionRow): LatestTransaction {
+function toLatestTransaction(row: DashboardTransactionRow): LatestTransaction {
   return {
     signature: row.signature,
     blockTime: row.block_time,
@@ -264,6 +265,7 @@ function emptyDashboardStats(
   now: number,
   setupRequired: boolean,
   protocolStatus: DashboardStats['health']['protocolStatus'] = 'not-initialized',
+  protocolStats: ProtocolStats | null = null,
 ): DashboardStats {
   const cursor: IndexerCursorRow | null = null;
   return {
@@ -271,6 +273,7 @@ function emptyDashboardStats(
     window,
     generatedAt: new Date(now).toISOString(),
     setupRequired,
+    protocolStats,
     health: {
       protocolStatus,
       lastIndexedSlot: cursor?.last_indexed_slot ?? null,

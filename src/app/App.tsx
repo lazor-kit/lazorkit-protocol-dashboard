@@ -33,7 +33,7 @@ import {
   type DashboardWindow,
 } from '../solana/dashboardTypes';
 import { fetchDashboardStats } from '../solana/fetchDashboardStats';
-import { fetchProtocolStats, type ProtocolStats } from '../solana/fetchProtocolStats';
+import type { ProtocolStats } from '../solana/fetchProtocolStats';
 import {
   formatDateTime,
   formatInteger,
@@ -54,12 +54,9 @@ export function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const [nextDashboardStats, nextProtocolStats] = await Promise.all([
-        fetchDashboardStats(cluster, window),
-        fetchProtocolStats(cluster),
-      ]);
+      const nextDashboardStats = await fetchDashboardStats(cluster, window);
       setDashboardStats(nextDashboardStats);
-      setStats(nextProtocolStats);
+      setStats(nextDashboardStats.protocolStats);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load protocol stats');
     } finally {

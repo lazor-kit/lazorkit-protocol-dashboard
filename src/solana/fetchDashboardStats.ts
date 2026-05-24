@@ -41,6 +41,7 @@ function isDashboardStats(value: unknown): value is DashboardStats {
     isDashboardWindow(stats.window) &&
     typeof stats.generatedAt === 'string' &&
     typeof stats.setupRequired === 'boolean' &&
+    (stats.protocolStats === null || typeof stats.protocolStats === 'object') &&
     typeof stats.health === 'object' &&
     stats.health !== null &&
     typeof stats.kpis === 'object' &&

@@ -21,6 +21,19 @@ export interface ProtocolTransactionRow {
   parse_warnings: string[];
 }
 
+export type DashboardTransactionRow = Pick<
+  ProtocolTransactionRow,
+  | 'cluster'
+  | 'signature'
+  | 'slot'
+  | 'block_time'
+  | 'fee_payer'
+  | 'wallet_pda'
+  | 'method'
+  | 'status'
+  | 'protocol_fee_lamports'
+>;
+
 export interface IndexerCursorRow {
   cluster: ClusterId;
   last_seen_signature: string | null;
@@ -64,6 +77,38 @@ export class SupabaseRestClient {
     search.set('order', `block_time.${params.order ?? 'desc'}`);
     search.set('limit', String(params.limit ?? 5000));
     return this.request<ProtocolTransactionRow[]>(
+      `/rest/v1/protocol_transactions?${search.toString()}`,
+    );
+  }
+
+  async selectDashboardTransactions(params: {
+    clusters: ClusterId[];
+    sinceIso: string;
+    untilIso: string;
+    limit?: number;
+    order?: 'asc' | 'desc';
+  }): Promise<DashboardTransactionRow[]> {
+    const search = new URLSearchParams();
+    search.set(
+      'select',
+      [
+        'cluster',
+        'signature',
+        'slot',
+        'block_time',
+        'fee_payer',
+        'wallet_pda',
+        'method',
+        'status',
+        'protocol_fee_lamports',
+      ].join(','),
+    );
+    search.set('cluster', `in.(${params.clusters.join(',')})`);
+    search.set('block_time', `gte.${params.sinceIso}`);
+    search.append('block_time', `lt.${params.untilIso}`);
+    search.set('order', `block_time.${params.order ?? 'desc'}`);
+    search.set('limit', String(params.limit ?? 20000));
+    return this.request<DashboardTransactionRow[]>(
       `/rest/v1/protocol_transactions?${search.toString()}`,
     );
   }

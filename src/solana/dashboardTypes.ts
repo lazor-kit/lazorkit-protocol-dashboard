@@ -1,4 +1,5 @@
 import type { ClusterId } from './shared';
+import type { ProtocolStats } from './protocolStatsTypes';
 
 export type DashboardWindow = '24h' | '7d' | '30d';
 export type LazorKitMethod = 'CreateWallet' | 'Execute' | 'ExecuteDeferred';
@@ -45,6 +46,7 @@ export interface DashboardStats {
   window: DashboardWindow;
   generatedAt: string;
   setupRequired: boolean;
+  protocolStats: ProtocolStats | null;
   health: {
     protocolStatus: 'enabled' | 'paused' | 'not-initialized';
     lastIndexedSlot: number | null;

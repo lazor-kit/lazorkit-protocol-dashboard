@@ -3,9 +3,9 @@ import {
   buildNetworkComparison,
   buildSeries,
 } from './analytics';
-import type { ProtocolTransactionRow } from './database';
+import type { DashboardTransactionRow } from './database';
 
-function row(partial: Partial<ProtocolTransactionRow>): ProtocolTransactionRow {
+function row(partial: Partial<DashboardTransactionRow>): DashboardTransactionRow {
   return {
     cluster: 'mainnet',
     signature: crypto.randomUUID(),
@@ -16,10 +16,6 @@ function row(partial: Partial<ProtocolTransactionRow>): ProtocolTransactionRow {
     method: 'Execute',
     status: 'success',
     protocol_fee_lamports: '0',
-    treasury_shard: null,
-    fee_record: null,
-    instruction_index: 0,
-    parse_warnings: [],
     ...partial,
   };
 }

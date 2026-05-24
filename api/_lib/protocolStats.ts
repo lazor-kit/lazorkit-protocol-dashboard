@@ -35,6 +35,7 @@ interface CacheEntry {
 }
 
 const cache = new Map<ClusterId, CacheEntry>();
+const inFlightRequests = new Map<ClusterId, Promise<Omit<ProtocolStats, 'cache'>>>();
 
 function discriminatorFilter(discriminator: number): GetProgramAccountsFilter {
   return {
@@ -61,7 +62,7 @@ export async function getCachedProtocolStats(
     };
   }
 
-  const stats = await fetchProtocolStatsFromRpc(cluster);
+  const stats = await fetchProtocolStatsOnce(cluster);
   cache.set(cluster, {
     stats,
     expiresAt: now + CACHE_TTL_SECONDS * 1000,
@@ -74,6 +75,19 @@ export async function getCachedProtocolStats(
       ttlSeconds: CACHE_TTL_SECONDS,
     },
   };
+}
+
+async function fetchProtocolStatsOnce(
+  cluster: ClusterId,
+): Promise<Omit<ProtocolStats, 'cache'>> {
+  const inFlight = inFlightRequests.get(cluster);
+  if (inFlight) return inFlight;
+
+  const request = fetchProtocolStatsFromRpc(cluster).finally(() => {
+    inFlightRequests.delete(cluster);
+  });
+  inFlightRequests.set(cluster, request);
+  return request;
 }
 
 async function fetchWalletAccountCount(
@@ -144,12 +158,14 @@ async function fetchShards(
   let skipped = 0;
   const rows: ShardRow[] = [];
 
+  const addresses = Array.from({ length: numShards }, (_, shardId) =>
+    findTreasuryShardPda(shardId, programId),
+  );
+  const infos = await connection.getMultipleAccountsInfo(addresses, 'confirmed');
+
   for (let shardId = 0; shardId < numShards; shardId += 1) {
-    const address = findTreasuryShardPda(shardId, programId);
-    const [info, balance] = await Promise.all([
-      connection.getAccountInfo(address, 'confirmed'),
-      connection.getBalance(address, 'confirmed'),
-    ]);
+    const address = addresses[shardId];
+    const info = infos[shardId];
 
     if (!info) {
       skipped += 1;
@@ -165,7 +181,7 @@ async function fetchShards(
 
     try {
       const decoded = decodeTreasuryShard(info.data);
-      const balanceLamports = BigInt(balance);
+      const balanceLamports = BigInt(info.lamports);
       rows.push({
         shardId: decoded.shardId,
         address: address.toBase58(),
@@ -180,7 +196,7 @@ async function fetchShards(
       rows.push({
         shardId,
         address: address.toBase58(),
-        balanceLamports: BigInt(balance).toString(),
+        balanceLamports: BigInt(info.lamports).toString(),
         collectibleLamports: '0',
         skippedReason: error instanceof Error ? error.message : 'Decode error',
       });
