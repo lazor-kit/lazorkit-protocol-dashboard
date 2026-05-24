@@ -16,8 +16,8 @@
   --text: #eef3ff;
   --muted: #9ba7bf;
   --quiet: #7f8ba4;
-  --accent: #7de3d4;
-  --accent-blue: #9cc6ff;
+  --accent: #7557ff;
+  --accent-soft: #9b86ff;
   --purple: #7557ff;
   --purple-soft: #9b86ff;
   --danger: #ff6b81;
@@ -358,7 +358,7 @@ a {
 
 .positiveTrend,
 .statusText {
-  color: #56d49b;
+  color: var(--accent-soft);
 }
 
 .negativeTrend {
@@ -461,7 +461,7 @@ a {
 }
 
 .chartPanel-uniqueWallets .chartLine {
-  stroke: var(--accent-blue);
+  stroke: var(--accent-soft);
 }
 
 .chartPanel-feesLamports .lineChart {
@@ -765,9 +765,9 @@ tbody tr:hover td {
 }
 
 .statusBadge.success {
-  color: #56d49b;
-  background: #0f2a27;
-  border-color: rgba(86, 212, 155, 0.5);
+  color: var(--accent-soft);
+  background: #171329;
+  border-color: rgba(117, 87, 255, 0.5);
 }
 
 .statusBadge.failed {
