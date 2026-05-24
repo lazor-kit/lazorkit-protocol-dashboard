@@ -20,7 +20,11 @@ export function getIndexerMaxSignatures(): number {
 }
 
 export function getIndexerBackfillMaxPages(): number {
-  return readPositiveInteger('INDEXER_BACKFILL_MAX_PAGES_PER_RUN', 10);
+  return readPositiveInteger('INDEXER_BACKFILL_MAX_PAGES_PER_RUN', 1);
+}
+
+export function getIndexerParseDelayMs(): number {
+  return readNonNegativeInteger('INDEXER_PARSE_DELAY_MS', 75);
 }
 
 export function getCronSecret(): string | null {
@@ -41,4 +45,11 @@ function readPositiveInteger(key: string, fallback: number): number {
   if (!raw) return fallback;
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function readNonNegativeInteger(key: string, fallback: number): number {
+  const raw = process.env[key];
+  if (!raw) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 }

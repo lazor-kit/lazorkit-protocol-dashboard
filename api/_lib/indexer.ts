@@ -4,12 +4,11 @@ import {
   getBackfillDays,
   getIndexerBackfillMaxPages,
   getIndexerMaxSignatures,
+  getIndexerParseDelayMs,
   rpcUrlForCluster,
 } from './env';
 import { SupabaseRestClient, type ProtocolTransactionRow } from './database';
 import { parseLazorKitTransaction } from './transactionParser';
-
-const PARSED_TRANSACTION_BATCH_SIZE = 5;
 
 export interface IndexerRunResult {
   cluster: ClusterId;
@@ -34,6 +33,7 @@ export async function runIndexer(
   const indexerState = await db.getIndexerState(cluster);
   const maxSignatures = getIndexerMaxSignatures();
   const maxBackfillPages = getIndexerBackfillMaxPages();
+  const parseDelayMs = getIndexerParseDelayMs();
   const backfillDays = getBackfillDays();
   const backfillCutoffMs = Date.now() - backfillDays * 24 * 60 * 60 * 1000;
 
@@ -52,6 +52,7 @@ export async function runIndexer(
     cluster,
     connection,
     filteredNewestSignatures,
+    parseDelayMs,
   );
   rows.push(...newestPage.rows);
   warnings.push(...newestPage.warnings);
@@ -76,6 +77,7 @@ export async function runIndexer(
     shouldBackfill,
     maxSignatures,
     maxBackfillPages,
+    parseDelayMs,
     backfillCutoffMs,
     db,
   });
@@ -126,6 +128,7 @@ async function runBackfillPages({
   shouldBackfill,
   maxSignatures,
   maxBackfillPages,
+  parseDelayMs,
   backfillCutoffMs,
   db,
 }: {
@@ -136,6 +139,7 @@ async function runBackfillPages({
   shouldBackfill: boolean;
   maxSignatures: number;
   maxBackfillPages: number;
+  parseDelayMs: number;
   backfillCutoffMs: number;
   db: SupabaseRestClient;
 }): Promise<{
@@ -175,7 +179,12 @@ async function runBackfillPages({
       signatures,
       backfillCutoffMs,
     );
-    const parsed = await parseSignatureBatch(cluster, connection, filteredSignatures);
+    const parsed = await parseSignatureBatch(
+      cluster,
+      connection,
+      filteredSignatures,
+      parseDelayMs,
+    );
     indexedTransactions += parsed.rows.length;
     skippedTransactions += parsed.skippedTransactions;
     warnings.push(...parsed.warnings);
@@ -216,6 +225,7 @@ async function parseSignatureBatch(
   cluster: ClusterId,
   connection: Connection,
   signatures: Awaited<ReturnType<Connection['getSignaturesForAddress']>>,
+  parseDelayMs = getIndexerParseDelayMs(),
 ): Promise<{
   rows: ProtocolTransactionRow[];
   skippedTransactions: number;
@@ -224,13 +234,21 @@ async function parseSignatureBatch(
   const rows: ProtocolTransactionRow[] = [];
   const warnings: string[] = [];
   let skippedTransactions = 0;
-  const transactions = await getParsedTransactionsInChunks(
-    connection,
-    signatures.map((item) => item.signature),
-  );
 
-  for (const [index, item] of signatures.entries()) {
-    const tx = transactions[index] ?? null;
+  for (const item of signatures) {
+    let tx = null;
+    try {
+      tx = await connection.getParsedTransaction(item.signature, {
+        commitment: 'confirmed',
+        maxSupportedTransactionVersion: 0,
+      });
+    } catch (error) {
+      warnings.push(`${item.signature}: ${formatFetchError(error)}`);
+      skippedTransactions += 1;
+      await sleep(parseDelayMs);
+      continue;
+    }
+
     const parsed = parseLazorKitTransaction(cluster, item.signature, tx);
     warnings.push(
       ...parsed.warnings.map((warning) => `${item.signature}: ${warning}`),
@@ -240,37 +258,23 @@ async function parseSignatureBatch(
     } else {
       skippedTransactions += 1;
     }
+    await sleep(parseDelayMs);
   }
 
   return { rows, skippedTransactions, warnings };
 }
 
-async function getParsedTransactionsInChunks(
-  connection: Connection,
-  signatures: string[],
-) {
-  const transactions = [];
-  for (let index = 0; index < signatures.length; index += PARSED_TRANSACTION_BATCH_SIZE) {
-    const chunk = signatures.slice(index, index + PARSED_TRANSACTION_BATCH_SIZE);
-    try {
-      transactions.push(
-        ...(await connection.getParsedTransactions(chunk, {
-          commitment: 'confirmed',
-          maxSupportedTransactionVersion: 0,
-        })),
-      );
-    } catch {
-      for (const signature of chunk) {
-        transactions.push(
-          await connection.getParsedTransaction(signature, {
-            commitment: 'confirmed',
-            maxSupportedTransactionVersion: 0,
-          }),
-        );
-      }
-    }
-  }
-  return transactions;
+function formatFetchError(error: unknown): string {
+  if (!(error instanceof Error)) return 'Transaction fetch failed';
+  const firstLine = error.message.split('\n')[0] ?? error.message;
+  return `Transaction fetch failed: ${firstLine.slice(0, 180)}`;
+}
+
+function sleep(ms: number): Promise<void> {
+  if (ms <= 0) return Promise.resolve();
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 function filterSignaturesWithinBackfillWindow(
