@@ -1,14 +1,18 @@
 import {
   buildKpis,
+  buildKpisFromBuckets,
   buildNetworkComparison,
+  buildNetworkComparisonFromBuckets,
   buildPagination,
   buildSeries,
+  buildSeriesFromBuckets,
   buildCoverageLabel,
   classifyAnalyticsStatus,
   parseDashboardWindow,
   parseDashboardPagination,
 } from './analytics.js';
-import type { DashboardTransactionRow } from './database.js';
+import type { DashboardTransactionRow, ProtocolMetricBucketRow } from './database.js';
+import type { ProtocolStats } from '../../src/solana/protocolStatsTypes.js';
 
 function row(partial: Partial<DashboardTransactionRow>): DashboardTransactionRow {
   return {
@@ -24,6 +28,28 @@ function row(partial: Partial<DashboardTransactionRow>): DashboardTransactionRow
     ...partial,
   };
 }
+
+function bucket(
+  partial: Partial<ProtocolMetricBucketRow>,
+): ProtocolMetricBucketRow {
+  return {
+    cluster: 'mainnet',
+    bucket_start: '2026-05-24T00:00:00.000Z',
+    bucket_granularity: 'day',
+    tx_count: 0,
+    success_count: 0,
+    failed_count: 0,
+    fee_lamports: '0',
+    create_wallet_count: 0,
+    execute_count: 0,
+    execute_deferred_count: 0,
+    ...partial,
+  };
+}
+
+const protocolStats = {
+  walletAccountCount: 37,
+} as ProtocolStats;
 
 describe('analytics aggregation', () => {
   it('aggregates KPI windows and deltas', () => {
@@ -41,6 +67,23 @@ describe('analytics aggregation', () => {
     expect(kpis.totalFeesLamports.value).toBe('30');
     expect(kpis.successRate.value).toBeCloseTo(2 / 3);
     expect(kpis.totalTransactions.percentChange).toBe(200);
+  });
+
+  it('aggregates KPIs from metric buckets and protocol wallet accounts', () => {
+    const kpis = buildKpisFromBuckets(
+      [
+        bucket({ tx_count: 3, success_count: 2, failed_count: 1, fee_lamports: '10' }),
+        bucket({ tx_count: 2, success_count: 2, fee_lamports: '15' }),
+      ],
+      [bucket({ tx_count: 1, success_count: 1, fee_lamports: '5' })],
+      protocolStats,
+    );
+
+    expect(kpis.totalTransactions.value).toBe(5);
+    expect(kpis.uniqueWallets.value).toBe(37);
+    expect(kpis.totalFeesLamports.value).toBe('25');
+    expect(kpis.successRate.value).toBe(0.8);
+    expect(kpis.totalTransactions.percentChange).toBe(400);
   });
 
   it('buckets chart series for supported windows', () => {
@@ -70,6 +113,30 @@ describe('analytics aggregation', () => {
     expect(buildSeries([], 'all', now)).toHaveLength(30);
     expect(buildSeries([], '7d', now)).toHaveLength(7);
     expect(buildSeries([], '30d', now)).toHaveLength(30);
+  });
+
+  it('builds chart series from metric buckets', () => {
+    const now = new Date('2026-05-24T00:00:00.000Z').getTime();
+    const series = buildSeriesFromBuckets(
+      [
+        bucket({
+          bucket_start: '2026-05-23T23:00:00.000Z',
+          bucket_granularity: 'hour',
+          tx_count: 2,
+          success_count: 2,
+          fee_lamports: '25',
+        }),
+      ],
+      '24h',
+      now,
+      37,
+    );
+
+    expect(series).toHaveLength(24);
+    expect(series.at(-1)?.txCount).toBe(2);
+    expect(series.at(-1)?.uniqueWallets).toBe(37);
+    expect(series.at(-1)?.feesLamports).toBe('25');
+    expect(series.at(-1)?.feeEventCount).toBe(2);
   });
 
   it('buckets all-time chart series across indexed activity', () => {
@@ -106,6 +173,12 @@ describe('analytics aggregation', () => {
       row({ cluster: 'devnet' }),
     ]);
     expect(comparison).toEqual({ mainnetTxCount: 2, devnetTxCount: 1 });
+    expect(
+      buildNetworkComparisonFromBuckets([
+        bucket({ cluster: 'mainnet', tx_count: 5 }),
+        bucket({ cluster: 'devnet', tx_count: 3 }),
+      ]),
+    ).toEqual({ mainnetTxCount: 5, devnetTxCount: 3 });
   });
 
   it('parses and builds latest transaction pagination', () => {

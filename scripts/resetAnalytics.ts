@@ -28,9 +28,18 @@ async function main() {
   await request('/rest/v1/protocol_snapshots?cluster=not.is.null', {
     method: 'DELETE',
   });
+  await request('/rest/v1/protocol_metric_buckets?cluster=not.is.null', {
+    method: 'DELETE',
+  });
+  await request('/rest/v1/protocol_state_snapshots?cluster=not.is.null', {
+    method: 'DELETE',
+  });
+  await request('/rest/v1/latest_protocol_transactions?cluster=not.is.null', {
+    method: 'DELETE',
+  });
 
   console.log(
-    'Reset analytics tables: protocol_transactions, indexer_cursors, protocol_snapshots',
+    'Reset analytics tables: protocol_transactions, indexer_cursors, protocol_snapshots, protocol_metric_buckets, protocol_state_snapshots, latest_protocol_transactions',
   );
 }
 

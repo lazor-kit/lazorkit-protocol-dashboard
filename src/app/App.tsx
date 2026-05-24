@@ -177,7 +177,7 @@ export function App() {
               showTrend={showKpiTrend}
             />
             <KpiCard
-              label="Unique Wallets"
+              label="Wallet Accounts"
               value={
                 isLoading || !dashboardStats
                   ? 'Loading'
@@ -235,7 +235,7 @@ export function App() {
                   series={dashboardStats.series}
                 />
                 <ChartPanel
-                  title="Unique wallets"
+                  title="Wallet accounts"
                   metric="uniqueWallets"
                   window={window}
                   series={dashboardStats.series}

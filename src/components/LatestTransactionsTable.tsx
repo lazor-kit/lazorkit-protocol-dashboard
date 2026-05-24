@@ -33,13 +33,13 @@ export function LatestTransactionsTable({
   const lastRow = Math.min(pagination.total, pagination.page * pagination.limit);
 
   return (
-    <section className="panel" aria-label="Latest transactions">
+    <section className="panel" aria-label="Latest activity">
       <div className="panelHeader">
         <div>
-          <p className="eyebrow">Transactions</p>
-          <h2>Latest transactions</h2>
+          <p className="eyebrow">Activity</p>
+          <h2>Latest activity</h2>
         </div>
-        <span className="mutedText">Recent fee-eligible LazorKit activity</span>
+        <span className="mutedText">Recent fee-eligible LazorKit transactions</span>
       </div>
       {rows.length === 0 ? (
         <EmptyState

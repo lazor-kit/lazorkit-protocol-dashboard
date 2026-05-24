@@ -1,4 +1,8 @@
-import { dedupeProtocolTransactionRows, mergeIndexerState } from './indexer.js';
+import {
+  buildMetricBuckets,
+  dedupeProtocolTransactionRows,
+  mergeIndexerState,
+} from './indexer.js';
 import type { ProtocolTransactionRow } from './database.js';
 
 function row(signature: string, slot: number): ProtocolTransactionRow {
@@ -28,6 +32,45 @@ describe('indexer helpers', () => {
         { ...row('same', 3), cluster: 'devnet' },
       ]),
     ).toEqual([row('same', 2), { ...row('same', 3), cluster: 'devnet' }]);
+  });
+
+  it('aggregates parsed rows into hourly and daily metric buckets', () => {
+    const buckets = buildMetricBuckets([
+      row('create', 1),
+      { ...row('failed', 2), status: 'failed', protocol_fee_lamports: '99' },
+      {
+        ...row('deferred', 3),
+        method: 'ExecuteDeferred',
+        protocol_fee_lamports: '2',
+        block_time: '2026-05-24T00:30:00.000Z',
+      },
+    ]);
+
+    const hourly = buckets.find(
+      (bucket) =>
+        bucket.bucket_granularity === 'hour' &&
+        bucket.bucket_start === '2026-05-24T00:00:00.000Z',
+    );
+    const daily = buckets.find(
+      (bucket) =>
+        bucket.bucket_granularity === 'day' &&
+        bucket.bucket_start === '2026-05-24T00:00:00.000Z',
+    );
+
+    expect(hourly).toMatchObject({
+      tx_count: 3,
+      success_count: 2,
+      failed_count: 1,
+      fee_lamports: '3',
+      execute_count: 2,
+      execute_deferred_count: 1,
+    });
+    expect(daily).toMatchObject({
+      tx_count: 3,
+      success_count: 2,
+      failed_count: 1,
+      fee_lamports: '3',
+    });
   });
 
   it('merges indexer state without dropping coverage fields', () => {

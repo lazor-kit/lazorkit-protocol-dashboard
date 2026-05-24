@@ -19,6 +19,8 @@ import {
   type IndexedTransactionBoundary,
   type IndexerCursorRow,
   type IndexerState,
+  type LatestProtocolTransactionRow,
+  type ProtocolMetricBucketRow,
 } from './database.js';
 
 export const DASHBOARD_CACHE_TTL_SECONDS = 300;
@@ -88,66 +90,10 @@ export async function getDashboardStats(
     };
   }
 
-  let db: SupabaseRestClient | null = null;
-  try {
-    db = new SupabaseRestClient();
-    const snapshot = await db.getDashboardSnapshot({
-      cluster,
-      cacheKey,
-      nowMs: now,
-      allowStale: true,
-    });
-    if (snapshot) {
-      dashboardCache.set(cacheKey, {
-        stats: snapshot,
-        expiresAt: now + snapshot.health.cacheTtlSeconds * 1000,
-      });
-      return snapshot;
-    }
-  } catch (error) {
-    if (!(error instanceof SupabaseNotConfiguredError)) throw error;
-  }
-
-  const stats = await buildDashboardStats(cluster, window, now, pagination, db);
+  const stats = await buildDashboardStats(cluster, window, now, pagination);
   dashboardCache.set(cacheKey, {
     stats,
     expiresAt: now + DASHBOARD_CACHE_TTL_SECONDS * 1000,
-  });
-  if (db && !stats.setupRequired) {
-    await db
-      .upsertDashboardSnapshot({
-        cluster,
-        cacheKey,
-        stats,
-        ttlSeconds: DASHBOARD_CACHE_TTL_SECONDS,
-      })
-      .catch(() => undefined);
-  }
-  return stats;
-}
-
-export async function refreshDashboardSnapshot(
-  cluster: ClusterId,
-  window: DashboardWindow,
-  pagination: DashboardPaginationOptions = {
-    txPage: DEFAULT_TX_PAGE,
-    txLimit: DEFAULT_TX_LIMIT,
-  },
-): Promise<DashboardStats> {
-  const now = Date.now();
-  const cacheKey = `${cluster}:${window}:${pagination.txPage}:${pagination.txLimit}`;
-  const db = new SupabaseRestClient();
-  const stats = await buildDashboardStats(cluster, window, now, pagination, db);
-
-  dashboardCache.set(cacheKey, {
-    stats,
-    expiresAt: now + DASHBOARD_CACHE_TTL_SECONDS * 1000,
-  });
-  await db.upsertDashboardSnapshot({
-    cluster,
-    cacheKey,
-    stats,
-    ttlSeconds: DASHBOARD_CACHE_TTL_SECONDS,
   });
   return stats;
 }
@@ -179,6 +125,7 @@ async function buildDashboardStats(
 
   const isAllTime = window === 'all';
   const duration = isAllTime ? 0 : windowToMs(window);
+  const granularity = window === '24h' ? 'hour' : 'day';
   const currentStart = isAllTime
     ? ALL_TIME_START_ISO
     : new Date(now - duration).toISOString();
@@ -187,48 +134,45 @@ async function buildDashboardStats(
     : new Date(now - duration * 2).toISOString();
   const currentEnd = new Date(now).toISOString();
 
-  const latestOffset = (pagination.txPage - 1) * pagination.txLimit;
   const [
-    rows,
+    buckets,
     latestTransactionsResult,
     cursor,
     indexerState,
-    oldestIndexed,
-    newestIndexed,
     protocolStats,
+    boundaries,
   ] = await Promise.all([
-    db.selectDashboardTransactions({
+    db.selectMetricBuckets({
       clusters: ['mainnet', 'devnet'],
-      sinceIso: previousStart,
+      granularity,
+      sinceIso: isAllTime ? undefined : previousStart,
       untilIso: currentEnd,
-      order: 'desc',
-      limit: 20000,
+      order: 'asc',
     }),
-    db.selectLatestDashboardTransactions({
+    db.selectLatestProtocolTransactions({
       cluster,
-      sinceIso: currentStart,
-      untilIso: currentEnd,
       limit: pagination.txLimit,
-      offset: latestOffset,
+      offset: (pagination.txPage - 1) * pagination.txLimit,
     }),
     db.getCursor(cluster),
     db.getIndexerState(cluster),
-    db.getOldestIndexedTransaction(cluster),
-    db.getNewestIndexedTransaction(cluster),
     db.getProtocolStatsSnapshot(cluster),
+    db.getMetricBoundaries(cluster),
   ]);
 
-  const selectedRows = rows.filter((row) => row.cluster === cluster);
-  const currentRows = selectedRows.filter((row) => row.block_time >= currentStart);
-  const previousRows = isAllTime
+  const selectedBuckets = buckets.filter((row) => row.cluster === cluster);
+  const currentBuckets = selectedBuckets.filter(
+    (row) => row.bucket_start >= currentStart,
+  );
+  const previousBuckets = isAllTime
     ? []
-    : rows.filter(
+    : buckets.filter(
         (row) =>
           row.cluster === cluster &&
-          row.block_time >= previousStart &&
-          row.block_time < currentStart,
+          row.bucket_start >= previousStart &&
+          row.bucket_start < currentStart,
       );
-  const comparisonRows = rows.filter((row) => row.block_time >= currentStart);
+  const comparisonBuckets = buckets.filter((row) => row.bucket_start >= currentStart);
 
   const protocolStatus =
     !protocolStats || protocolStats.initialized === false
@@ -239,8 +183,8 @@ async function buildDashboardStats(
   const analyticsHealth = buildAnalyticsHealth({
     setupRequired: false,
     indexerState,
-    oldestIndexed,
-    newestIndexed,
+    oldestIndexed: boundaries.oldest,
+    newestIndexed: boundaries.newest,
     now,
   });
 
@@ -258,15 +202,22 @@ async function buildDashboardStats(
       cacheHit: false,
       cacheTtlSeconds: DASHBOARD_CACHE_TTL_SECONDS,
     },
-    kpis: buildKpis(currentRows, previousRows),
-    series: buildSeries(currentRows, window, now),
-    latestTransactions: latestTransactionsResult.rows.map(toLatestTransaction),
+    kpis: buildKpisFromBuckets(currentBuckets, previousBuckets, protocolStats),
+    series: buildSeriesFromBuckets(
+      currentBuckets,
+      window,
+      now,
+      protocolStats?.walletAccountCount ?? 0,
+    ),
+    latestTransactions: latestTransactionsResult.rows.map(
+      toLatestTransactionFromLatest,
+    ),
     latestTransactionsPagination: buildPagination(
       pagination.txPage,
       pagination.txLimit,
       latestTransactionsResult.total,
     ),
-    networkComparison: buildNetworkComparison(comparisonRows),
+    networkComparison: buildNetworkComparisonFromBuckets(comparisonBuckets),
   };
 }
 
@@ -389,6 +340,21 @@ export function buildKpis(
   };
 }
 
+export function buildKpisFromBuckets(
+  currentBuckets: readonly ProtocolMetricBucketRow[],
+  previousBuckets: readonly ProtocolMetricBucketRow[],
+  protocolStats: ProtocolStats | null,
+): DashboardKpis {
+  const current = summarizeBuckets(currentBuckets, protocolStats);
+  const previous = summarizeBuckets(previousBuckets, protocolStats);
+  return {
+    totalTransactions: kpi(current.totalTransactions, previous.totalTransactions),
+    uniqueWallets: kpi(current.walletAccountCount, previous.walletAccountCount),
+    totalFeesLamports: kpi(current.totalFeesLamports, previous.totalFeesLamports),
+    successRate: kpi(current.successRate, previous.successRate),
+  };
+}
+
 export function buildSeries(
   rows: readonly DashboardTransactionRow[],
   window: DashboardWindow,
@@ -425,6 +391,43 @@ export function buildSeries(
     bucket: bucket.bucket,
     txCount: bucket.txCount,
     uniqueWallets: bucket.wallets.size,
+    feesLamports: bucket.feesLamports.toString(),
+    feeEventCount: bucket.feeEventCount,
+  }));
+}
+
+export function buildSeriesFromBuckets(
+  rows: readonly ProtocolMetricBucketRow[],
+  window: DashboardWindow,
+  now = Date.now(),
+  walletAccountCount = 0,
+): SeriesPoint[] {
+  const range = buildBucketSeriesRange(rows, window, now);
+  const { bucketCount, start, duration } = range;
+  const bucketMs = duration / bucketCount;
+  const buckets = Array.from({ length: bucketCount }, (_, index) => ({
+    bucket: new Date(start + index * bucketMs).toISOString(),
+    txCount: 0,
+    feesLamports: 0n,
+    feeEventCount: 0,
+  }));
+
+  for (const row of rows) {
+    const time = new Date(row.bucket_start).getTime();
+    const index = Math.min(
+      bucketCount - 1,
+      Math.max(0, Math.floor((time - start) / bucketMs)),
+    );
+    const bucket = buckets[index];
+    bucket.txCount += row.tx_count;
+    bucket.feesLamports += BigInt(row.fee_lamports);
+    bucket.feeEventCount += row.success_count;
+  }
+
+  return buckets.map((bucket) => ({
+    bucket: bucket.bucket,
+    txCount: bucket.txCount,
+    uniqueWallets: walletAccountCount,
     feesLamports: bucket.feesLamports.toString(),
     feeEventCount: bucket.feeEventCount,
   }));
@@ -469,6 +472,45 @@ function buildSeriesRange(
   };
 }
 
+function buildBucketSeriesRange(
+  rows: readonly ProtocolMetricBucketRow[],
+  window: DashboardWindow,
+  now: number,
+): { bucketCount: number; start: number; duration: number } {
+  if (window !== 'all') {
+    const duration = windowToMs(window);
+    return {
+      bucketCount: window === '24h' ? 24 : window === '7d' ? 7 : 30,
+      start: now - duration,
+      duration,
+    };
+  }
+
+  const bucketCount = 30;
+  if (rows.length === 0) {
+    const duration = windowToMs('30d');
+    return { bucketCount, start: now - duration, duration };
+  }
+
+  const rowTimes = rows
+    .map((row) => new Date(row.bucket_start).getTime())
+    .filter(Number.isFinite);
+  if (rowTimes.length === 0) {
+    const duration = windowToMs('30d');
+    return { bucketCount, start: now - duration, duration };
+  }
+  const firstRowTime = Math.min(...rowTimes);
+  const lastRowTime = Math.max(...rowTimes, now);
+  const fallbackDuration = windowToMs('30d');
+  const duration = Math.max(lastRowTime - firstRowTime, fallbackDuration);
+
+  return {
+    bucketCount,
+    start: lastRowTime - duration,
+    duration,
+  };
+}
+
 export function buildNetworkComparison(
   rows: readonly DashboardTransactionRow[],
 ): NetworkComparison {
@@ -476,6 +518,19 @@ export function buildNetworkComparison(
     (acc, row) => {
       if (row.cluster === 'mainnet') acc.mainnetTxCount += 1;
       if (row.cluster === 'devnet') acc.devnetTxCount += 1;
+      return acc;
+    },
+    { mainnetTxCount: 0, devnetTxCount: 0 },
+  );
+}
+
+export function buildNetworkComparisonFromBuckets(
+  rows: readonly ProtocolMetricBucketRow[],
+): NetworkComparison {
+  return rows.reduce<NetworkComparison>(
+    (acc, row) => {
+      if (row.cluster === 'mainnet') acc.mainnetTxCount += row.tx_count;
+      if (row.cluster === 'devnet') acc.devnetTxCount += row.tx_count;
       return acc;
     },
     { mainnetTxCount: 0, devnetTxCount: 0 },
@@ -493,6 +548,24 @@ function summarizeRows(rows: readonly DashboardTransactionRow[]) {
     uniqueWallets: new Set(rows.map((row) => row.wallet_pda)).size,
     totalFeesLamports: totalFeesLamports.toString(),
     successRate: rows.length === 0 ? 0 : successful.length / rows.length,
+  };
+}
+
+function summarizeBuckets(
+  rows: readonly ProtocolMetricBucketRow[],
+  protocolStats: ProtocolStats | null,
+) {
+  const totalTransactions = rows.reduce((sum, row) => sum + row.tx_count, 0);
+  const successCount = rows.reduce((sum, row) => sum + row.success_count, 0);
+  const totalFeesLamports = rows.reduce(
+    (sum, row) => sum + BigInt(row.fee_lamports),
+    0n,
+  );
+  return {
+    totalTransactions,
+    walletAccountCount: protocolStats?.walletAccountCount ?? 0,
+    totalFeesLamports: totalFeesLamports.toString(),
+    successRate: totalTransactions === 0 ? 0 : successCount / totalTransactions,
   };
 }
 
@@ -524,6 +597,21 @@ function toLatestTransaction(row: DashboardTransactionRow): LatestTransaction {
     method: row.method,
     status: row.status,
     feeLamports: row.protocol_fee_lamports,
+  };
+}
+
+function toLatestTransactionFromLatest(
+  row: LatestProtocolTransactionRow,
+): LatestTransaction {
+  return {
+    signature: row.signature,
+    blockTime: row.block_time,
+    slot: row.slot,
+    feePayer: row.fee_payer,
+    walletPda: row.wallet_pda,
+    method: row.method,
+    status: row.status,
+    feeLamports: row.fee_lamports,
   };
 }
 

@@ -3,9 +3,10 @@
 Public read-only dashboard for LazorKit protocol usage and fee metrics.
 
 The dashboard serves a static Vite frontend from Vercel. Its Vercel API routes
-are intentionally thin: they only read Supabase data and cached snapshots. A
-GitHub Actions worker runs the Solana RPC/indexer work on a schedule, then
-writes dashboard-ready data back to Supabase.
+are intentionally thin: they only read aggregate Supabase tables. A GitHub
+Actions worker runs the Solana RPC/indexer work on a schedule, then writes
+dashboard-ready metric buckets, current protocol state, and a small latest
+activity buffer back to Supabase.
 
 ## Metrics
 
@@ -19,8 +20,8 @@ writes dashboard-ready data back to Supabase.
 - **Shard Balances Including Rent**: raw shard lamport balances.
 - **Total Transactions**: landed transactions containing a fee-eligible
   LazorKit instruction in the selected window.
-- **Unique Wallets**: distinct LazorKit wallet PDAs parsed from those
-  transactions.
+- **Wallet Accounts**: current on-chain wallet PDA count, used as the primary
+  public wallet/user metric.
 - **Success Rate**: successful indexed transactions divided by all indexed
   transactions in the selected window.
 
@@ -35,9 +36,8 @@ The record PDA is derived from `[b"fee_record", payer]`, but PDA derivation is
 not reversible. The dashboard therefore shows the canonical `FeeRecord` PDA,
 not the payer address.
 
-Showing actual payer addresses requires either an indexed transaction history
-mapping payers to records, or a future account layout that stores the payer
-pubkey directly.
+Latest activity can show recent fee payers because the worker parses recent
+transactions, but the dashboard does not retain full transaction history.
 
 ## Program IDs
 
@@ -121,9 +121,9 @@ Use `MAINNET_RPC_URL` and `DEVNET_RPC_URL` only in local backend env files and
 GitHub Actions secrets. Do not create `VITE_MAINNET_RPC_URL`; `VITE_` values are
 compiled into browser JavaScript.
 
-Run `supabase/schema.sql` in the Supabase SQL editor before enabling the
-indexer. The dashboard returns an empty setup-safe analytics state until
-Supabase variables are configured.
+Run `supabase/schema.sql` or the migrations in the Supabase SQL editor before
+enabling the indexer. The dashboard returns an empty setup-safe analytics state
+until Supabase variables are configured and aggregate tables are populated.
 
 ## Checks
 
@@ -149,15 +149,21 @@ npm run indexer:devnet
 npm run indexer:all
 ```
 
+When migrating from the old raw transaction table, rebuild aggregate tables
+once:
+
+```bash
+npm run db:rebuild-aggregates
+```
+
 After a reset the dashboard should show a preparing-data state, not confident
 zero activity. After the first indexer pass, the UI will show the latest
-available activity while coverage grows. Re-run the indexer to watch the
-coverage range move backward until the configured backfill window is complete.
+available activity while coverage grows.
 
 ## RPC Limitations
 
 The Vercel API does not call Solana RPC. Protocol stats are refreshed by the
-indexer worker and stored at `protocol_snapshots.snapshot.protocolStats`.
+indexer worker and stored in `protocol_state_snapshots`.
 Public RPC endpoints may still rate-limit large `getProgramAccounts` scans, so
 production indexing should use a dedicated server-side RPC URL.
 
@@ -175,13 +181,13 @@ npm run indexer:all
 ```
 
 GitHub Actions runs `.github/workflows/indexer.yml` every 10 minutes and also
-supports manual dispatch. It stores one row per transaction signature and
-upserts by `(cluster, signature)`. The worker also refreshes protocol snapshots:
-protocol config, wallet account count, FeeRecord totals, treasury shard
-balances, and cached dashboard/indexer health.
+supports manual dispatch. The worker writes aggregate rows to
+`protocol_metric_buckets`, keeps only the newest 50 rows per cluster in
+`latest_protocol_transactions`, and refreshes protocol config/current-state
+metrics in `protocol_state_snapshots`.
 
-Backfill runs newest activity first, then walks older signature pages until the
-configured `INDEXER_BACKFILL_DAYS` cutoff. Keep
+The worker fetches newest activity first, then walks older signature pages until
+the configured `INDEXER_BACKFILL_DAYS` cutoff. Keep
 `INDEXER_BACKFILL_MAX_PAGES_PER_RUN` low for public or rate-limited RPCs; the
 indexer stores progress in `protocol_snapshots` and continues on the next cron
 run. The default `INDEXER_MAX_SIGNATURES_PER_RUN=50` and
@@ -214,8 +220,9 @@ INDEXER_MAX_RUNTIME_MS=45000
 Run the workflow manually once after adding secrets. Then verify Supabase:
 
 ```sql
-select count(*) from protocol_transactions;
-select cluster, snapshot from protocol_snapshots;
+select cluster, bucket_granularity, count(*) from protocol_metric_buckets group by 1, 2;
+select cluster, wallet_account_count, lifetime_fees_lamports from protocol_state_snapshots;
+select cluster, count(*) from latest_protocol_transactions group by 1;
 ```
 
 ## Deployment

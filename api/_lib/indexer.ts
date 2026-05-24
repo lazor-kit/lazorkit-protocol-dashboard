@@ -9,7 +9,6 @@ import {
   getIndexerParseDelayMs,
   rpcUrlForCluster,
 } from './env.js';
-import { refreshDashboardSnapshot } from './analytics.js';
 import {
   SupabaseRestClient,
   type IndexedTransactionBoundary,
@@ -18,7 +17,6 @@ import {
 } from './database.js';
 import { getCachedProtocolStats } from './protocolStats.js';
 import { parseLazorKitTransaction } from './transactionParser.js';
-import type { DashboardWindow } from '../../src/solana/dashboardTypes.js';
 
 export interface IndexerRunResult {
   cluster: ClusterId;
@@ -98,11 +96,14 @@ export async function runIndexer(
     }
 
     let skippedTransactions = newestPage.skippedTransactions;
-    await db.upsertProtocolTransactions(
-      dedupeProtocolTransactionRows(newestPage.rows),
+    const newestIndexedTransactions = await writeParsedRows(
+      cluster,
+      db,
+      newestPage.rows,
     );
 
-    const oldestBeforeBackfill = await db.getOldestIndexedTransaction(cluster);
+    const metricBoundariesBeforeBackfill = await db.getMetricBoundaries(cluster);
+    const oldestBeforeBackfill = metricBoundariesBeforeBackfill.oldest;
     const backfillAlreadyComplete =
       indexerState?.backfillComplete === true &&
       indexerState.backfillDays >= backfillDays;
@@ -150,12 +151,8 @@ export async function runIndexer(
       });
     }
 
-    const [oldestIndexed, newestIndexed] = await Promise.all([
-      db.getOldestIndexedTransaction(cluster),
-      db.getNewestIndexedTransaction(cluster),
-    ]);
+    const metricBoundaries = await db.getMetricBoundaries(cluster);
     await refreshProtocolStatsSnapshot(cluster, db, warnings);
-    await refreshDashboardSnapshots(cluster, warnings);
 
     const backfillComplete = backfill.complete || backfillAlreadyComplete;
     const runStatus: IndexerState['lastRunStatus'] =
@@ -169,8 +166,8 @@ export async function runIndexer(
         lastRunStatus: runStatus,
         lastRunError: null,
         lastRunWarningsCount: warnings.length,
-        newestIndexedAt: newestIndexed?.block_time ?? null,
-        oldestIndexedAt: oldestIndexed?.block_time ?? null,
+        newestIndexedAt: metricBoundaries.newest?.block_time ?? null,
+        oldestIndexedAt: metricBoundaries.oldest?.block_time ?? null,
         backfillStartedAt:
           indexerState?.backfillStartedAt ??
           (shouldBackfill || backfill.fetchedSignatures > 0 ? runStartedIso : null),
@@ -189,15 +186,15 @@ export async function runIndexer(
       cluster,
       fetchedSignatures: newestSignatures.length + backfill.fetchedSignatures,
       backfillFetchedSignatures: backfill.fetchedSignatures,
-      indexedTransactions: newestPage.rows.length + backfill.indexedTransactions,
+      indexedTransactions: newestIndexedTransactions + backfill.indexedTransactions,
       skippedTransactions,
       warnings,
       lastSeenSignature,
       lastIndexedSlot,
       lastIndexedAt: shouldRecordRun ? lastIndexedAt : null,
       backfillComplete,
-      oldestIndexed,
-      newestIndexed,
+      oldestIndexed: metricBoundaries.oldest,
+      newestIndexed: metricBoundaries.newest,
       runStatus,
       lastRunError: null,
     });
@@ -205,10 +202,10 @@ export async function runIndexer(
     const message = formatIndexerError(error);
     warnings.push(message);
     const completedAt = new Date().toISOString();
-    const [oldestIndexed, newestIndexed] = await Promise.all([
-      db.getOldestIndexedTransaction(cluster).catch(() => null),
-      db.getNewestIndexedTransaction(cluster).catch(() => null),
-    ]);
+    const metricBoundaries = await db.getMetricBoundaries(cluster).catch(() => ({
+      oldest: null,
+      newest: null,
+    }));
     await db.upsertIndexerState(
       cluster,
       mergeIndexerState(indexerState, {
@@ -217,8 +214,10 @@ export async function runIndexer(
         lastRunStatus: 'failed',
         lastRunError: message,
         lastRunWarningsCount: warnings.length,
-        newestIndexedAt: newestIndexed?.block_time ?? indexerState?.newestIndexedAt ?? null,
-        oldestIndexedAt: oldestIndexed?.block_time ?? indexerState?.oldestIndexedAt ?? null,
+        newestIndexedAt:
+          metricBoundaries.newest?.block_time ?? indexerState?.newestIndexedAt ?? null,
+        oldestIndexedAt:
+          metricBoundaries.oldest?.block_time ?? indexerState?.oldestIndexedAt ?? null,
         backfillDays,
       }),
     );
@@ -233,27 +232,11 @@ export async function runIndexer(
       lastIndexedSlot: cursor?.last_indexed_slot ?? null,
       lastIndexedAt: cursor?.last_indexed_at ?? null,
       backfillComplete: indexerState?.backfillComplete ?? false,
-      oldestIndexed,
-      newestIndexed,
+      oldestIndexed: metricBoundaries.oldest,
+      newestIndexed: metricBoundaries.newest,
       runStatus: 'failed',
       lastRunError: message,
     });
-  }
-}
-
-async function refreshDashboardSnapshots(
-  cluster: ClusterId,
-  warnings: string[],
-): Promise<void> {
-  const windows: DashboardWindow[] = ['all', '24h', '7d', '30d'];
-  for (const window of windows) {
-    try {
-      await refreshDashboardSnapshot(cluster, window, { txPage: 1, txLimit: 10 });
-    } catch (error) {
-      warnings.push(
-        `Dashboard snapshot refresh failed for ${window}: ${formatFetchError(error)}`,
-      );
-    }
   }
 }
 
@@ -274,6 +257,103 @@ async function refreshProtocolStatsSnapshot(
   } catch (error) {
     warnings.push(`Protocol snapshot refresh failed: ${formatFetchError(error)}`);
   }
+}
+
+async function writeParsedRows(
+  cluster: ClusterId,
+  db: SupabaseRestClient,
+  rows: readonly ProtocolTransactionRow[],
+): Promise<number> {
+  const dedupedRows = dedupeProtocolTransactionRows(rows);
+  if (dedupedRows.length === 0) return 0;
+
+  await Promise.all([
+    db.upsertMetricBuckets(buildMetricBuckets(dedupedRows)),
+    db.upsertLatestProtocolTransactions(
+      dedupedRows.map(toLatestProtocolTransactionRow),
+    ),
+  ]);
+  await db.pruneLatestProtocolTransactions(cluster, 50);
+  return dedupedRows.length;
+}
+
+export function buildMetricBuckets(
+  rows: readonly ProtocolTransactionRow[],
+) {
+  const buckets = new Map<
+    string,
+    ReturnType<typeof emptyMetricBucket>
+  >();
+
+  for (const row of rows) {
+    for (const granularity of ['hour', 'day'] as const) {
+      const bucketStart = bucketStartIso(row.block_time, granularity);
+      const key = `${row.cluster}:${granularity}:${bucketStart}`;
+      const bucket =
+        buckets.get(key) ?? emptyMetricBucket(row.cluster, granularity, bucketStart);
+      bucket.tx_count += 1;
+      if (row.status === 'success') {
+        bucket.success_count += 1;
+        bucket.fee_lamports = (
+          BigInt(bucket.fee_lamports) + BigInt(row.protocol_fee_lamports)
+        ).toString();
+      } else {
+        bucket.failed_count += 1;
+      }
+      if (row.method === 'CreateWallet') bucket.create_wallet_count += 1;
+      if (row.method === 'Execute') bucket.execute_count += 1;
+      if (row.method === 'ExecuteDeferred') bucket.execute_deferred_count += 1;
+      buckets.set(key, bucket);
+    }
+  }
+
+  return [...buckets.values()];
+}
+
+function emptyMetricBucket(
+  cluster: ClusterId,
+  bucket_granularity: 'hour' | 'day',
+  bucket_start: string,
+) {
+  return {
+    cluster,
+    bucket_start,
+    bucket_granularity,
+    tx_count: 0,
+    success_count: 0,
+    failed_count: 0,
+    fee_lamports: '0',
+    create_wallet_count: 0,
+    execute_count: 0,
+    execute_deferred_count: 0,
+  };
+}
+
+function bucketStartIso(
+  value: string,
+  granularity: 'hour' | 'day',
+): string {
+  const date = new Date(value);
+  if (granularity === 'hour') {
+    date.setUTCMinutes(0, 0, 0);
+  } else {
+    date.setUTCHours(0, 0, 0, 0);
+  }
+  return date.toISOString();
+}
+
+function toLatestProtocolTransactionRow(row: ProtocolTransactionRow) {
+  return {
+    cluster: row.cluster,
+    signature: row.signature,
+    slot: row.slot,
+    block_time: row.block_time,
+    fee_payer: row.fee_payer,
+    wallet_pda: row.wallet_pda,
+    method: row.method,
+    status: row.status,
+    fee_lamports: row.protocol_fee_lamports,
+  };
 }
 
 async function runBackfillPages({
@@ -352,10 +432,9 @@ async function runBackfillPages({
       parseDelayMs,
       deadlineMs,
     );
-    indexedTransactions += parsed.rows.length;
+    indexedTransactions += await writeParsedRows(cluster, db, parsed.rows);
     skippedTransactions += parsed.skippedTransactions;
     warnings.push(...parsed.warnings);
-    await db.upsertProtocolTransactions(dedupeProtocolTransactionRows(parsed.rows));
     if (parsed.deadlineReached) {
       deadlineReached = true;
       break;

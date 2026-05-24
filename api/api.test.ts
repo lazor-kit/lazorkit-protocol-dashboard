@@ -157,6 +157,13 @@ describe('api handlers', () => {
       }
     }
   });
+
+  it('keeps dashboard aggregation off the raw transaction table', () => {
+    const source = readFileSync(join(process.cwd(), 'api/_lib/analytics.ts'), 'utf8');
+    expect(source).not.toContain('selectDashboardTransactions');
+    expect(source).not.toContain('selectLatestDashboardTransactions');
+    expect(source).not.toContain('protocol_transactions');
+  });
 });
 
 function restoreEnv(key: string, value: string | undefined) {
