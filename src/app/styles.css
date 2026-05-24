@@ -250,7 +250,7 @@ a {
 
 .statusBar {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -284,6 +284,18 @@ a {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.statusTone-good {
+  color: var(--accent-soft) !important;
+}
+
+.statusTone-warn {
+  color: #d8ceff !important;
+}
+
+.statusTone-bad {
+  color: #ffb7c1 !important;
 }
 
 .metricsGrid {

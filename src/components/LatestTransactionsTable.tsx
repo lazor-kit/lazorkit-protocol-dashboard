@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import type {
+  AnalyticsStatus,
   LatestTransaction,
   LatestTransactionsPagination,
 } from '../solana/dashboardTypes';
@@ -17,11 +18,13 @@ export function LatestTransactionsTable({
   cluster,
   rows,
   pagination,
+  analyticsStatus,
   onPageChange,
 }: {
   cluster: ClusterId;
   rows: LatestTransaction[];
   pagination: LatestTransactionsPagination;
+  analyticsStatus: AnalyticsStatus;
   onPageChange: (page: number) => void;
 }) {
   const firstRow = pagination.total === 0
@@ -40,8 +43,8 @@ export function LatestTransactionsTable({
       </div>
       {rows.length === 0 ? (
         <EmptyState
-          title="No indexed transactions"
-          body="Transactions will appear after the indexer stores LazorKit activity for the selected network and time window."
+          title={emptyCopy(analyticsStatus).title}
+          body={emptyCopy(analyticsStatus).body}
         />
       ) : (
         <div className="tableWrap">
@@ -138,6 +141,25 @@ export function LatestTransactionsTable({
       )}
     </section>
   );
+}
+
+function emptyCopy(status: AnalyticsStatus): { title: string; body: string } {
+  if (status === 'empty' || status === 'not_configured') {
+    return {
+      title: 'No indexed data yet',
+      body: 'Transactions will appear after analytics indexing starts for this network.',
+    };
+  }
+  if (status === 'partial' || status === 'indexing') {
+    return {
+      title: 'Backfill in progress',
+      body: 'No transactions are available for this page yet while historical activity is still being indexed.',
+    };
+  }
+  return {
+    title: 'No activity in selected window',
+    body: 'Try a wider time filter or refresh after the next indexer run.',
+  };
 }
 
 function paginationPages(totalPages: number, currentPage: number): number[] {

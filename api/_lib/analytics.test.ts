@@ -3,6 +3,8 @@ import {
   buildNetworkComparison,
   buildPagination,
   buildSeries,
+  buildCoverageLabel,
+  classifyAnalyticsStatus,
   parseDashboardWindow,
   parseDashboardPagination,
 } from './analytics';
@@ -133,5 +135,65 @@ describe('analytics aggregation', () => {
     });
     expect(parseDashboardWindow(undefined)).toBe('all');
     expect(parseDashboardWindow('all')).toBe('all');
+  });
+
+  it('classifies analytics coverage truthfully', () => {
+    const now = new Date('2026-05-24T00:00:00.000Z').getTime();
+    expect(
+      classifyAnalyticsStatus({
+        setupRequired: true,
+        hasIndexedRows: false,
+        indexerState: null,
+        now,
+      }),
+    ).toBe('not_configured');
+    expect(
+      classifyAnalyticsStatus({
+        setupRequired: false,
+        hasIndexedRows: false,
+        indexerState: null,
+        now,
+      }),
+    ).toBe('empty');
+    expect(
+      classifyAnalyticsStatus({
+        setupRequired: false,
+        hasIndexedRows: true,
+        indexerState: {
+          lastRunStartedAt: null,
+          lastRunCompletedAt: null,
+          lastRunStatus: 'success',
+          lastRunError: null,
+          lastRunWarningsCount: 0,
+          newestIndexedAt: null,
+          oldestIndexedAt: null,
+          backfillStartedAt: null,
+          backfillCompletedAt: null,
+          backfillBeforeSignature: null,
+          backfillComplete: false,
+          backfillDays: 60,
+          backfillUpdatedAt: null,
+          lastSuccessfulRunAt: new Date(now).toISOString(),
+        },
+        now,
+      }),
+    ).toBe('partial');
+  });
+
+  it('builds coverage labels from indexed boundaries', () => {
+    expect(
+      buildCoverageLabel({
+        oldestIndexedAt: null,
+        newestIndexedAt: null,
+        analyticsStatus: 'empty',
+      }),
+    ).toBe('No indexed data yet');
+    expect(
+      buildCoverageLabel({
+        oldestIndexedAt: '2026-05-01T00:00:00.000Z',
+        newestIndexedAt: '2026-05-24T00:00:00.000Z',
+        analyticsStatus: 'partial',
+      }),
+    ).toContain('Backfilling');
   });
 });

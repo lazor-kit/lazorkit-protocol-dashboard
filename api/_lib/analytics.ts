@@ -1,4 +1,5 @@
 import type {
+  AnalyticsStatus,
   DashboardKpis,
   DashboardStats,
   DashboardWindow,
@@ -15,7 +16,9 @@ import {
   SupabaseNotConfiguredError,
   SupabaseRestClient,
   type DashboardTransactionRow,
+  type IndexedTransactionBoundary,
   type IndexerCursorRow,
+  type IndexerState,
 } from './database';
 import { getCachedProtocolStats } from './protocolStats';
 
@@ -24,6 +27,7 @@ export const DEFAULT_TX_PAGE = 1;
 export const DEFAULT_TX_LIMIT = 10;
 export const ALLOWED_TX_LIMITS = [10, 15] as const;
 const ALL_TIME_START_ISO = '1970-01-01T00:00:00.000Z';
+const STALE_AFTER_MS = 15 * 60 * 1000;
 
 export interface DashboardPaginationOptions {
   txPage: number;
@@ -85,11 +89,36 @@ export async function getDashboardStats(
     };
   }
 
-  const stats = await buildDashboardStats(cluster, window, now, pagination);
+  let db: SupabaseRestClient | null = null;
+  try {
+    db = new SupabaseRestClient();
+    const snapshot = await db.getDashboardSnapshot({ cluster, cacheKey, nowMs: now });
+    if (snapshot) {
+      dashboardCache.set(cacheKey, {
+        stats: snapshot,
+        expiresAt: now + snapshot.health.cacheTtlSeconds * 1000,
+      });
+      return snapshot;
+    }
+  } catch (error) {
+    if (!(error instanceof SupabaseNotConfiguredError)) throw error;
+  }
+
+  const stats = await buildDashboardStats(cluster, window, now, pagination, db);
   dashboardCache.set(cacheKey, {
     stats,
     expiresAt: now + DASHBOARD_CACHE_TTL_SECONDS * 1000,
   });
+  if (db && !stats.setupRequired) {
+    await db
+      .upsertDashboardSnapshot({
+        cluster,
+        cacheKey,
+        stats,
+        ttlSeconds: DASHBOARD_CACHE_TTL_SECONDS,
+      })
+      .catch(() => undefined);
+  }
   return stats;
 }
 
@@ -98,10 +127,11 @@ async function buildDashboardStats(
   window: DashboardWindow,
   now: number,
   pagination: DashboardPaginationOptions,
+  existingDb: SupabaseRestClient | null = null,
 ): Promise<DashboardStats> {
   let db: SupabaseRestClient;
   try {
-    db = new SupabaseRestClient();
+    db = existingDb ?? new SupabaseRestClient();
   } catch (error) {
     if (error instanceof SupabaseNotConfiguredError) {
       const protocolStats =
@@ -138,7 +168,15 @@ async function buildDashboardStats(
   const currentEnd = new Date(now).toISOString();
 
   const latestOffset = (pagination.txPage - 1) * pagination.txLimit;
-  const [rows, latestTransactionsResult, cursor, protocolStats] = await Promise.all([
+  const [
+    rows,
+    latestTransactionsResult,
+    cursor,
+    indexerState,
+    oldestIndexed,
+    newestIndexed,
+    protocolStats,
+  ] = await Promise.all([
     db.selectDashboardTransactions({
       clusters: ['mainnet', 'devnet'],
       sinceIso: previousStart,
@@ -154,6 +192,9 @@ async function buildDashboardStats(
       offset: latestOffset,
     }),
     db.getCursor(cluster),
+    db.getIndexerState(cluster),
+    db.getOldestIndexedTransaction(cluster),
+    db.getNewestIndexedTransaction(cluster),
     getCachedProtocolStats(cluster).catch(() => null),
   ]);
 
@@ -175,6 +216,13 @@ async function buildDashboardStats(
       : protocolStats?.config?.enabled
         ? 'enabled'
         : 'paused';
+  const analyticsHealth = buildAnalyticsHealth({
+    setupRequired: false,
+    indexerState,
+    oldestIndexed,
+    newestIndexed,
+    now,
+  });
 
   return {
     cluster,
@@ -184,6 +232,7 @@ async function buildDashboardStats(
     protocolStats,
     health: {
       protocolStatus,
+      ...analyticsHealth,
       lastIndexedSlot: cursor?.last_indexed_slot ?? null,
       lastIndexedAt: cursor?.last_indexed_at ?? null,
       cacheHit: false,
@@ -215,6 +264,94 @@ export function buildPagination(
     totalPages,
     hasPreviousPage: safePage > 1,
     hasNextPage: safePage < totalPages,
+  };
+}
+
+export function classifyAnalyticsStatus(params: {
+  setupRequired: boolean;
+  hasIndexedRows: boolean;
+  indexerState: IndexerState | null;
+  now: number;
+}): AnalyticsStatus {
+  if (params.setupRequired) return 'not_configured';
+  const { indexerState } = params;
+  if (indexerState?.lastRunStatus === 'running') return 'indexing';
+  if (indexerState?.lastRunStatus === 'failed') return 'error';
+  if (!params.hasIndexedRows) return 'empty';
+  if (!indexerState?.backfillComplete) return 'partial';
+
+  const lastSuccessfulRunAt = indexerState.lastSuccessfulRunAt
+    ? new Date(indexerState.lastSuccessfulRunAt).getTime()
+    : null;
+  if (!lastSuccessfulRunAt || params.now - lastSuccessfulRunAt > STALE_AFTER_MS) {
+    return 'stale';
+  }
+  return 'fresh';
+}
+
+export function buildCoverageLabel(params: {
+  oldestIndexedAt: string | null;
+  newestIndexedAt: string | null;
+  analyticsStatus: AnalyticsStatus;
+}): string {
+  if (params.analyticsStatus === 'not_configured') return 'Analytics not configured';
+  if (!params.oldestIndexedAt || !params.newestIndexedAt) {
+    return 'No indexed data yet';
+  }
+  const oldest = formatCoverageDate(params.oldestIndexedAt);
+  const newest = formatCoverageDate(params.newestIndexedAt);
+  const prefix =
+    params.analyticsStatus === 'partial' || params.analyticsStatus === 'indexing'
+      ? 'Backfilling'
+      : 'Indexed';
+  return oldest === newest ? `${prefix} ${oldest}` : `${prefix} ${oldest} - ${newest}`;
+}
+
+function buildAnalyticsHealth(params: {
+  setupRequired: boolean;
+  indexerState: IndexerState | null;
+  oldestIndexed: IndexedTransactionBoundary | null;
+  newestIndexed: IndexedTransactionBoundary | null;
+  now: number;
+}): Pick<
+  DashboardStats['health'],
+  | 'analyticsStatus'
+  | 'dataCoverageLabel'
+  | 'isBackfilling'
+  | 'backfillComplete'
+  | 'oldestIndexedAt'
+  | 'newestIndexedAt'
+  | 'lastRunStatus'
+  | 'lastRunError'
+  | 'lastRunWarningsCount'
+  | 'lastSuccessfulRunAt'
+> {
+  const oldestIndexedAt =
+    params.oldestIndexed?.block_time ?? params.indexerState?.oldestIndexedAt ?? null;
+  const newestIndexedAt =
+    params.newestIndexed?.block_time ?? params.indexerState?.newestIndexedAt ?? null;
+  const analyticsStatus = classifyAnalyticsStatus({
+    setupRequired: params.setupRequired,
+    hasIndexedRows: Boolean(oldestIndexedAt || newestIndexedAt),
+    indexerState: params.indexerState,
+    now: params.now,
+  });
+
+  return {
+    analyticsStatus,
+    dataCoverageLabel: buildCoverageLabel({
+      oldestIndexedAt,
+      newestIndexedAt,
+      analyticsStatus,
+    }),
+    isBackfilling: analyticsStatus === 'indexing' || analyticsStatus === 'partial',
+    backfillComplete: params.indexerState?.backfillComplete ?? false,
+    oldestIndexedAt,
+    newestIndexedAt,
+    lastRunStatus: params.indexerState?.lastRunStatus ?? 'idle',
+    lastRunError: params.indexerState?.lastRunError ?? null,
+    lastRunWarningsCount: params.indexerState?.lastRunWarningsCount ?? 0,
+    lastSuccessfulRunAt: params.indexerState?.lastSuccessfulRunAt ?? null,
   };
 }
 
@@ -391,6 +528,13 @@ function emptyDashboardStats(
     protocolStats,
     health: {
       protocolStatus,
+      ...buildAnalyticsHealth({
+        setupRequired,
+        indexerState: null,
+        oldestIndexed: null,
+        newestIndexed: null,
+        now,
+      }),
       lastIndexedSlot: cursor?.last_indexed_slot ?? null,
       lastIndexedAt: cursor?.last_indexed_at ?? null,
       cacheHit: false,
@@ -406,6 +550,14 @@ function emptyDashboardStats(
     ),
     networkComparison: { mainnetTxCount: 0, devnetTxCount: 0 },
   };
+}
+
+function formatCoverageDate(value: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(value));
 }
 
 function parseOptionalPositiveInteger(value: unknown, fallback: number): number | null {

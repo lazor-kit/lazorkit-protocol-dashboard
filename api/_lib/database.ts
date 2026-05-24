@@ -1,5 +1,7 @@
 import { getSupabaseConfig } from './env';
 import type {
+  DashboardStats,
+  IndexerRunStatus,
   LazorKitMethod,
   TransactionStatus,
 } from '../../src/solana/dashboardTypes';
@@ -43,19 +45,36 @@ export interface IndexerCursorRow {
 }
 
 export interface IndexerState {
+  lastRunStartedAt: string | null;
+  lastRunCompletedAt: string | null;
+  lastRunStatus: IndexerRunStatus;
+  lastRunError: string | null;
+  lastRunWarningsCount: number;
+  newestIndexedAt: string | null;
+  oldestIndexedAt: string | null;
+  backfillStartedAt: string | null;
+  backfillCompletedAt: string | null;
   backfillBeforeSignature: string | null;
   backfillComplete: boolean;
   backfillDays: number;
-  backfillUpdatedAt: string;
+  backfillUpdatedAt: string | null;
+  lastSuccessfulRunAt: string | null;
 }
 
 interface ProtocolSnapshotRow {
   cluster: ClusterId;
   snapshot: {
     indexer?: Partial<IndexerState>;
+    dashboard?: Record<string, DashboardSnapshotEntry>;
     [key: string]: unknown;
   };
   fetched_at: string;
+}
+
+interface DashboardSnapshotEntry {
+  cachedAt: string;
+  expiresAt: string;
+  stats: DashboardStats;
 }
 
 export interface PaginatedDashboardTransactions {
@@ -193,6 +212,21 @@ export class SupabaseRestClient {
     return rows[0] ?? null;
   }
 
+  async getNewestIndexedTransaction(
+    cluster: ClusterId,
+  ): Promise<IndexedTransactionBoundary | null> {
+    const search = new URLSearchParams();
+    search.set('select', 'signature,block_time');
+    search.set('cluster', `eq.${cluster}`);
+    search.set('order', 'block_time.desc');
+    search.set('limit', '1');
+
+    const rows = await this.request<IndexedTransactionBoundary[]>(
+      `/rest/v1/protocol_transactions?${search.toString()}`,
+    );
+    return rows[0] ?? null;
+  }
+
   async upsertProtocolTransactions(rows: ProtocolTransactionRow[]): Promise<void> {
     if (rows.length === 0) return;
     await this.request('/rest/v1/protocol_transactions?on_conflict=cluster,signature', {
@@ -234,17 +268,20 @@ export class SupabaseRestClient {
     const indexer = rows[0]?.snapshot.indexer;
     if (!indexer) return null;
     return {
-      backfillBeforeSignature:
-        typeof indexer.backfillBeforeSignature === 'string'
-          ? indexer.backfillBeforeSignature
-          : null,
+      lastRunStartedAt: readNullableString(indexer.lastRunStartedAt),
+      lastRunCompletedAt: readNullableString(indexer.lastRunCompletedAt),
+      lastRunStatus: readRunStatus(indexer.lastRunStatus),
+      lastRunError: readNullableString(indexer.lastRunError),
+      lastRunWarningsCount: readNumber(indexer.lastRunWarningsCount, 0),
+      newestIndexedAt: readNullableString(indexer.newestIndexedAt),
+      oldestIndexedAt: readNullableString(indexer.oldestIndexedAt),
+      backfillStartedAt: readNullableString(indexer.backfillStartedAt),
+      backfillCompletedAt: readNullableString(indexer.backfillCompletedAt),
+      backfillBeforeSignature: readNullableString(indexer.backfillBeforeSignature),
       backfillComplete: indexer.backfillComplete === true,
-      backfillDays:
-        typeof indexer.backfillDays === 'number' ? indexer.backfillDays : 0,
-      backfillUpdatedAt:
-        typeof indexer.backfillUpdatedAt === 'string'
-          ? indexer.backfillUpdatedAt
-          : new Date(0).toISOString(),
+      backfillDays: readNumber(indexer.backfillDays, 0),
+      backfillUpdatedAt: readNullableString(indexer.backfillUpdatedAt),
+      lastSuccessfulRunAt: readNullableString(indexer.lastSuccessfulRunAt),
     };
   }
 
@@ -262,6 +299,66 @@ export class SupabaseRestClient {
             indexer: state,
           },
           fetched_at: existing?.fetched_at ?? now,
+        },
+      ]),
+    });
+  }
+
+  async getDashboardSnapshot(params: {
+    cluster: ClusterId;
+    cacheKey: string;
+    nowMs: number;
+  }): Promise<DashboardStats | null> {
+    const existing = await this.getProtocolSnapshot(params.cluster);
+    const entry = existing?.snapshot.dashboard?.[params.cacheKey];
+    if (!entry) return null;
+
+    const expiresAt = new Date(entry.expiresAt).getTime();
+    if (!Number.isFinite(expiresAt) || expiresAt <= params.nowMs) return null;
+
+    return {
+      ...entry.stats,
+      health: {
+        ...entry.stats.health,
+        cacheHit: true,
+        cacheTtlSeconds: Math.max(
+          1,
+          Math.ceil((expiresAt - params.nowMs) / 1000),
+        ),
+      },
+    };
+  }
+
+  async upsertDashboardSnapshot(params: {
+    cluster: ClusterId;
+    cacheKey: string;
+    stats: DashboardStats;
+    ttlSeconds: number;
+  }): Promise<void> {
+    const existing = await this.getProtocolSnapshot(params.cluster);
+    const nowMs = Date.now();
+    const cachedAt = new Date(nowMs).toISOString();
+    const expiresAt = new Date(nowMs + params.ttlSeconds * 1000).toISOString();
+    const dashboard = {
+      ...(existing?.snapshot.dashboard ?? {}),
+      [params.cacheKey]: {
+        cachedAt,
+        expiresAt,
+        stats: params.stats,
+      },
+    };
+
+    await this.request('/rest/v1/protocol_snapshots?on_conflict=cluster', {
+      method: 'POST',
+      headers: { prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify([
+        {
+          cluster: params.cluster,
+          snapshot: {
+            ...(existing?.snapshot ?? {}),
+            dashboard,
+          },
+          fetched_at: existing?.fetched_at ?? cachedAt,
         },
       ]),
     });
@@ -338,4 +435,21 @@ function parseContentRangeTotal(value: string | null): number {
   if (!total || total === '*') return 0;
   const parsed = Number.parseInt(total, 10);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function readNullableString(value: unknown): string | null {
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+function readNumber(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function readRunStatus(value: unknown): IndexerRunStatus {
+  return value === 'running' ||
+    value === 'success' ||
+    value === 'partial' ||
+    value === 'failed'
+    ? value
+    : 'idle';
 }

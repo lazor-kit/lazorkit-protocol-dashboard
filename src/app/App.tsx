@@ -13,6 +13,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { AppShell } from '../components/AppShell';
+import { AnalyticsHealthBar } from '../components/AnalyticsHealthBar';
 import { ChartPanel } from '../components/ChartPanel';
 import { ClusterSelector } from '../components/ClusterSelector';
 import { DataNotes } from '../components/DataNotes';
@@ -83,8 +84,17 @@ export function App() {
     return stats.config?.enabled ? 'enabled' : 'disabled';
   }, [stats]);
   const kpiDetail =
-    window === 'all' ? 'currently indexed activity' : `vs previous ${window}`;
-  const showKpiTrend = window !== 'all';
+    dashboardStats === null
+      ? ''
+      : buildKpiDetail(dashboardStats, window);
+  const showKpiTrend =
+    window !== 'all' &&
+    dashboardStats?.health.analyticsStatus !== 'empty' &&
+    dashboardStats?.health.analyticsStatus !== 'not_configured';
+  const shouldMaskKpis =
+    !isLoading &&
+    (dashboardStats?.health.analyticsStatus === 'empty' ||
+      dashboardStats?.health.analyticsStatus === 'not_configured');
 
   return (
     <AppShell>
@@ -123,6 +133,33 @@ export function App() {
             </div>
           </section>
 
+          <AnalyticsHealthBar stats={dashboardStats} cluster={cluster} />
+
+          {dashboardStats?.health.analyticsStatus === 'error' ? (
+            <EmptyState
+              title="Indexer error"
+              body={
+                dashboardStats.health.lastRunError ??
+                'The last analytics indexing run failed. Existing indexed data may still be shown below.'
+              }
+            />
+          ) : dashboardStats?.health.analyticsStatus === 'empty' ? (
+            <EmptyState
+              title="No indexed data yet"
+              body="Analytics has not indexed LazorKit activity for this network yet. Run the indexer, then refresh this dashboard."
+            />
+          ) : dashboardStats?.health.analyticsStatus === 'partial' ? (
+            <EmptyState
+              title="Backfill in progress"
+              body="These numbers are partial while historical transactions are still being indexed."
+            />
+          ) : dashboardStats?.health.analyticsStatus === 'stale' ? (
+            <EmptyState
+              title="Stale analytics data"
+              body="The latest successful indexer run is older than expected. Values remain useful, but may not include the newest transactions."
+            />
+          ) : null}
+
           {dashboardStats?.setupRequired ? (
             <EmptyState
               title="Analytics setup required"
@@ -136,6 +173,8 @@ export function App() {
               value={
                 isLoading || !dashboardStats
                   ? 'Loading'
+                  : shouldMaskKpis
+                    ? '--'
                   : formatInteger(dashboardStats.kpis.totalTransactions.value)
               }
               detail={kpiDetail}
@@ -149,6 +188,8 @@ export function App() {
               value={
                 isLoading || !dashboardStats
                   ? 'Loading'
+                  : shouldMaskKpis
+                    ? '--'
                   : formatInteger(dashboardStats.kpis.uniqueWallets.value)
               }
               detail={kpiDetail}
@@ -162,6 +203,8 @@ export function App() {
               value={
                 isLoading || !dashboardStats
                   ? 'Loading'
+                  : shouldMaskKpis
+                    ? '--'
                   : formatLamportsShort(
                       String(dashboardStats.kpis.totalFeesLamports.value),
                     )
@@ -177,6 +220,8 @@ export function App() {
               value={
                 isLoading || !dashboardStats
                   ? 'Loading'
+                  : shouldMaskKpis
+                    ? '--'
                   : formatPercent(dashboardStats.kpis.successRate.value)
               }
               detail={kpiDetail}
@@ -213,6 +258,7 @@ export function App() {
                 cluster={cluster}
                 rows={dashboardStats.latestTransactions}
                 pagination={dashboardStats.latestTransactionsPagination}
+                analyticsStatus={dashboardStats.health.analyticsStatus}
                 onPageChange={setTxPage}
               />
             </>
@@ -404,6 +450,18 @@ function formatProtocolStatus(
   if (status === 'paused') return 'Paused';
   if (status === 'not-initialized') return 'Not initialized';
   return 'Loading';
+}
+
+function buildKpiDetail(
+  stats: DashboardStats,
+  window: DashboardWindow,
+): string {
+  if (stats.health.analyticsStatus === 'empty') return 'No indexed data yet';
+  if (stats.health.analyticsStatus === 'not_configured') return 'Analytics not configured';
+  if (stats.health.analyticsStatus === 'partial') return 'Backfilling indexed data';
+  if (stats.health.analyticsStatus === 'stale') return 'Stale data';
+  if (stats.health.analyticsStatus === 'error') return 'Indexer error';
+  return window === 'all' ? 'indexed history' : `vs previous ${window}`;
 }
 
 function AddressConfigItem({

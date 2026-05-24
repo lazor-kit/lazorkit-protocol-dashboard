@@ -4,6 +4,15 @@ import type { ProtocolStats } from './protocolStatsTypes';
 export type DashboardWindow = 'all' | '24h' | '7d' | '30d';
 export type LazorKitMethod = 'CreateWallet' | 'Execute' | 'ExecuteDeferred';
 export type TransactionStatus = 'success' | 'failed';
+export type AnalyticsStatus =
+  | 'not_configured'
+  | 'empty'
+  | 'indexing'
+  | 'partial'
+  | 'fresh'
+  | 'stale'
+  | 'error';
+export type IndexerRunStatus = 'idle' | 'running' | 'success' | 'partial' | 'failed';
 
 export interface KpiValue {
   value: number | string;
@@ -59,6 +68,16 @@ export interface DashboardStats {
   protocolStats: ProtocolStats | null;
   health: {
     protocolStatus: 'enabled' | 'paused' | 'not-initialized';
+    analyticsStatus: AnalyticsStatus;
+    dataCoverageLabel: string;
+    isBackfilling: boolean;
+    backfillComplete: boolean;
+    oldestIndexedAt: string | null;
+    newestIndexedAt: string | null;
+    lastRunStatus: IndexerRunStatus;
+    lastRunError: string | null;
+    lastRunWarningsCount: number;
+    lastSuccessfulRunAt: string | null;
     lastIndexedSlot: number | null;
     lastIndexedAt: string | null;
     cacheHit: boolean;

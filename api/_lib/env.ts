@@ -27,6 +27,10 @@ export function getIndexerParseDelayMs(): number {
   return readNonNegativeInteger('INDEXER_PARSE_DELAY_MS', 75);
 }
 
+export function getIndexerMaxRuntimeMs(): number {
+  return readPositiveInteger('INDEXER_MAX_RUNTIME_MS', 45_000);
+}
+
 export function getCronSecret(): string | null {
   return process.env.CRON_SECRET ?? null;
 }

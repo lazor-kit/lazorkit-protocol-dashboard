@@ -1,4 +1,4 @@
-import { dedupeProtocolTransactionRows } from './indexer';
+import { dedupeProtocolTransactionRows, mergeIndexerState } from './indexer';
 import type { ProtocolTransactionRow } from './database';
 
 function row(signature: string, slot: number): ProtocolTransactionRow {
@@ -28,5 +28,35 @@ describe('indexer helpers', () => {
         { ...row('same', 3), cluster: 'devnet' },
       ]),
     ).toEqual([row('same', 2), { ...row('same', 3), cluster: 'devnet' }]);
+  });
+
+  it('merges indexer state without dropping coverage fields', () => {
+    const merged = mergeIndexerState(
+      {
+        lastRunStartedAt: '2026-05-24T00:00:00.000Z',
+        lastRunCompletedAt: null,
+        lastRunStatus: 'running',
+        lastRunError: null,
+        lastRunWarningsCount: 0,
+        newestIndexedAt: '2026-05-24T00:00:00.000Z',
+        oldestIndexedAt: '2026-05-01T00:00:00.000Z',
+        backfillStartedAt: '2026-05-24T00:00:00.000Z',
+        backfillCompletedAt: null,
+        backfillBeforeSignature: 'before',
+        backfillComplete: false,
+        backfillDays: 60,
+        backfillUpdatedAt: null,
+        lastSuccessfulRunAt: null,
+      },
+      {
+        lastRunStatus: 'partial',
+        lastRunWarningsCount: 2,
+      },
+    );
+
+    expect(merged.lastRunStatus).toBe('partial');
+    expect(merged.lastRunWarningsCount).toBe(2);
+    expect(merged.oldestIndexedAt).toBe('2026-05-01T00:00:00.000Z');
+    expect(merged.backfillBeforeSignature).toBe('before');
   });
 });

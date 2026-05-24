@@ -85,6 +85,8 @@ describe('api handlers', () => {
     expect(bodyText).not.toContain('SUPABASE');
     expect(bodyText).not.toContain('service');
     expect(bodyText).toContain('latestTransactionsPagination');
+    expect(bodyText).toContain('analyticsStatus');
+    expect(bodyText).toContain('not_configured');
   });
 
   it('rejects cron requests without the configured secret', async () => {

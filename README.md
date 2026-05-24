@@ -101,6 +101,7 @@ INDEXER_BACKFILL_DAYS=60
 INDEXER_MAX_SIGNATURES_PER_RUN=100
 INDEXER_BACKFILL_MAX_PAGES_PER_RUN=1
 INDEXER_PARSE_DELAY_MS=75
+INDEXER_MAX_RUNTIME_MS=45000
 API_PORT=8787
 ```
 
@@ -131,6 +132,27 @@ npm run build
 npm run typecheck:api
 ```
 
+## Local Analytics Workflow
+
+Reset only local analytics tables and cached analytics snapshots:
+
+```bash
+npm run db:reset-analytics
+```
+
+Run one indexer pass:
+
+```bash
+npm run indexer:mainnet
+npm run indexer:devnet
+npm run indexer:all
+```
+
+After a reset the dashboard should say `No indexed data yet`, not `0 activity`.
+After the first indexer pass it may say `Backfilling` or `Partial data` while
+coverage grows. Re-run the indexer to watch the coverage range move backward
+until the configured backfill window is complete.
+
 ## RPC Limitations
 
 The `/api/protocol-stats` route fetches from RPC server-side and caches results
@@ -160,7 +182,9 @@ configured `INDEXER_BACKFILL_DAYS` cutoff. Keep
 `INDEXER_BACKFILL_MAX_PAGES_PER_RUN` low for public or rate-limited RPCs; the
 indexer stores progress in `protocol_snapshots` and continues on the next cron
 run. `INDEXER_PARSE_DELAY_MS` adds a small delay between transaction fetches to
-avoid RPC 429s.
+avoid RPC 429s. `INDEXER_MAX_RUNTIME_MS` keeps the cron inside the Vercel
+runtime budget; if the budget is reached, the run is recorded as partial and
+continues on the next pass.
 
 ## Deployment
 
@@ -176,4 +200,5 @@ Deploy as a Vercel project:
   `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`
 - Optional env: `DEVNET_RPC_URL`, `LOCALNET_RPC_URL`, `VITE_DEFAULT_CLUSTER`,
   `INDEXER_BACKFILL_DAYS`, `INDEXER_MAX_SIGNATURES_PER_RUN`,
-  `INDEXER_BACKFILL_MAX_PAGES_PER_RUN`, `INDEXER_PARSE_DELAY_MS`
+  `INDEXER_BACKFILL_MAX_PAGES_PER_RUN`, `INDEXER_PARSE_DELAY_MS`,
+  `INDEXER_MAX_RUNTIME_MS`
