@@ -28,7 +28,7 @@ export default async function handler(
   }
 
   const cluster = firstQueryValue(request.query.cluster) ?? 'mainnet';
-  const window = firstQueryValue(request.query.window) ?? '24h';
+  const window = firstQueryValue(request.query.window) ?? 'all';
   const pagination = parseDashboardPagination({
     txPage: firstQueryValue(request.query.txPage),
     txLimit: firstQueryValue(request.query.txLimit),

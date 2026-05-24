@@ -1,7 +1,7 @@
 import type { ClusterId } from './shared';
 import type { ProtocolStats } from './protocolStatsTypes';
 
-export type DashboardWindow = '24h' | '7d' | '30d';
+export type DashboardWindow = 'all' | '24h' | '7d' | '30d';
 export type LazorKitMethod = 'CreateWallet' | 'Execute' | 'ExecuteDeferred';
 export type TransactionStatus = 'success' | 'failed';
 
@@ -71,5 +71,5 @@ export interface DashboardStats {
 }
 
 export function isDashboardWindow(value: unknown): value is DashboardWindow {
-  return value === '24h' || value === '7d' || value === '30d';
+  return value === 'all' || value === '24h' || value === '7d' || value === '30d';
 }

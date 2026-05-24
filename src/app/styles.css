@@ -99,6 +99,18 @@ a {
   font-weight: 700;
 }
 
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .publicControls {
   display: flex;
   align-items: center;
@@ -117,29 +129,43 @@ a {
 }
 
 .timeWindowControl {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(52px, 1fr));
-  gap: 10px;
+  position: relative;
+  display: block;
   padding: 0;
-  background: transparent;
-  border: 0;
+  min-width: 148px;
 }
 
-.timeWindowControl button {
+.timeWindowControl::after {
+  content: "";
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  pointer-events: none;
+  transform: translateY(-68%) rotate(45deg);
+}
+
+.timeWindowControl select {
+  width: 100%;
   min-height: 42px;
-  padding: 0 16px;
+  padding: 0 40px 0 15px;
   background: #10172a;
   border: 1px solid var(--border);
   border-radius: 10px;
   color: var(--text);
   cursor: pointer;
   font-weight: 700;
+  appearance: none;
+  outline: none;
 }
 
-.timeWindowControl button.active {
+.timeWindowControl select:focus {
   background: transparent;
   border-color: var(--accent);
-  color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(117, 87, 255, 0.18);
 }
 
 .clusterControl button {

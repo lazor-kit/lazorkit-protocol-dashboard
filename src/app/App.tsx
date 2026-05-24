@@ -43,7 +43,7 @@ import {
 
 export function App() {
   const [cluster, setCluster] = useState<ClusterId>(DEFAULT_CLUSTER);
-  const [window, setWindow] = useState<DashboardWindow>('24h');
+  const [window, setWindow] = useState<DashboardWindow>('all');
   const [txPage, setTxPage] = useState(1);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [stats, setStats] = useState<ProtocolStats | null>(null);
@@ -82,6 +82,9 @@ export function App() {
     if (!stats?.initialized) return 'not-initialized';
     return stats.config?.enabled ? 'enabled' : 'disabled';
   }, [stats]);
+  const kpiDetail =
+    window === 'all' ? 'all indexed activity' : `vs previous ${window}`;
+  const showKpiTrend = window !== 'all';
 
   return (
     <AppShell>
@@ -135,10 +138,11 @@ export function App() {
                   ? 'Loading'
                   : formatInteger(dashboardStats.kpis.totalTransactions.value)
               }
-              detail={`vs previous ${window}`}
+              detail={kpiDetail}
               percentChange={dashboardStats?.kpis.totalTransactions.percentChange ?? 0}
               icon={Activity}
               isLoading={isLoading}
+              showTrend={showKpiTrend}
             />
             <KpiCard
               label="Unique Wallets"
@@ -147,10 +151,11 @@ export function App() {
                   ? 'Loading'
                   : formatInteger(dashboardStats.kpis.uniqueWallets.value)
               }
-              detail={`vs previous ${window}`}
+              detail={kpiDetail}
               percentChange={dashboardStats?.kpis.uniqueWallets.percentChange ?? 0}
               icon={Wallet}
               isLoading={isLoading}
+              showTrend={showKpiTrend}
             />
             <KpiCard
               label="Total Fees"
@@ -161,10 +166,11 @@ export function App() {
                       String(dashboardStats.kpis.totalFeesLamports.value),
                     )
               }
-              detail={`vs previous ${window}`}
+              detail={kpiDetail}
               percentChange={dashboardStats?.kpis.totalFeesLamports.percentChange ?? 0}
               icon={CircleDollarSign}
               isLoading={isLoading}
+              showTrend={showKpiTrend}
             />
             <KpiCard
               label="Success Rate"
@@ -173,10 +179,11 @@ export function App() {
                   ? 'Loading'
                   : formatPercent(dashboardStats.kpis.successRate.value)
               }
-              detail={`vs previous ${window}`}
+              detail={kpiDetail}
               percentChange={dashboardStats?.kpis.successRate.percentChange ?? 0}
               icon={Percent}
               isLoading={isLoading}
+              showTrend={showKpiTrend}
             />
           </section>
 

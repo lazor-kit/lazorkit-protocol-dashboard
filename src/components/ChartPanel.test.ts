@@ -58,6 +58,7 @@ describe('chart panel helpers', () => {
     expect(formatYAxisTick(4_000_000, 'feesLamports')).toBe('0.004');
     expect(formatYAxisTick(4, 'txCount')).toBe('4');
     expect(formatXAxisTick('2026-05-24T13:00:00.000Z', '24h')).toContain('PM');
+    expect(formatXAxisTick('2026-05-24T13:00:00.000Z', 'all')).toContain('May');
     expect(formatTooltipLabel('2026-05-24T13:00:00.000Z', '30d')).toContain('2026');
   });
 });

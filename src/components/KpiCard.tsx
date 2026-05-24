@@ -7,6 +7,7 @@ export function KpiCard({
   percentChange,
   icon: Icon,
   isLoading = false,
+  showTrend = true,
 }: {
   label: string;
   value: string;
@@ -14,6 +15,7 @@ export function KpiCard({
   percentChange: number | null;
   icon: LucideIcon;
   isLoading?: boolean;
+  showTrend?: boolean;
 }) {
   const trend = formatTrend(percentChange);
   return (
@@ -25,7 +27,7 @@ export function KpiCard({
         <span>{label}</span>
         <strong className={isLoading ? 'skeletonText' : undefined}>{value}</strong>
         <small>
-          <span className={trend.className}>{trend.label}</span>
+          {showTrend ? <span className={trend.className}>{trend.label}</span> : null}
           {detail}
         </small>
       </div>

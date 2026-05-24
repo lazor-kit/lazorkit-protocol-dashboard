@@ -1,9 +1,10 @@
 import type { DashboardWindow } from '../solana/dashboardTypes';
 
 const WINDOWS: { value: DashboardWindow; label: string }[] = [
-  { value: '24h', label: '24h' },
-  { value: '7d', label: '7d' },
-  { value: '30d', label: '30d' },
+  { value: 'all', label: 'All time' },
+  { value: '30d', label: 'Last 30 days' },
+  { value: '7d', label: 'Last 7 days' },
+  { value: '24h', label: 'Last 24 hours' },
 ];
 
 export function TimeWindowSelector({
@@ -14,17 +15,19 @@ export function TimeWindowSelector({
   onChange: (window: DashboardWindow) => void;
 }) {
   return (
-    <div className="timeWindowControl" aria-label="Time window">
-      {WINDOWS.map((item) => (
-        <button
-          key={item.value}
-          type="button"
-          className={window === item.value ? 'active' : undefined}
-          onClick={() => onChange(item.value)}
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
+    <label className="timeWindowControl">
+      <span className="srOnly">Time range</span>
+      <select
+        value={window}
+        onChange={(event) => onChange(event.target.value as DashboardWindow)}
+        aria-label="Time range"
+      >
+        {WINDOWS.map((item) => (
+          <option key={item.value} value={item.value}>
+            {item.label}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }

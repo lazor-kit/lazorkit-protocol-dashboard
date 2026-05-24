@@ -23,6 +23,7 @@ export const DASHBOARD_CACHE_TTL_SECONDS = 30;
 export const DEFAULT_TX_PAGE = 1;
 export const DEFAULT_TX_LIMIT = 10;
 export const ALLOWED_TX_LIMITS = [10, 15] as const;
+const ALL_TIME_START_ISO = '1970-01-01T00:00:00.000Z';
 
 export interface DashboardPaginationOptions {
   txPage: number;
@@ -37,10 +38,10 @@ interface DashboardCacheEntry {
 const dashboardCache = new Map<string, DashboardCacheEntry>();
 
 export function parseDashboardWindow(value: unknown): DashboardWindow {
-  return isDashboardWindow(value) ? value : '24h';
+  return isDashboardWindow(value) ? value : 'all';
 }
 
-export function windowToMs(window: DashboardWindow): number {
+export function windowToMs(window: Exclude<DashboardWindow, 'all'>): number {
   if (window === '24h') return 24 * 60 * 60 * 1000;
   if (window === '7d') return 7 * 24 * 60 * 60 * 1000;
   return 30 * 24 * 60 * 60 * 1000;
@@ -126,9 +127,14 @@ async function buildDashboardStats(
     throw error;
   }
 
-  const duration = windowToMs(window);
-  const currentStart = new Date(now - duration).toISOString();
-  const previousStart = new Date(now - duration * 2).toISOString();
+  const isAllTime = window === 'all';
+  const duration = isAllTime ? 0 : windowToMs(window);
+  const currentStart = isAllTime
+    ? ALL_TIME_START_ISO
+    : new Date(now - duration).toISOString();
+  const previousStart = isAllTime
+    ? ALL_TIME_START_ISO
+    : new Date(now - duration * 2).toISOString();
   const currentEnd = new Date(now).toISOString();
 
   const latestOffset = (pagination.txPage - 1) * pagination.txLimit;
@@ -153,12 +159,14 @@ async function buildDashboardStats(
 
   const selectedRows = rows.filter((row) => row.cluster === cluster);
   const currentRows = selectedRows.filter((row) => row.block_time >= currentStart);
-  const previousRows = rows.filter(
-    (row) =>
-      row.cluster === cluster &&
-      row.block_time >= previousStart &&
-      row.block_time < currentStart,
-  );
+  const previousRows = isAllTime
+    ? []
+    : rows.filter(
+        (row) =>
+          row.cluster === cluster &&
+          row.block_time >= previousStart &&
+          row.block_time < currentStart,
+      );
   const comparisonRows = rows.filter((row) => row.block_time >= currentStart);
 
   const protocolStatus =
@@ -229,10 +237,9 @@ export function buildSeries(
   window: DashboardWindow,
   now = Date.now(),
 ): SeriesPoint[] {
-  const duration = windowToMs(window);
-  const bucketCount = window === '24h' ? 24 : window === '7d' ? 7 : 30;
+  const range = buildSeriesRange(rows, window, now);
+  const { bucketCount, start, duration } = range;
   const bucketMs = duration / bucketCount;
-  const start = now - duration;
   const buckets = Array.from({ length: bucketCount }, (_, index) => ({
     bucket: new Date(start + index * bucketMs).toISOString(),
     txCount: 0,
@@ -260,6 +267,45 @@ export function buildSeries(
     uniqueWallets: bucket.wallets.size,
     feesLamports: bucket.feesLamports.toString(),
   }));
+}
+
+function buildSeriesRange(
+  rows: readonly DashboardTransactionRow[],
+  window: DashboardWindow,
+  now: number,
+): { bucketCount: number; start: number; duration: number } {
+  if (window !== 'all') {
+    const duration = windowToMs(window);
+    return {
+      bucketCount: window === '24h' ? 24 : window === '7d' ? 7 : 30,
+      start: now - duration,
+      duration,
+    };
+  }
+
+  const bucketCount = 30;
+  if (rows.length === 0) {
+    const duration = windowToMs('30d');
+    return { bucketCount, start: now - duration, duration };
+  }
+
+  const rowTimes = rows
+    .map((row) => new Date(row.block_time).getTime())
+    .filter(Number.isFinite);
+  if (rowTimes.length === 0) {
+    const duration = windowToMs('30d');
+    return { bucketCount, start: now - duration, duration };
+  }
+  const firstRowTime = Math.min(...rowTimes);
+  const lastRowTime = Math.max(...rowTimes, now);
+  const fallbackDuration = windowToMs('30d');
+  const duration = Math.max(lastRowTime - firstRowTime, fallbackDuration);
+
+  return {
+    bucketCount,
+    start: lastRowTime - duration,
+    duration,
+  };
 }
 
 export function buildNetworkComparison(

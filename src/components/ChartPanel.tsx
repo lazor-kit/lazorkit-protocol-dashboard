@@ -170,6 +170,12 @@ export function formatXAxisTick(bucket: string, window: DashboardWindow): string
   if (window === '24h') {
     return new Intl.DateTimeFormat('en-US', { hour: 'numeric' }).format(date);
   }
+  if (window === 'all') {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      year: '2-digit',
+    }).format(date);
+  }
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',

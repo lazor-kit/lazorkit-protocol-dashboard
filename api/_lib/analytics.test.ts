@@ -3,6 +3,7 @@ import {
   buildNetworkComparison,
   buildPagination,
   buildSeries,
+  parseDashboardWindow,
   parseDashboardPagination,
 } from './analytics';
 import type { DashboardTransactionRow } from './database';
@@ -63,8 +64,35 @@ describe('analytics aggregation', () => {
     expect(series.at(-1)?.txCount).toBe(2);
     expect(series.at(-1)?.uniqueWallets).toBe(1);
     expect(series.at(-1)?.feesLamports).toBe('25');
+    expect(buildSeries([], 'all', now)).toHaveLength(30);
     expect(buildSeries([], '7d', now)).toHaveLength(7);
     expect(buildSeries([], '30d', now)).toHaveLength(30);
+  });
+
+  it('buckets all-time chart series across indexed activity', () => {
+    const now = new Date('2026-05-24T00:00:00.000Z').getTime();
+    const series = buildSeries(
+      [
+        row({
+          block_time: '2026-03-24T00:00:00.000Z',
+          wallet_pda: 'wallet-a',
+          protocol_fee_lamports: '10',
+        }),
+        row({
+          block_time: '2026-05-24T00:00:00.000Z',
+          wallet_pda: 'wallet-b',
+          protocol_fee_lamports: '15',
+        }),
+      ],
+      'all',
+      now,
+    );
+
+    expect(series).toHaveLength(30);
+    expect(series.reduce((sum, point) => sum + point.txCount, 0)).toBe(2);
+    expect(
+      series.reduce((sum, point) => sum + BigInt(point.feesLamports), 0n),
+    ).toBe(25n);
   });
 
   it('compares mainnet and devnet activity', () => {
@@ -101,5 +129,7 @@ describe('analytics aggregation', () => {
       hasPreviousPage: false,
       hasNextPage: false,
     });
+    expect(parseDashboardWindow(undefined)).toBe('all');
+    expect(parseDashboardWindow('all')).toBe('all');
   });
 });
