@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { AppShell } from '../components/AppShell';
 import { ClusterSelector } from '../components/ClusterSelector';
+import { DataNotes } from '../components/DataNotes';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { FeeRecordTable } from '../components/FeeRecordTable';
@@ -107,7 +108,7 @@ export function App() {
                   ? 'Loading'
                   : formatInteger(stats.feeTotals.walletCount)
               }
-              detail="Strict fee records"
+              detail="Sum of FeeRecord.wallet_count"
               icon={ShieldCheck}
               isLoading={isLoading}
             />
@@ -118,7 +119,7 @@ export function App() {
                   ? 'Loading'
                   : formatInteger(stats.feeTotals.txCount)
               }
-              detail="Execute + deferred"
+              detail="Execute + ExecuteDeferred"
               icon={Activity}
               isLoading={isLoading}
             />
@@ -140,12 +141,12 @@ export function App() {
                   ? 'Loading'
                   : formatLamportsShort(stats.feeTotals.lifetimeFeesLamports)
               }
-              detail="Cumulative FeeRecord sum"
+              detail="Cumulative, not treasury balance"
               icon={CircleDollarSign}
               isLoading={isLoading}
             />
             <MetricCard
-              label="Collectible Fees"
+              label="Currently Collectible Fees"
               value={
                 isLoading || !stats
                   ? 'Loading'
@@ -162,7 +163,7 @@ export function App() {
                   ? 'Loading'
                   : formatInteger(stats.feeTotals.recordCount)
               }
-              detail="Tracked payer PDAs"
+              detail="FeeRecord account count"
               icon={Database}
               isLoading={isLoading}
             />
@@ -235,6 +236,7 @@ export function App() {
                 </div>
               </section>
 
+              <DataNotes />
               <ShardTable cluster={cluster} shards={stats.shards} />
               <FeeRecordTable cluster={cluster} rows={stats.feeRecords} />
             </>

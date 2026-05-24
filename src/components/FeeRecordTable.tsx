@@ -21,10 +21,14 @@ export function FeeRecordTable({
       <div className="panelHeader">
         <div>
           <p className="eyebrow">Fee Records</p>
-          <h2>Top recorded fee payers</h2>
+          <h2>Top FeeRecord accounts</h2>
         </div>
         <span className="mutedText">Showing top 50 by lifetime fees</span>
       </div>
+      <p className="panelNote">
+        Fee payer addresses are not stored in the current FeeRecord account
+        data. This table shows the canonical record PDA for each tracked payer.
+      </p>
       {rows.length === 0 ? (
         <EmptyState
           title="No fee records yet"
@@ -35,7 +39,7 @@ export function FeeRecordTable({
           <table>
             <thead>
               <tr>
-                <th>FeeRecord PDA</th>
+                <th>Record PDA</th>
                 <th>Total Fees</th>
                 <th>Wallets</th>
                 <th>Txns</th>
@@ -82,4 +86,3 @@ export function FeeRecordTable({
     </section>
   );
 }
-

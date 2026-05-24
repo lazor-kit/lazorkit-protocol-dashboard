@@ -20,6 +20,17 @@ wallet connection, no backend, no indexer, and no admin controls.
 separate. Treasury shards can be withdrawn, while `FeeRecord.total_fees_paid`
 is cumulative.
 
+## FeeRecord Identity
+
+The current `FeeRecord` account layout does not store the fee payer pubkey.
+The record PDA is derived from `[b"fee_record", payer]`, but PDA derivation is
+not reversible. The dashboard therefore shows the canonical `FeeRecord` PDA,
+not the payer address.
+
+Showing actual payer addresses requires either an indexed transaction history
+mapping payers to records, or a future account layout that stores the payer
+pubkey directly.
+
 ## Program IDs
 
 - Mainnet: `LazorjRFNavitUaBu5m3WaNPjU1maipvSW2rZfAFAKi`
@@ -62,3 +73,7 @@ npm run build
 This v1 app uses browser-side direct RPC. Public RPC endpoints may rate-limit
 large `getProgramAccounts` scans. If that becomes a problem, the next version
 should add a small backend cache or indexer.
+
+Private or key-bearing RPC URLs cannot be hidden in a frontend-only app. To use
+a private RPC key safely, fetch and aggregate stats in a server-side API route
+or indexer, then return only dashboard JSON to the browser.
