@@ -1,5 +1,5 @@
-import { dedupeProtocolTransactionRows, mergeIndexerState } from './indexer';
-import type { ProtocolTransactionRow } from './database';
+import { dedupeProtocolTransactionRows, mergeIndexerState } from './indexer.js';
+import type { ProtocolTransactionRow } from './database.js';
 
 function row(signature: string, slot: number): ProtocolTransactionRow {
   return {

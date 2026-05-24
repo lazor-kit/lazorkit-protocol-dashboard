@@ -1,11 +1,11 @@
-import { getSupabaseConfig } from './env';
+import { getSupabaseConfig } from './env.js';
 import type {
   DashboardStats,
   IndexerRunStatus,
   LazorKitMethod,
   TransactionStatus,
-} from '../../src/solana/dashboardTypes';
-import { type ClusterId } from '../../src/solana/shared';
+} from '../../src/solana/dashboardTypes.js';
+import { type ClusterId } from '../../src/solana/shared.js';
 
 export interface ProtocolTransactionRow {
   cluster: ClusterId;

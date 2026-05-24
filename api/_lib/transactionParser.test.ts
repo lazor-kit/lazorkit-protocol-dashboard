@@ -3,8 +3,8 @@ import { PublicKey, SystemProgram, type ParsedTransactionWithMeta } from '@solan
 import {
   computePositiveLamportDelta,
   parseLazorKitTransaction,
-} from './transactionParser';
-import { programIdForCluster } from '../../src/solana/shared';
+} from './transactionParser.js';
+import { programIdForCluster } from '../../src/solana/shared.js';
 
 function txFixture(params: {
   discriminator: number;

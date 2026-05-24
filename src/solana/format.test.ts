@@ -3,7 +3,7 @@ import {
   formatLamports,
   formatLamportsShort,
   shortenAddress,
-} from './format';
+} from './format.js';
 
 describe('format helpers', () => {
   it('formats integers', () => {

@@ -7,8 +7,8 @@ import {
   classifyAnalyticsStatus,
   parseDashboardWindow,
   parseDashboardPagination,
-} from './analytics';
-import type { DashboardTransactionRow } from './database';
+} from './analytics.js';
+import type { DashboardTransactionRow } from './database.js';
 
 function row(partial: Partial<DashboardTransactionRow>): DashboardTransactionRow {
   return {

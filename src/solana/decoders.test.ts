@@ -3,7 +3,7 @@ import {
   decodeFeeRecord,
   decodeProtocolConfig,
   decodeTreasuryShard,
-} from './decoders';
+} from './decoders.js';
 
 function writeU64(data: Uint8Array, offset: number, value: bigint) {
   new DataView(data.buffer).setBigUint64(offset, value, true);

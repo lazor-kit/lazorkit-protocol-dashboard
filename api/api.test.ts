@@ -1,5 +1,5 @@
-import dashboardHandler from './dashboard';
-import cronHandler from './cron/indexer';
+import dashboardHandler from './dashboard.js';
+import cronHandler from './cron/indexer.js';
 
 function response() {
   const state = {

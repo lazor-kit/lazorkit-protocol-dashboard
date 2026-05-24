@@ -2,7 +2,7 @@ import {
   aggregateFeeRecords,
   computeCollectibleLamports,
   type FeeRecordAmountRow,
-} from './statsMath';
+} from './statsMath.js';
 
 function row(partial: Partial<FeeRecordAmountRow>): FeeRecordAmountRow {
   return {

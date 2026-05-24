@@ -1,6 +1,6 @@
-import { getCronSecret } from '../_lib/env';
-import { runIndexer } from '../_lib/indexer';
-import { isClusterId, type ClusterId } from '../../src/solana/shared';
+import { getCronSecret } from '../_lib/env.js';
+import { runIndexer } from '../_lib/indexer.js';
+import { isClusterId, type ClusterId } from '../../src/solana/shared.js';
 
 interface ApiRequest {
   method?: string;

@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { ACCOUNT_SIZES, DISCRIMINATORS } from './shared';
+import { ACCOUNT_SIZES, DISCRIMINATORS } from './shared.js';
 
 export interface ProtocolConfigAccount {
   discriminator: number;
