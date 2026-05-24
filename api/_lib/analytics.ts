@@ -353,10 +353,18 @@ export function buildKpisFromBuckets(
 ): DashboardKpis {
   const current = summarizeBuckets(currentBuckets, protocolStats);
   const previous = summarizeBuckets(previousBuckets, protocolStats);
+  const currentWalletsCreated = Math.min(
+    current.walletsCreated,
+    current.walletAccountCount,
+  );
+  const previousWalletsCreated = Math.min(
+    previous.walletsCreated,
+    current.walletAccountCount,
+  );
   const walletMetric =
     window === 'all'
       ? kpi(current.walletAccountCount, previous.walletAccountCount)
-      : kpi(current.walletsCreated, previous.walletsCreated);
+      : kpi(currentWalletsCreated, previousWalletsCreated);
   return {
     totalTransactions: kpi(current.totalTransactions, previous.totalTransactions),
     uniqueWallets: walletMetric,
@@ -391,7 +399,9 @@ export function buildSeries(
     const bucket = buckets[index];
     bucket.txCount += 1;
     bucket.wallets.add(row.wallet_pda);
-    if (row.method === 'CreateWallet') bucket.createWalletCount += 1;
+    if (row.status === 'success' && row.method === 'CreateWallet') {
+      bucket.createWalletCount += 1;
+    }
     const feeLamports = BigInt(row.protocol_fee_lamports);
     if (row.status === 'success' && feeLamports > 0n) {
       bucket.feesLamports += feeLamports;
@@ -439,14 +449,24 @@ export function buildSeriesFromBuckets(
     bucket.feeEventCount += row.success_count;
   }
 
-  return buckets.map((bucket) => ({
-    bucket: bucket.bucket,
-    txCount: bucket.txCount,
-    uniqueWallets: walletAccountCount,
-    createWalletCount: bucket.createWalletCount,
-    feesLamports: bucket.feesLamports.toString(),
-    feeEventCount: bucket.feeEventCount,
-  }));
+  let remainingWalletCreates =
+    walletAccountCount > 0 ? walletAccountCount : Number.POSITIVE_INFINITY;
+
+  return buckets.map((bucket) => {
+    const createWalletCount = Math.min(
+      bucket.createWalletCount,
+      remainingWalletCreates,
+    );
+    remainingWalletCreates -= createWalletCount;
+    return {
+      bucket: bucket.bucket,
+      txCount: bucket.txCount,
+      uniqueWallets: walletAccountCount,
+      createWalletCount,
+      feesLamports: bucket.feesLamports.toString(),
+      feeEventCount: bucket.feeEventCount,
+    };
+  });
 }
 
 function buildSeriesRange(

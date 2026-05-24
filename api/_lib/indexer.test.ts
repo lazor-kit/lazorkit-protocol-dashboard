@@ -36,8 +36,13 @@ describe('indexer helpers', () => {
 
   it('aggregates parsed rows into hourly and daily metric buckets', () => {
     const buckets = buildMetricBuckets([
-      row('create', 1),
-      { ...row('failed', 2), status: 'failed', protocol_fee_lamports: '99' },
+      { ...row('create', 1), method: 'CreateWallet' },
+      {
+        ...row('failed-create', 2),
+        method: 'CreateWallet',
+        status: 'failed',
+        protocol_fee_lamports: '99',
+      },
       {
         ...row('deferred', 3),
         method: 'ExecuteDeferred',
@@ -62,7 +67,8 @@ describe('indexer helpers', () => {
       success_count: 2,
       failed_count: 1,
       fee_lamports: '3',
-      execute_count: 2,
+      create_wallet_count: 1,
+      execute_count: 0,
       execute_deferred_count: 1,
     });
     expect(daily).toMatchObject({
@@ -70,6 +76,7 @@ describe('indexer helpers', () => {
       success_count: 2,
       failed_count: 1,
       fee_lamports: '3',
+      create_wallet_count: 1,
     });
   });
 

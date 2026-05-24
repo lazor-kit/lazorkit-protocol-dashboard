@@ -114,6 +114,17 @@ describe('analytics aggregation', () => {
     expect(kpis.uniqueWallets.percentChange).toBe(200);
   });
 
+  it('caps filtered wallet KPIs at current wallet accounts', () => {
+    const kpis = buildKpisFromBuckets(
+      [bucket({ tx_count: 40, success_count: 37, create_wallet_count: 40 })],
+      [],
+      protocolStats,
+      '30d',
+    );
+
+    expect(kpis.uniqueWallets.value).toBe(37);
+  });
+
   it('buckets chart series for supported windows', () => {
     const now = new Date('2026-05-24T00:00:00.000Z').getTime();
     const series = buildSeries(
@@ -169,6 +180,24 @@ describe('analytics aggregation', () => {
     expect(series.at(-1)?.createWalletCount).toBe(1);
     expect(series.at(-1)?.feesLamports).toBe('25');
     expect(series.at(-1)?.feeEventCount).toBe(2);
+  });
+
+  it('caps wallet-created chart series at current wallet accounts', () => {
+    const now = new Date('2026-05-24T00:00:00.000Z').getTime();
+    const series = buildSeriesFromBuckets(
+      [
+        bucket({
+          bucket_start: '2026-05-23T23:00:00.000Z',
+          bucket_granularity: 'hour',
+          create_wallet_count: 40,
+        }),
+      ],
+      '24h',
+      now,
+      37,
+    );
+
+    expect(series.reduce((sum, point) => sum + point.createWalletCount, 0)).toBe(37);
   });
 
   it('buckets all-time chart series across indexed activity', () => {

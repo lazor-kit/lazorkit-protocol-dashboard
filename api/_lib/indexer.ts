@@ -300,7 +300,9 @@ export function buildMetricBuckets(
       } else {
         bucket.failed_count += 1;
       }
-      if (row.method === 'CreateWallet') bucket.create_wallet_count += 1;
+      if (row.status === 'success' && row.method === 'CreateWallet') {
+        bucket.create_wallet_count += 1;
+      }
       if (row.method === 'Execute') bucket.execute_count += 1;
       if (row.method === 'ExecuteDeferred') bucket.execute_deferred_count += 1;
       buckets.set(key, bucket);
