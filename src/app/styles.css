@@ -436,54 +436,7 @@ a {
   margin-top: 16px;
 }
 
-.lineChart {
-  width: 100%;
-  height: 100%;
-}
-
-.chartGrid line {
-  stroke: #273451;
-  stroke-width: 0.28;
-}
-
-.chartBorder {
-  fill: none;
-  stroke: #35466e;
-  stroke-width: 0.45;
-  stroke-dasharray: 1.2 1.2;
-}
-
-.chartArea {
-  fill: var(--accent);
-  opacity: 0.18;
-}
-
-.chartLine {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 1.45;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-}
-
-.chartCrosshair {
-  stroke: var(--accent-soft);
-  stroke-width: 0.5;
-  stroke-dasharray: 1 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.chartHoverPoint {
-  fill: var(--accent);
-  stroke: var(--text);
-  stroke-width: 0.35;
-  vector-effect: non-scaling-stroke;
-}
-
 .chartTooltip {
-  position: absolute;
-  z-index: 3;
   min-width: 156px;
   display: grid;
   gap: 6px;
@@ -493,8 +446,6 @@ a {
   border-radius: 10px;
   color: var(--muted);
   font-size: 12px;
-  pointer-events: none;
-  transform: translate(-50%, -100%);
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32);
 }
 
@@ -506,36 +457,6 @@ a {
 .chartTooltip span.active {
   color: var(--accent-soft);
   font-weight: 750;
-}
-
-.chartYAxis,
-.chartXAxis {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  color: var(--quiet);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.chartYAxis span {
-  position: absolute;
-  left: 0;
-  width: 8.5%;
-  text-align: right;
-  transform: translateY(-50%);
-  white-space: nowrap;
-}
-
-.chartXAxis span {
-  position: absolute;
-  top: 91%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-
-.chartPanel-uniqueWallets .chartLine {
-  stroke: var(--accent-soft);
 }
 
 .chartPanel-feesLamports .chartCanvas {

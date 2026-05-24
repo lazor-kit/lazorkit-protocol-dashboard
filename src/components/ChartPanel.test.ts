@@ -1,10 +1,10 @@
 import {
-  buildChartModel,
   buildXAxisTicks,
-  buildYAxisTicks,
-  formatAxisValue,
-  getChartValue,
-  getNearestSeriesIndex,
+  buildYAxisDomain,
+  formatTooltipLabel,
+  formatXAxisTick,
+  formatYAxisTick,
+  toChartData,
 } from './ChartPanel';
 import type { SeriesPoint } from '../solana/dashboardTypes';
 
@@ -19,56 +19,45 @@ function point(partial: Partial<SeriesPoint>): SeriesPoint {
 }
 
 describe('chart panel helpers', () => {
-  it('extracts metric values and keeps empty charts scaled', () => {
-    expect(getChartValue(point({ txCount: 3 }), 'txCount')).toBe(3);
-    expect(getChartValue(point({ uniqueWallets: 2 }), 'uniqueWallets')).toBe(2);
-    expect(getChartValue(point({ feesLamports: '50' }), 'feesLamports')).toBe(50);
-
-    const model = buildChartModel([point({}), point({})], 'txCount');
-    expect(model.points).toHaveLength(2);
-    expect(model.yTicks).toHaveLength(5);
-    expect(model.yTicks.map((tick) => tick.value)).toEqual([4, 3, 2, 1, 0]);
-    expect(model.linePoints).not.toBe('');
+  it('normalizes chart data for Recharts', () => {
+    expect(
+      toChartData([
+        point({ txCount: 3, uniqueWallets: 2, feesLamports: '5000000' }),
+      ]),
+    ).toEqual([
+      {
+        bucket: '2026-05-24T00:00:00.000Z',
+        txCount: 3,
+        uniqueWallets: 2,
+        feesLamports: 5_000_000,
+      },
+    ]);
   });
 
-  it('builds y and x ticks for supported windows', () => {
-    const yTicks = buildYAxisTicks(100);
-    expect(yTicks.map((tick) => tick.value)).toEqual([100, 75, 50, 25, 0]);
-
-    expect(buildXAxisTicks(24)).toHaveLength(5);
-    expect(buildXAxisTicks(7)).toHaveLength(5);
-    expect(buildXAxisTicks(30)).toHaveLength(5);
+  it('builds stable y domains for empty and populated charts', () => {
+    expect(buildYAxisDomain([], 'txCount')).toEqual([0, 4]);
+    expect(buildYAxisDomain([toChartData([point({ txCount: 7 })])[0]], 'txCount')).toEqual([
+      0,
+      10,
+    ]);
+    expect(buildYAxisDomain([], 'feesLamports')).toEqual([0, 4_000_000]);
   });
 
-  it('formats y-axis labels without oversized lamports text', () => {
-    expect(formatAxisValue(4_000_000, 'feesLamports')).toBe('0.004 SOL');
-    expect(formatAxisValue(0, 'feesLamports')).toBe('0 SOL');
-    expect(formatAxisValue(4, 'txCount')).toBe('4');
+  it('limits x-axis ticks to readable positions', () => {
+    const data = toChartData(
+      Array.from({ length: 24 }, (_, index) =>
+        point({ bucket: new Date(2026, 4, 24, index).toISOString() }),
+      ),
+    );
+    expect(buildXAxisTicks(data)).toHaveLength(5);
+    expect(buildXAxisTicks(data)[0]).toBe(data[0].bucket);
+    expect(buildXAxisTicks(data).at(-1)).toBe(data.at(-1)?.bucket);
   });
 
-  it('finds nearest point from pointer x position', () => {
-    const rect = { left: 100, width: 200 };
-    expect(getNearestSeriesIndex(100, rect, 5)).toBe(0);
-    expect(getNearestSeriesIndex(200, rect, 5)).toBe(2);
-    expect(getNearestSeriesIndex(300, rect, 5)).toBe(4);
-    expect(getNearestSeriesIndex(90, rect, 5)).toBe(0);
-    expect(getNearestSeriesIndex(320, rect, 5)).toBe(4);
-    expect(getNearestSeriesIndex(200, rect, 0)).toBeNull();
-  });
-
-  it('keeps tooltip payload source values in the chart model', () => {
-    const series = [
-      point({ txCount: 1, uniqueWallets: 1, feesLamports: '10' }),
-      point({ txCount: 2, uniqueWallets: 2, feesLamports: '20' }),
-    ];
-    const model = buildChartModel(series, 'feesLamports');
-
-    expect(model.total).toBe(30);
-    expect(model.areaPoints).toContain(',');
-    expect(series[1]).toMatchObject({
-      txCount: 2,
-      uniqueWallets: 2,
-      feesLamports: '20',
-    });
+  it('formats axis and tooltip labels compactly', () => {
+    expect(formatYAxisTick(4_000_000, 'feesLamports')).toBe('0.004');
+    expect(formatYAxisTick(4, 'txCount')).toBe('4');
+    expect(formatXAxisTick('2026-05-24T13:00:00.000Z', '24h')).toContain('PM');
+    expect(formatTooltipLabel('2026-05-24T13:00:00.000Z', '30d')).toContain('2026');
   });
 });
