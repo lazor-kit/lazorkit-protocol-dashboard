@@ -25,6 +25,9 @@ async function main() {
   await request('/rest/v1/indexer_cursors?cluster=not.is.null', {
     method: 'DELETE',
   });
+  await request('/rest/v1/indexer_states?cluster=not.is.null', {
+    method: 'DELETE',
+  });
   await request('/rest/v1/protocol_snapshots?cluster=not.is.null', {
     method: 'DELETE',
   });
@@ -39,7 +42,7 @@ async function main() {
   });
 
   console.log(
-    'Reset analytics tables: protocol_transactions, indexer_cursors, protocol_snapshots, protocol_metric_buckets, protocol_state_snapshots, latest_protocol_transactions',
+    'Reset analytics tables: protocol_transactions, indexer_cursors, indexer_states, protocol_snapshots, protocol_metric_buckets, protocol_state_snapshots, latest_protocol_transactions',
   );
 }
 

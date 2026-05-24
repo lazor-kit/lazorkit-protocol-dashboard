@@ -31,6 +31,25 @@ create table if not exists public.indexer_cursors (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.indexer_states (
+  cluster text primary key check (cluster in ('mainnet', 'devnet')),
+  last_run_started_at timestamptz,
+  last_run_completed_at timestamptz,
+  last_run_status text not null default 'idle' check (last_run_status in ('idle', 'running', 'success', 'partial', 'failed')),
+  last_run_error text,
+  last_run_warnings_count integer not null default 0,
+  newest_indexed_at timestamptz,
+  oldest_indexed_at timestamptz,
+  backfill_started_at timestamptz,
+  backfill_completed_at timestamptz,
+  backfill_before_signature text,
+  backfill_complete boolean not null default false,
+  backfill_days integer not null default 0,
+  backfill_updated_at timestamptz,
+  last_successful_run_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.protocol_metric_buckets (
   cluster text not null check (cluster in ('mainnet', 'devnet')),
   bucket_start timestamptz not null,
@@ -81,13 +100,6 @@ create table if not exists public.latest_protocol_transactions (
 create index if not exists latest_protocol_transactions_cluster_time_idx
   on public.latest_protocol_transactions (cluster, block_time desc);
 
-create table if not exists public.protocol_snapshots (
-  cluster text primary key check (cluster in ('mainnet', 'devnet')),
-  snapshot jsonb not null,
-  fetched_at timestamptz not null,
-  updated_at timestamptz not null default now()
-);
-
 create or replace function public.set_updated_at()
 returns trigger as $$
 begin
@@ -108,6 +120,12 @@ create trigger indexer_cursors_set_updated_at
 before update on public.indexer_cursors
 for each row execute function public.set_updated_at();
 
+drop trigger if exists indexer_states_set_updated_at
+  on public.indexer_states;
+create trigger indexer_states_set_updated_at
+before update on public.indexer_states
+for each row execute function public.set_updated_at();
+
 drop trigger if exists protocol_metric_buckets_set_updated_at
   on public.protocol_metric_buckets;
 create trigger protocol_metric_buckets_set_updated_at
@@ -124,10 +142,4 @@ drop trigger if exists latest_protocol_transactions_set_updated_at
   on public.latest_protocol_transactions;
 create trigger latest_protocol_transactions_set_updated_at
 before update on public.latest_protocol_transactions
-for each row execute function public.set_updated_at();
-
-drop trigger if exists protocol_snapshots_set_updated_at
-  on public.protocol_snapshots;
-create trigger protocol_snapshots_set_updated_at
-before update on public.protocol_snapshots
 for each row execute function public.set_updated_at();

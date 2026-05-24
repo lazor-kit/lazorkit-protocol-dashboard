@@ -1,6 +1,5 @@
 import { getSupabaseConfig } from './env.js';
 import type {
-  DashboardStats,
   IndexerRunStatus,
   LazorKitMethod,
   TransactionStatus,
@@ -104,28 +103,6 @@ export interface IndexerState {
   lastSuccessfulRunAt: string | null;
 }
 
-interface ProtocolSnapshotRow {
-  cluster: ClusterId;
-  snapshot: {
-    indexer?: Partial<IndexerState>;
-    dashboard?: Record<string, DashboardSnapshotEntry>;
-    protocolStats?: ProtocolStats;
-    [key: string]: unknown;
-  };
-  fetched_at: string;
-}
-
-interface DashboardSnapshotEntry {
-  cachedAt: string;
-  expiresAt: string;
-  stats: DashboardStats;
-}
-
-export interface PaginatedDashboardTransactions {
-  rows: DashboardTransactionRow[];
-  total: number;
-}
-
 export interface PaginatedLatestProtocolTransactions {
   rows: LatestProtocolTransactionRow[];
   total: number;
@@ -175,77 +152,6 @@ export class SupabaseRestClient {
     return this.request<ProtocolTransactionRow[]>(
       `/rest/v1/protocol_transactions?${search.toString()}`,
     );
-  }
-
-  async selectDashboardTransactions(params: {
-    clusters: ClusterId[];
-    sinceIso: string;
-    untilIso: string;
-    limit?: number;
-    order?: 'asc' | 'desc';
-  }): Promise<DashboardTransactionRow[]> {
-    const search = new URLSearchParams();
-    search.set(
-      'select',
-      [
-        'cluster',
-        'signature',
-        'slot',
-        'block_time',
-        'fee_payer',
-        'wallet_pda',
-        'method',
-        'status',
-        'protocol_fee_lamports',
-      ].join(','),
-    );
-    search.set('cluster', `in.(${params.clusters.join(',')})`);
-    search.set('block_time', `gte.${params.sinceIso}`);
-    search.append('block_time', `lt.${params.untilIso}`);
-    search.set('order', `block_time.${params.order ?? 'desc'}`);
-    search.set('limit', String(params.limit ?? 20000));
-    return this.request<DashboardTransactionRow[]>(
-      `/rest/v1/protocol_transactions?${search.toString()}`,
-    );
-  }
-
-  async selectLatestDashboardTransactions(params: {
-    cluster: ClusterId;
-    sinceIso: string;
-    untilIso: string;
-    limit: number;
-    offset: number;
-  }): Promise<PaginatedDashboardTransactions> {
-    const search = new URLSearchParams();
-    search.set(
-      'select',
-      [
-        'cluster',
-        'signature',
-        'slot',
-        'block_time',
-        'fee_payer',
-        'wallet_pda',
-        'method',
-        'status',
-        'protocol_fee_lamports',
-      ].join(','),
-    );
-    search.set('cluster', `eq.${params.cluster}`);
-    search.set('block_time', `gte.${params.sinceIso}`);
-    search.append('block_time', `lt.${params.untilIso}`);
-    search.set('order', 'block_time.desc');
-    search.set('limit', String(params.limit));
-    search.set('offset', String(params.offset));
-
-    const response = await this.requestWithHeaders<DashboardTransactionRow[]>(
-      `/rest/v1/protocol_transactions?${search.toString()}`,
-      { headers: { prefer: 'count=exact' } },
-    );
-    return {
-      rows: response.body,
-      total: parseContentRangeTotal(response.headers.get('content-range')),
-    };
   }
 
   async getOldestIndexedTransaction(
@@ -480,113 +386,54 @@ export class SupabaseRestClient {
 
   async getIndexerState(cluster: ClusterId): Promise<IndexerState | null> {
     const search = new URLSearchParams({
-      select: 'snapshot',
+      select: '*',
       cluster: `eq.${cluster}`,
       limit: '1',
     });
-    const rows = await this.request<Array<Pick<ProtocolSnapshotRow, 'snapshot'>>>(
-      `/rest/v1/protocol_snapshots?${search.toString()}`,
+    const rows = await this.request<Array<Record<string, unknown>>>(
+      `/rest/v1/indexer_states?${search.toString()}`,
     );
-    const indexer = rows[0]?.snapshot.indexer;
+    const indexer = rows[0];
     if (!indexer) return null;
     return {
-      lastRunStartedAt: readNullableString(indexer.lastRunStartedAt),
-      lastRunCompletedAt: readNullableString(indexer.lastRunCompletedAt),
-      lastRunStatus: readRunStatus(indexer.lastRunStatus),
-      lastRunError: readNullableString(indexer.lastRunError),
-      lastRunWarningsCount: readNumber(indexer.lastRunWarningsCount, 0),
-      newestIndexedAt: readNullableString(indexer.newestIndexedAt),
-      oldestIndexedAt: readNullableString(indexer.oldestIndexedAt),
-      backfillStartedAt: readNullableString(indexer.backfillStartedAt),
-      backfillCompletedAt: readNullableString(indexer.backfillCompletedAt),
-      backfillBeforeSignature: readNullableString(indexer.backfillBeforeSignature),
-      backfillComplete: indexer.backfillComplete === true,
-      backfillDays: readNumber(indexer.backfillDays, 0),
-      backfillUpdatedAt: readNullableString(indexer.backfillUpdatedAt),
-      lastSuccessfulRunAt: readNullableString(indexer.lastSuccessfulRunAt),
+      lastRunStartedAt: readNullableString(indexer.last_run_started_at),
+      lastRunCompletedAt: readNullableString(indexer.last_run_completed_at),
+      lastRunStatus: readRunStatus(indexer.last_run_status),
+      lastRunError: readNullableString(indexer.last_run_error),
+      lastRunWarningsCount: readNumber(indexer.last_run_warnings_count, 0),
+      newestIndexedAt: readNullableString(indexer.newest_indexed_at),
+      oldestIndexedAt: readNullableString(indexer.oldest_indexed_at),
+      backfillStartedAt: readNullableString(indexer.backfill_started_at),
+      backfillCompletedAt: readNullableString(indexer.backfill_completed_at),
+      backfillBeforeSignature: readNullableString(indexer.backfill_before_signature),
+      backfillComplete: indexer.backfill_complete === true,
+      backfillDays: readNumber(indexer.backfill_days, 0),
+      backfillUpdatedAt: readNullableString(indexer.backfill_updated_at),
+      lastSuccessfulRunAt: readNullableString(indexer.last_successful_run_at),
     };
   }
 
   async upsertIndexerState(cluster: ClusterId, state: IndexerState): Promise<void> {
-    const existing = await this.getProtocolSnapshot(cluster);
-    const now = new Date().toISOString();
-    await this.request('/rest/v1/protocol_snapshots?on_conflict=cluster', {
+    await this.request('/rest/v1/indexer_states?on_conflict=cluster', {
       method: 'POST',
       headers: { prefer: 'resolution=merge-duplicates' },
       body: JSON.stringify([
         {
           cluster,
-          snapshot: {
-            ...(existing?.snapshot ?? {}),
-            indexer: state,
-          },
-          fetched_at: existing?.fetched_at ?? now,
-        },
-      ]),
-    });
-  }
-
-  async getDashboardSnapshot(params: {
-    cluster: ClusterId;
-    cacheKey: string;
-    nowMs: number;
-    allowStale?: boolean;
-  }): Promise<DashboardStats | null> {
-    const existing = await this.getProtocolSnapshot(params.cluster);
-    const entry = existing?.snapshot.dashboard?.[params.cacheKey];
-    if (!entry) return null;
-
-    const expiresAt = new Date(entry.expiresAt).getTime();
-    if (
-      !params.allowStale &&
-      (!Number.isFinite(expiresAt) || expiresAt <= params.nowMs)
-    ) {
-      return null;
-    }
-
-    return {
-      ...entry.stats,
-      health: {
-        ...entry.stats.health,
-        cacheHit: true,
-        cacheTtlSeconds:
-          Number.isFinite(expiresAt) && expiresAt > params.nowMs
-            ? Math.max(1, Math.ceil((expiresAt - params.nowMs) / 1000))
-            : 0,
-      },
-    };
-  }
-
-  async upsertDashboardSnapshot(params: {
-    cluster: ClusterId;
-    cacheKey: string;
-    stats: DashboardStats;
-    ttlSeconds: number;
-  }): Promise<void> {
-    const existing = await this.getProtocolSnapshot(params.cluster);
-    const nowMs = Date.now();
-    const cachedAt = new Date(nowMs).toISOString();
-    const expiresAt = new Date(nowMs + params.ttlSeconds * 1000).toISOString();
-    const dashboard = {
-      ...(existing?.snapshot.dashboard ?? {}),
-      [params.cacheKey]: {
-        cachedAt,
-        expiresAt,
-        stats: params.stats,
-      },
-    };
-
-    await this.request('/rest/v1/protocol_snapshots?on_conflict=cluster', {
-      method: 'POST',
-      headers: { prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify([
-        {
-          cluster: params.cluster,
-          snapshot: {
-            ...(existing?.snapshot ?? {}),
-            dashboard,
-          },
-          fetched_at: existing?.fetched_at ?? cachedAt,
+          last_run_started_at: state.lastRunStartedAt,
+          last_run_completed_at: state.lastRunCompletedAt,
+          last_run_status: state.lastRunStatus,
+          last_run_error: state.lastRunError,
+          last_run_warnings_count: state.lastRunWarningsCount,
+          newest_indexed_at: state.newestIndexedAt,
+          oldest_indexed_at: state.oldestIndexedAt,
+          backfill_started_at: state.backfillStartedAt,
+          backfill_completed_at: state.backfillCompletedAt,
+          backfill_before_signature: state.backfillBeforeSignature,
+          backfill_complete: state.backfillComplete,
+          backfill_days: state.backfillDays,
+          backfill_updated_at: state.backfillUpdatedAt,
+          last_successful_run_at: state.lastSuccessfulRunAt,
         },
       ]),
     });
@@ -604,16 +451,7 @@ export class SupabaseRestClient {
       };
     }
 
-    const existing = await this.getProtocolSnapshot(cluster);
-    const protocolStats = existing?.snapshot.protocolStats;
-    if (!isProtocolStatsSnapshot(protocolStats, cluster)) return null;
-    return {
-      ...protocolStats,
-      cache: {
-        hit: true,
-        ttlSeconds: 30,
-      },
-    };
+    return null;
   }
 
   async upsertProtocolStatsSnapshot(
@@ -622,36 +460,6 @@ export class SupabaseRestClient {
   ): Promise<void> {
     await this.upsertProtocolStateSnapshot(toProtocolStateSnapshotRow(protocolStats));
 
-    const existing = await this.getProtocolSnapshot(cluster);
-    const now = new Date().toISOString();
-    await this.request('/rest/v1/protocol_snapshots?on_conflict=cluster', {
-      method: 'POST',
-      headers: { prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify([
-        {
-          cluster,
-          snapshot: {
-            ...(existing?.snapshot ?? {}),
-            protocolStats,
-          },
-          fetched_at: protocolStats.fetchedAt || now,
-        },
-      ]),
-    });
-  }
-
-  private async getProtocolSnapshot(
-    cluster: ClusterId,
-  ): Promise<ProtocolSnapshotRow | null> {
-    const search = new URLSearchParams({
-      select: 'cluster,snapshot,fetched_at',
-      cluster: `eq.${cluster}`,
-      limit: '1',
-    });
-    const rows = await this.request<ProtocolSnapshotRow[]>(
-      `/rest/v1/protocol_snapshots?${search.toString()}`,
-    );
-    return rows[0] ?? null;
   }
 
   private async mergeExistingMetricBuckets(
@@ -822,25 +630,4 @@ function toProtocolStateSnapshotRow(
     shard_balances_lamports: stats.shardBalancesLamports,
     snapshot_json: stats,
   };
-}
-
-function isProtocolStatsSnapshot(
-  value: unknown,
-  cluster: ClusterId,
-): value is ProtocolStats {
-  if (typeof value !== 'object' || value === null) return false;
-  const stats = value as Partial<ProtocolStats>;
-  return (
-    stats.cluster === cluster &&
-    typeof stats.programId === 'string' &&
-    typeof stats.protocolConfigAddress === 'string' &&
-    typeof stats.slot === 'number' &&
-    typeof stats.fetchedAt === 'string' &&
-    typeof stats.initialized === 'boolean' &&
-    Array.isArray(stats.feeRecords) &&
-    Array.isArray(stats.shards) &&
-    typeof stats.walletAccountCount === 'number' &&
-    typeof stats.collectibleFeesLamports === 'string' &&
-    typeof stats.shardBalancesLamports === 'string'
-  );
 }

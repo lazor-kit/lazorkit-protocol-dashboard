@@ -189,8 +189,8 @@ metrics in `protocol_state_snapshots`.
 The worker fetches newest activity first, then walks older signature pages until
 the configured `INDEXER_BACKFILL_DAYS` cutoff. Keep
 `INDEXER_BACKFILL_MAX_PAGES_PER_RUN` low for public or rate-limited RPCs; the
-indexer stores progress in `protocol_snapshots` and continues on the next cron
-run. The default `INDEXER_MAX_SIGNATURES_PER_RUN=50` and
+indexer stores progress in `indexer_states` and continues on the next cron run.
+The default `INDEXER_MAX_SIGNATURES_PER_RUN=50` and
 `INDEXER_PARSE_DELAY_MS=200` are intentionally conservative for RPC plans around
 10 requests per second; raising them can trigger 429s. `INDEXER_MAX_RUNTIME_MS`
 keeps each run bounded; if the budget is reached, the run is recorded as partial
