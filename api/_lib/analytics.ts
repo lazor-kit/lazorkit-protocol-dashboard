@@ -26,13 +26,13 @@ import {
 export const DASHBOARD_CACHE_TTL_SECONDS = 300;
 export const DEFAULT_TX_PAGE = 1;
 export const DEFAULT_TX_LIMIT = 10;
-export const ALLOWED_TX_LIMITS = [10, 15] as const;
+export const ALLOWED_TX_LIMITS = [10, 15, 50] as const;
 const ALL_TIME_START_ISO = '1970-01-01T00:00:00.000Z';
 const STALE_AFTER_MS = 15 * 60 * 1000;
 
 export interface DashboardPaginationOptions {
   txPage: number;
-  txLimit: 10 | 15;
+  txLimit: 10 | 15 | 50;
 }
 
 interface DashboardCacheEntry {
@@ -64,7 +64,7 @@ export function parseDashboardPagination(params: {
 
   return {
     txPage,
-    txLimit: txLimit as 10 | 15,
+    txLimit: txLimit as 10 | 15 | 50,
   };
 }
 
@@ -153,6 +153,8 @@ async function buildDashboardStats(
       cluster,
       limit: pagination.txLimit,
       offset: (pagination.txPage - 1) * pagination.txLimit,
+      sinceIso: isAllTime ? undefined : currentStart,
+      untilIso: currentEnd,
     }),
     db.getCursor(cluster),
     db.getIndexerState(cluster),
@@ -228,7 +230,7 @@ async function buildDashboardStats(
 
 export function buildPagination(
   page: number,
-  limit: 10 | 15,
+  limit: 10 | 15 | 50,
   total: number,
 ): LatestTransactionsPagination {
   const totalPages = Math.max(1, Math.ceil(total / limit));

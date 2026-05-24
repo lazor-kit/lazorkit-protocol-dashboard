@@ -9,7 +9,7 @@ export async function fetchDashboardStats(
   cluster: ClusterId,
   window: DashboardWindow,
   txPage = 1,
-  txLimit: 10 | 15 = 10,
+  txLimit: 10 | 15 | 50 = 10,
 ): Promise<DashboardStats> {
   const params = new URLSearchParams({
     cluster,

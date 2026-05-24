@@ -54,7 +54,7 @@ export function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const nextDashboardStats = await fetchDashboardStats(cluster, window, txPage, 10);
+      const nextDashboardStats = await fetchDashboardStats(cluster, window, 1, 50);
       setDashboardStats(nextDashboardStats);
       setStats(nextDashboardStats.protocolStats);
     } catch (err) {
@@ -62,7 +62,7 @@ export function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [cluster, window, txPage]);
+  }, [cluster, window]);
 
   const handleClusterChange = useCallback((nextCluster: ClusterId) => {
     setCluster(nextCluster);
@@ -104,6 +104,10 @@ export function App() {
     (dashboardStats?.health.analyticsStatus === 'empty' ||
       dashboardStats?.health.analyticsStatus === 'not_configured');
   const shouldShowActivitySections = Boolean(dashboardStats && !shouldMaskKpis);
+  const latestTransactionsPage = useMemo(() => {
+    if (!dashboardStats) return null;
+    return paginateLatestTransactions(dashboardStats, txPage, 10);
+  }, [dashboardStats, txPage]);
 
   return (
     <AppShell>
@@ -252,8 +256,11 @@ export function App() {
               </section>
               <LatestTransactionsTable
                 cluster={cluster}
-                rows={dashboardStats.latestTransactions}
-                pagination={dashboardStats.latestTransactionsPagination}
+                rows={latestTransactionsPage?.rows ?? []}
+                pagination={
+                  latestTransactionsPage?.pagination ??
+                  dashboardStats.latestTransactionsPagination
+                }
                 analyticsStatus={dashboardStats.health.analyticsStatus}
                 onPageChange={setTxPage}
               />
@@ -459,6 +466,31 @@ function buildKpiDetail(
     return 'Preparing data';
   }
   return window === 'all' ? 'Activity to date' : `vs previous ${window}`;
+}
+
+function paginateLatestTransactions(
+  stats: DashboardStats,
+  page: number,
+  limit: 10,
+): {
+  rows: DashboardStats['latestTransactions'];
+  pagination: DashboardStats['latestTransactionsPagination'];
+} {
+  const total = stats.latestTransactions.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const start = (safePage - 1) * limit;
+  return {
+    rows: stats.latestTransactions.slice(start, start + limit),
+    pagination: {
+      page: safePage,
+      limit,
+      total,
+      totalPages,
+      hasPreviousPage: safePage > 1,
+      hasNextPage: safePage < totalPages,
+    },
+  };
 }
 
 function AddressConfigItem({

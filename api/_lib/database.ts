@@ -287,10 +287,14 @@ export class SupabaseRestClient {
     cluster: ClusterId;
     limit: number;
     offset: number;
+    sinceIso?: string;
+    untilIso?: string;
   }): Promise<PaginatedLatestProtocolTransactions> {
     const search = new URLSearchParams();
     search.set('select', '*');
     search.set('cluster', `eq.${params.cluster}`);
+    if (params.sinceIso) search.set('block_time', `gte.${params.sinceIso}`);
+    if (params.untilIso) search.append('block_time', `lt.${params.untilIso}`);
     search.set('order', 'block_time.desc');
     search.set('limit', String(params.limit));
     search.set('offset', String(params.offset));

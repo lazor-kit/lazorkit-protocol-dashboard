@@ -54,7 +54,7 @@ export interface NetworkComparison {
 
 export interface LatestTransactionsPagination {
   page: number;
-  limit: 10 | 15;
+  limit: 10 | 15 | 50;
   total: number;
   totalPages: number;
   hasPreviousPage: boolean;
