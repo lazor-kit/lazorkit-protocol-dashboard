@@ -146,14 +146,14 @@ export function LatestTransactionsTable({
 function emptyCopy(status: AnalyticsStatus): { title: string; body: string } {
   if (status === 'empty' || status === 'not_configured') {
     return {
-      title: 'No indexed data yet',
-      body: 'Transactions will appear after analytics indexing starts for this network.',
+      title: 'Preparing transaction activity',
+      body: 'Recent transactions will appear here as soon as activity data is ready.',
     };
   }
   if (status === 'partial' || status === 'indexing') {
     return {
-      title: 'Backfill in progress',
-      body: 'No transactions are available for this page yet while historical activity is still being indexed.',
+      title: 'No transactions on this page',
+      body: 'Try a wider time range or refresh again shortly.',
     };
   }
   return {

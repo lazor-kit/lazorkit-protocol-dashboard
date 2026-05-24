@@ -13,7 +13,6 @@ import {
   Wallet,
 } from 'lucide-react';
 import { AppShell } from '../components/AppShell';
-import { AnalyticsHealthBar } from '../components/AnalyticsHealthBar';
 import { ChartPanel } from '../components/ChartPanel';
 import { ClusterSelector } from '../components/ClusterSelector';
 import { DataNotes } from '../components/DataNotes';
@@ -90,11 +89,14 @@ export function App() {
   const showKpiTrend =
     window !== 'all' &&
     dashboardStats?.health.analyticsStatus !== 'empty' &&
-    dashboardStats?.health.analyticsStatus !== 'not_configured';
+    dashboardStats?.health.analyticsStatus !== 'not_configured' &&
+    dashboardStats?.health.analyticsStatus !== 'partial' &&
+    dashboardStats?.health.analyticsStatus !== 'indexing';
   const shouldMaskKpis =
     !isLoading &&
     (dashboardStats?.health.analyticsStatus === 'empty' ||
       dashboardStats?.health.analyticsStatus === 'not_configured');
+  const shouldShowActivitySections = Boolean(dashboardStats && !shouldMaskKpis);
 
   return (
     <AppShell>
@@ -133,37 +135,27 @@ export function App() {
             </div>
           </section>
 
-          <AnalyticsHealthBar stats={dashboardStats} cluster={cluster} />
-
           {dashboardStats?.health.analyticsStatus === 'error' ? (
             <EmptyState
-              title="Indexer error"
-              body={
-                dashboardStats.health.lastRunError ??
-                'The last analytics indexing run failed. Existing indexed data may still be shown below.'
-              }
+              title="Data update delayed"
+              body="The dashboard is showing the latest available activity while the next update is prepared."
             />
           ) : dashboardStats?.health.analyticsStatus === 'empty' ? (
             <EmptyState
-              title="No indexed data yet"
-              body="Analytics has not indexed LazorKit activity for this network yet. Run the indexer, then refresh this dashboard."
-            />
-          ) : dashboardStats?.health.analyticsStatus === 'partial' ? (
-            <EmptyState
-              title="Backfill in progress"
-              body="These numbers are partial while historical transactions are still being indexed."
+              title="Preparing activity data"
+              body="Live protocol metrics are available below. Traffic, fee, and transaction views will appear as soon as activity data is ready."
             />
           ) : dashboardStats?.health.analyticsStatus === 'stale' ? (
             <EmptyState
-              title="Stale analytics data"
-              body="The latest successful indexer run is older than expected. Values remain useful, but may not include the newest transactions."
+              title="Data update in progress"
+              body="The dashboard is showing the latest available activity while fresh data is prepared."
             />
           ) : null}
 
           {dashboardStats?.setupRequired ? (
             <EmptyState
-              title="Analytics setup required"
-              body="Set Supabase server environment variables and run the indexer to populate time-based metrics. Protocol snapshot data remains available below."
+              title="Dashboard data is being prepared"
+              body="Live protocol metrics are available below. Activity charts and transactions will appear as soon as data is ready."
             />
           ) : null}
 
@@ -232,7 +224,7 @@ export function App() {
             />
           </section>
 
-          {dashboardStats ? (
+          {dashboardStats && shouldShowActivitySections ? (
             <>
               <section className="chartsGrid" aria-label="Analytics charts">
                 <ChartPanel
@@ -287,7 +279,7 @@ export function App() {
                   <ChevronDown size={18} />
                 </div>
               </summary>
-              {dashboardStats ? (
+              {dashboardStats && shouldShowActivitySections ? (
                 <NetworkComparison comparison={dashboardStats.networkComparison} />
               ) : null}
               <section className="metricsGrid secondaryMetricsGrid" aria-label="Protocol metrics">
@@ -456,12 +448,19 @@ function buildKpiDetail(
   stats: DashboardStats,
   window: DashboardWindow,
 ): string {
-  if (stats.health.analyticsStatus === 'empty') return 'No indexed data yet';
-  if (stats.health.analyticsStatus === 'not_configured') return 'Analytics not configured';
-  if (stats.health.analyticsStatus === 'partial') return 'Backfilling indexed data';
-  if (stats.health.analyticsStatus === 'stale') return 'Stale data';
-  if (stats.health.analyticsStatus === 'error') return 'Indexer error';
-  return window === 'all' ? 'indexed history' : `vs previous ${window}`;
+  if (
+    stats.health.analyticsStatus === 'empty' ||
+    stats.health.analyticsStatus === 'not_configured'
+  ) {
+    return 'Preparing data';
+  }
+  if (stats.health.analyticsStatus === 'error' || stats.health.analyticsStatus === 'stale') {
+    return 'Latest available data';
+  }
+  if (stats.health.analyticsStatus === 'partial' || stats.health.analyticsStatus === 'indexing') {
+    return window === 'all' ? 'Activity to date' : 'Latest available data';
+  }
+  return window === 'all' ? 'Activity to date' : `vs previous ${window}`;
 }
 
 function AddressConfigItem({

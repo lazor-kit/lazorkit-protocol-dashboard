@@ -1,7 +1,7 @@
 import type { DashboardWindow } from '../solana/dashboardTypes';
 
 const WINDOWS: { value: DashboardWindow; label: string }[] = [
-  { value: 'all', label: 'Indexed history' },
+  { value: 'all', label: 'All history' },
   { value: '30d', label: 'Last 30 days' },
   { value: '7d', label: 'Last 7 days' },
   { value: '24h', label: 'Last 24 hours' },

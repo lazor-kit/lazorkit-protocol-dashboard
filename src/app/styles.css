@@ -248,56 +248,6 @@ a {
   }
 }
 
-.statusBar {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 1px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--border);
-}
-
-.analyticsHealthBar {
-  margin-top: 16px;
-}
-
-.statusItem {
-  min-width: 0;
-  min-height: 62px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  background: var(--surface);
-}
-
-.statusItem span {
-  color: var(--quiet);
-  font-size: 11px;
-}
-
-.statusItem strong {
-  min-width: 0;
-  color: var(--text);
-  font-size: 13px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.statusTone-good {
-  color: var(--accent-soft) !important;
-}
-
-.statusTone-warn {
-  color: #d8ceff !important;
-}
-
-.statusTone-bad {
-  color: #ffb7c1 !important;
-}
-
 .metricsGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -930,7 +880,6 @@ tbody tr:hover td {
     grid-column: auto;
   }
 
-  .statusBar,
   .configGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -962,7 +911,6 @@ tbody tr:hover td {
   }
 
   .metricsGrid,
-  .statusBar,
   .configGrid {
     grid-template-columns: 1fr;
   }
