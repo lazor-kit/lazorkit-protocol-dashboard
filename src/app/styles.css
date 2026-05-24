@@ -3,19 +3,20 @@
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  background: #070b16;
+  background: #07070a;
   color: #f7f7fa;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --bg: #070b16;
-  --surface: #111827;
-  --surface-elevated: #151d31;
-  --border: #26324f;
-  --border-strong: #34456c;
-  --text: #eef3ff;
-  --muted: #9ba7bf;
-  --quiet: #7f8ba4;
+  --bg: #07070a;
+  --surface: #101014;
+  --surface-elevated: #15151b;
+  --surface-control: #181820;
+  --border: #24242d;
+  --border-strong: #333342;
+  --text: #f7f7fa;
+  --muted: #a4a4b2;
+  --quiet: #777789;
   --accent: #7557ff;
   --accent-soft: #9b86ff;
   --purple: #7557ff;
@@ -39,6 +40,11 @@ body {
   background: var(--bg);
 }
 
+::selection {
+  background: rgba(117, 87, 255, 0.42);
+  color: var(--text);
+}
+
 button,
 select {
   font: inherit;
@@ -58,48 +64,49 @@ a {
 }
 
 .dashboard {
-  width: min(1520px, 100%);
+  width: min(1440px, 100%);
   margin: 0 auto;
-  padding: 34px clamp(16px, 3vw, 36px) 64px;
+  padding: 28px clamp(16px, 3vw, 40px) 64px;
 }
 
 .publicHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  min-height: 108px;
-  padding: 24px 26px;
+  gap: 22px;
+  min-height: 96px;
+  padding: 20px 22px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 12px;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.22);
 }
 
 .brandHeader {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .brandLogo {
-  width: 46px;
-  height: 46px;
+  width: 42px;
+  height: 42px;
   flex: 0 0 auto;
-  border-radius: 10px;
+  border-radius: 9px;
   box-shadow: 0 0 0 1px rgba(247, 247, 250, 0.08);
 }
 
 .publicHeader h1 {
   margin: 0;
   color: var(--text);
-  font-size: clamp(26px, 3vw, 34px);
+  font-size: clamp(25px, 2.7vw, 32px);
   line-height: 1.06;
   letter-spacing: 0;
 }
 
 .publicHeader p {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
@@ -125,7 +132,7 @@ a {
 .publicControls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
@@ -133,7 +140,7 @@ a {
 .clusterControl {
   display: grid;
   grid-template-columns: repeat(2, minmax(76px, 1fr));
-  gap: 10px;
+  gap: 8px;
   padding: 0;
   background: transparent;
   border: 0;
@@ -143,7 +150,7 @@ a {
   position: relative;
   display: block;
   padding: 0;
-  min-width: 148px;
+  min-width: 152px;
 }
 
 .timeWindowControl::after {
@@ -163,9 +170,9 @@ a {
   width: 100%;
   min-height: 42px;
   padding: 0 40px 0 15px;
-  background: #10172a;
+  background: var(--surface-control);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 9px;
   color: var(--text);
   cursor: pointer;
   font-weight: 700;
@@ -174,7 +181,7 @@ a {
 }
 
 .timeWindowControl select:focus {
-  background: transparent;
+  background: var(--surface-control);
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(117, 87, 255, 0.18);
 }
@@ -182,16 +189,16 @@ a {
 .clusterControl button {
   min-height: 42px;
   padding: 0 16px;
-  background: #10172a;
+  background: var(--surface-control);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 9px;
   color: var(--text);
   cursor: pointer;
   font-weight: 700;
 }
 
 .clusterControl button.active {
-  background: transparent;
+  background: #19142a;
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -203,7 +210,7 @@ a {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border);
-  background: #10172a;
+  background: var(--surface-control);
   color: var(--text);
   cursor: pointer;
   transition:
@@ -216,6 +223,7 @@ a {
 .miniIconButton:hover,
 .primaryButton:hover {
   border-color: var(--purple);
+  background: #1b1728;
 }
 
 .iconButton:disabled {
@@ -226,7 +234,7 @@ a {
 .iconButton {
   width: 42px;
   height: 42px;
-  border-radius: 10px;
+  border-radius: 9px;
 }
 
 .miniIconButton {
@@ -262,12 +270,12 @@ a {
 .metricsGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 16px;
+  gap: 14px;
+  margin-top: 14px;
 }
 
 .kpiGrid {
-  margin-top: 18px;
+  margin-top: 16px;
 }
 
 .secondaryMetricsGrid {
@@ -275,19 +283,31 @@ a {
 }
 
 .metricCard {
-  min-height: 120px;
+  min-height: 116px;
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 20px;
+  gap: 13px;
+  padding: 18px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 12px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.16);
 }
 
 .kpiCard {
-  min-height: 124px;
-  padding: 20px;
+  position: relative;
+  min-height: 122px;
+  padding: 19px 20px;
+  overflow: hidden;
+}
+
+.kpiCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--accent);
+  opacity: 0.86;
 }
 
 .kpiCard .metricIcon {
@@ -299,7 +319,7 @@ a {
 }
 
 .kpiCard .metricContent strong {
-  font-size: clamp(28px, 3vw, 36px);
+  font-size: clamp(30px, 3vw, 38px);
 }
 
 .metricCard.statusCard.enabled {
@@ -314,7 +334,7 @@ a {
   justify-content: center;
   flex: 0 0 auto;
   border-radius: 8px;
-  background: #1c1830;
+  background: #19142a;
   color: var(--purple-soft);
 }
 
@@ -329,10 +349,10 @@ a {
 .eyebrow {
   margin: 0;
   color: var(--quiet);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 650;
   letter-spacing: 0;
-  text-transform: none;
+  text-transform: uppercase;
 }
 
 .metricContent strong {
@@ -384,18 +404,19 @@ a {
 }
 
 .panel {
-  margin-top: 16px;
-  padding: 20px;
+  margin-top: 14px;
+  padding: 18px 20px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 12px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.14);
 }
 
 .chartsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 16px;
+  gap: 14px;
+  margin-top: 14px;
 }
 
 .chartsGrid .chartPanel:nth-child(3) {
@@ -405,10 +426,11 @@ a {
 .chartPanel,
 .networkComparison {
   position: relative;
-  padding: 20px;
+  padding: 18px 20px 20px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 12px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.14);
 }
 
 .chartHeader,
@@ -423,7 +445,7 @@ a {
 .networkComparison h2 {
   margin: 0;
   color: var(--text);
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.25;
   letter-spacing: 0;
 }
@@ -431,8 +453,8 @@ a {
 .chartCanvas {
   position: relative;
   width: 100%;
-  height: 286px;
-  margin-top: 16px;
+  height: 300px;
+  margin-top: 14px;
 }
 
 .chartTooltip {
@@ -440,9 +462,9 @@ a {
   display: grid;
   gap: 6px;
   padding: 11px 12px;
-  background: #0d1324;
+  background: #0b0b10;
   border: 1px solid var(--border-strong);
-  border-radius: 10px;
+  border-radius: 8px;
   color: var(--muted);
   font-size: 12px;
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32);
@@ -459,7 +481,7 @@ a {
 }
 
 .chartPanel-feesLamports .chartCanvas {
-  height: 285px;
+  height: 320px;
 }
 
 .networkComparison {
@@ -506,10 +528,11 @@ a {
 }
 
 .technicalDetails {
-  margin-top: 18px;
+  margin-top: 16px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.14);
 }
 
 .technicalDetails > summary {
@@ -585,7 +608,7 @@ a {
 }
 
 .technicalDetails[open] {
-  padding-bottom: 18px;
+  padding-bottom: 16px;
 }
 
 .technicalDetails[open] > summary {
@@ -595,8 +618,8 @@ a {
 .technicalDetails .secondaryMetricsGrid,
 .technicalDetails .panel,
 .technicalDetails .dataNotes {
-  margin-left: 18px;
-  margin-right: 18px;
+  margin-left: 16px;
+  margin-right: 16px;
 }
 
 .dataNotes {
@@ -607,7 +630,7 @@ a {
   padding: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .noteIcon {
@@ -617,7 +640,7 @@ a {
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  background: #1c1830;
+  background: #19142a;
   color: var(--purple-soft);
 }
 
@@ -645,7 +668,7 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .panelHeader h2,
@@ -688,17 +711,17 @@ a {
   gap: 1px;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--border);
 }
 
 .configItem {
-  min-height: 72px;
+  min-height: 76px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 8px;
-  padding: 14px;
+  padding: 14px 15px;
   background: var(--surface-elevated);
 }
 
@@ -738,17 +761,17 @@ table {
 
 th,
 td {
-  padding: 14px 10px;
+  padding: 13px 10px;
   text-align: left;
   border-bottom: 1px solid var(--border);
   color: var(--text);
-  font-size: 15px;
+  font-size: 14px;
   white-space: nowrap;
 }
 
 th {
   color: var(--quiet);
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -758,7 +781,7 @@ tbody tr:last-child td {
 }
 
 tbody tr:hover td {
-  background: #141d31;
+  background: #15151b;
 }
 
 .paginationBar {
@@ -784,7 +807,7 @@ tbody tr:hover td {
   padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: #10172a;
+  background: var(--surface-control);
   color: var(--text);
   cursor: pointer;
 }
@@ -792,6 +815,7 @@ tbody tr:hover td {
 .paginationControls button.active {
   border-color: var(--accent);
   color: var(--accent-soft);
+  background: #19142a;
 }
 
 .paginationControls button:disabled {
@@ -855,10 +879,10 @@ tbody tr:hover td {
 
 .emptyState,
 .errorState {
-  margin-top: 16px;
-  padding: 24px;
+  margin-top: 14px;
+  padding: 22px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface);
 }
 

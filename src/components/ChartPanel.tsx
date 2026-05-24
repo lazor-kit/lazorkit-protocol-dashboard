@@ -62,14 +62,14 @@ export const ChartPanel = memo(function ChartPanel({
 
   const commonChildren = (
     <>
-      <CartesianGrid stroke="#273451" strokeDasharray="3 3" />
+      <CartesianGrid stroke="#2a2a35" strokeDasharray="3 3" />
       <XAxis
         dataKey="bucket"
         ticks={xTicks}
         tickFormatter={(value) => formatXAxisTick(String(value), window)}
         tick={{ fill: '#7f8ba4', fontSize: 12, fontWeight: 700 }}
         tickLine={false}
-        axisLine={{ stroke: '#35466e' }}
+        axisLine={{ stroke: '#333342' }}
         minTickGap={18}
         interval="preserveStartEnd"
       />
@@ -112,11 +112,11 @@ export const ChartPanel = memo(function ChartPanel({
                 type="monotone"
                 dataKey={metric}
                 stroke="#7557ff"
-                strokeWidth={2.25}
+                strokeWidth={2}
                 fill="#7557ff"
                 fillOpacity={0.16}
                 dot={false}
-                activeDot={{ r: 4, stroke: '#eef3ff', strokeWidth: 1 }}
+                activeDot={{ r: 4, fill: '#7557ff', stroke: '#f7f7fa', strokeWidth: 1 }}
                 isAnimationActive={false}
               />
             </AreaChart>
@@ -131,9 +131,9 @@ export const ChartPanel = memo(function ChartPanel({
                     ? '#9b86ff'
                     : '#7557ff'
                 }
-                strokeWidth={2.25}
+                strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, stroke: '#eef3ff', strokeWidth: 1 }}
+                activeDot={{ r: 4, fill: '#7557ff', stroke: '#f7f7fa', strokeWidth: 1 }}
                 isAnimationActive={false}
               />
             </LineChart>
