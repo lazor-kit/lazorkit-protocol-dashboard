@@ -42,9 +42,30 @@ export interface IndexerCursorRow {
   updated_at?: string;
 }
 
+export interface IndexerState {
+  backfillBeforeSignature: string | null;
+  backfillComplete: boolean;
+  backfillDays: number;
+  backfillUpdatedAt: string;
+}
+
+interface ProtocolSnapshotRow {
+  cluster: ClusterId;
+  snapshot: {
+    indexer?: Partial<IndexerState>;
+    [key: string]: unknown;
+  };
+  fetched_at: string;
+}
+
 export interface PaginatedDashboardTransactions {
   rows: DashboardTransactionRow[];
   total: number;
+}
+
+export interface IndexedTransactionBoundary {
+  signature: string;
+  block_time: string;
 }
 
 type SupabaseConfig = Extract<ReturnType<typeof getSupabaseConfig>, { configured: true }>;
@@ -157,6 +178,21 @@ export class SupabaseRestClient {
     };
   }
 
+  async getOldestIndexedTransaction(
+    cluster: ClusterId,
+  ): Promise<IndexedTransactionBoundary | null> {
+    const search = new URLSearchParams();
+    search.set('select', 'signature,block_time');
+    search.set('cluster', `eq.${cluster}`);
+    search.set('order', 'block_time.asc');
+    search.set('limit', '1');
+
+    const rows = await this.request<IndexedTransactionBoundary[]>(
+      `/rest/v1/protocol_transactions?${search.toString()}`,
+    );
+    return rows[0] ?? null;
+  }
+
   async upsertProtocolTransactions(rows: ProtocolTransactionRow[]): Promise<void> {
     if (rows.length === 0) return;
     await this.request('/rest/v1/protocol_transactions?on_conflict=cluster,signature', {
@@ -184,6 +220,65 @@ export class SupabaseRestClient {
       headers: { prefer: 'resolution=merge-duplicates' },
       body: JSON.stringify([row]),
     });
+  }
+
+  async getIndexerState(cluster: ClusterId): Promise<IndexerState | null> {
+    const search = new URLSearchParams({
+      select: 'snapshot',
+      cluster: `eq.${cluster}`,
+      limit: '1',
+    });
+    const rows = await this.request<Array<Pick<ProtocolSnapshotRow, 'snapshot'>>>(
+      `/rest/v1/protocol_snapshots?${search.toString()}`,
+    );
+    const indexer = rows[0]?.snapshot.indexer;
+    if (!indexer) return null;
+    return {
+      backfillBeforeSignature:
+        typeof indexer.backfillBeforeSignature === 'string'
+          ? indexer.backfillBeforeSignature
+          : null,
+      backfillComplete: indexer.backfillComplete === true,
+      backfillDays:
+        typeof indexer.backfillDays === 'number' ? indexer.backfillDays : 0,
+      backfillUpdatedAt:
+        typeof indexer.backfillUpdatedAt === 'string'
+          ? indexer.backfillUpdatedAt
+          : new Date(0).toISOString(),
+    };
+  }
+
+  async upsertIndexerState(cluster: ClusterId, state: IndexerState): Promise<void> {
+    const existing = await this.getProtocolSnapshot(cluster);
+    const now = new Date().toISOString();
+    await this.request('/rest/v1/protocol_snapshots?on_conflict=cluster', {
+      method: 'POST',
+      headers: { prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify([
+        {
+          cluster,
+          snapshot: {
+            ...(existing?.snapshot ?? {}),
+            indexer: state,
+          },
+          fetched_at: existing?.fetched_at ?? now,
+        },
+      ]),
+    });
+  }
+
+  private async getProtocolSnapshot(
+    cluster: ClusterId,
+  ): Promise<ProtocolSnapshotRow | null> {
+    const search = new URLSearchParams({
+      select: 'cluster,snapshot,fetched_at',
+      cluster: `eq.${cluster}`,
+      limit: '1',
+    });
+    const rows = await this.request<ProtocolSnapshotRow[]>(
+      `/rest/v1/protocol_snapshots?${search.toString()}`,
+    );
+    return rows[0] ?? null;
   }
 
   private async request<T = unknown>(

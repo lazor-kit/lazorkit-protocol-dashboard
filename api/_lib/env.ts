@@ -19,6 +19,10 @@ export function getIndexerMaxSignatures(): number {
   return readPositiveInteger('INDEXER_MAX_SIGNATURES_PER_RUN', 100);
 }
 
+export function getIndexerBackfillMaxPages(): number {
+  return readPositiveInteger('INDEXER_BACKFILL_MAX_PAGES_PER_RUN', 10);
+}
+
 export function getCronSecret(): string | null {
   return process.env.CRON_SECRET ?? null;
 }

@@ -99,6 +99,7 @@ SUPABASE_SERVICE_ROLE_KEY=
 CRON_SECRET=
 INDEXER_BACKFILL_DAYS=60
 INDEXER_MAX_SIGNATURES_PER_RUN=100
+INDEXER_BACKFILL_MAX_PAGES_PER_RUN=10
 API_PORT=8787
 ```
 
@@ -153,6 +154,12 @@ sends `Authorization: Bearer $CRON_SECRET` when the env var is configured.
 The indexer stores one row per transaction signature and upserts by
 `(cluster, signature)`.
 
+Backfill runs newest activity first, then walks older signature pages until the
+configured `INDEXER_BACKFILL_DAYS` cutoff. `INDEXER_BACKFILL_MAX_PAGES_PER_RUN`
+limits how much historical crawling one cron invocation can do. The
+`protocol_snapshots` table stores a small indexer state object so completed
+backfills do not re-scan old skipped signatures on every cron run.
+
 ## Deployment
 
 Deploy as a Vercel project:
@@ -166,4 +173,5 @@ Deploy as a Vercel project:
 - Required production env: `MAINNET_RPC_URL`, `SUPABASE_URL`,
   `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`
 - Optional env: `DEVNET_RPC_URL`, `LOCALNET_RPC_URL`, `VITE_DEFAULT_CLUSTER`,
-  `INDEXER_BACKFILL_DAYS`, `INDEXER_MAX_SIGNATURES_PER_RUN`
+  `INDEXER_BACKFILL_DAYS`, `INDEXER_MAX_SIGNATURES_PER_RUN`,
+  `INDEXER_BACKFILL_MAX_PAGES_PER_RUN`

@@ -83,7 +83,7 @@ export function App() {
     return stats.config?.enabled ? 'enabled' : 'disabled';
   }, [stats]);
   const kpiDetail =
-    window === 'all' ? 'all indexed activity' : `vs previous ${window}`;
+    window === 'all' ? 'currently indexed activity' : `vs previous ${window}`;
   const showKpiTrend = window !== 'all';
 
   return (
