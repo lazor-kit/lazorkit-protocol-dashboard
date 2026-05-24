@@ -112,9 +112,75 @@ a {
 }
 
 .dashboard {
-  width: min(1440px, 100%);
+  width: min(1240px, 100%);
   margin: 0 auto;
-  padding: 24px clamp(16px, 3vw, 36px) 56px;
+  padding: 28px clamp(16px, 3vw, 36px) 56px;
+}
+
+.publicHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 8px;
+}
+
+.publicHeader h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.06;
+  letter-spacing: 0;
+}
+
+.publicHeader h1 span {
+  color: var(--purple-soft);
+}
+
+.publicHeader p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.headerStatus {
+  color: var(--purple-soft);
+  font-weight: 700;
+}
+
+.headerMeta {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.metaPill {
+  min-width: 132px;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.metaPill span {
+  color: var(--quiet);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.metaPill strong {
+  min-width: 0;
+  color: var(--text);
+  font-size: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .clusterControl {
@@ -276,7 +342,7 @@ a {
 }
 
 .kpiGrid {
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .secondaryMetricsGrid {
@@ -284,7 +350,7 @@ a {
 }
 
 .metricCard {
-  min-height: 132px;
+  min-height: 118px;
   display: flex;
   align-items: flex-start;
   gap: 14px;
@@ -292,6 +358,23 @@ a {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
+}
+
+.kpiCard {
+  min-height: 124px;
+  padding: 20px;
+}
+
+.kpiCard .metricIcon {
+  display: none;
+}
+
+.kpiCard .metricContent {
+  gap: 10px;
+}
+
+.kpiCard .metricContent strong {
+  font-size: clamp(28px, 3vw, 40px);
 }
 
 .metricCard.statusCard.enabled {
@@ -381,9 +464,13 @@ a {
 
 .chartsGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 14px;
+}
+
+.chartsGrid .chartPanel:nth-child(3) {
+  grid-column: 1 / -1;
 }
 
 .chartPanel,
@@ -413,22 +500,23 @@ a {
 
 .lineChart {
   width: 100%;
-  height: 150px;
+  height: 170px;
   margin-top: 16px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--surface-elevated);
+  background: #0b0b10;
 }
 
 .lineChart polyline {
   fill: none;
-  stroke: var(--purple);
-  stroke-width: 2.4;
+  stroke: var(--purple-soft);
+  stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
 
 .networkComparison {
   margin-top: 16px;
+  align-items: center;
 }
 
 .networkBars {
@@ -467,6 +555,55 @@ a {
   height: 100%;
   min-width: 2px;
   background: var(--purple);
+}
+
+.technicalDetails {
+  margin-top: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.technicalDetails > summary {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.technicalDetails > summary::-webkit-details-marker {
+  display: none;
+}
+
+.technicalDetails > summary span {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.technicalDetails > summary small {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.technicalDetails[open] {
+  padding-bottom: 18px;
+}
+
+.technicalDetails[open] > summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.technicalDetails .secondaryMetricsGrid,
+.technicalDetails .panel,
+.technicalDetails .dataNotes {
+  margin-left: 18px;
+  margin-right: 18px;
 }
 
 .dataNotes {
@@ -601,7 +738,7 @@ a {
 
 table {
   width: 100%;
-  min-width: 760px;
+  min-width: 720px;
   border-collapse: collapse;
   background: var(--surface);
 }
@@ -643,6 +780,48 @@ tbody tr:hover td {
   color: var(--text);
 }
 
+.inlineExplorerLink,
+.networkLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.inlineExplorerLink:hover,
+.networkLink:hover {
+  color: var(--purple-soft);
+}
+
+.networkLink {
+  text-transform: capitalize;
+  font-weight: 650;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.statusBadge.success {
+  color: var(--purple-soft);
+  background: #171329;
+  border-color: rgba(117, 87, 255, 0.45);
+}
+
+.statusBadge.failed {
+  color: #ffb7c1;
+  background: #211018;
+  border-color: rgba(255, 107, 129, 0.38);
+}
+
 .emptyState,
 .errorState {
   margin-top: 16px;
@@ -677,6 +856,10 @@ tbody tr:hover td {
     grid-template-columns: 1fr;
   }
 
+  .chartsGrid .chartPanel:nth-child(3) {
+    grid-column: auto;
+  }
+
   .statusBar,
   .configGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -708,6 +891,16 @@ tbody tr:hover td {
     padding-top: 16px;
   }
 
+  .publicHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .headerMeta,
+  .metaPill {
+    width: 100%;
+  }
+
   .metricsGrid,
   .statusBar,
   .configGrid {
@@ -723,5 +916,21 @@ tbody tr:hover td {
   .networkComparison {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .technicalDetails > summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .technicalDetails > summary small {
+    text-align: left;
+  }
+
+  .technicalDetails .secondaryMetricsGrid,
+  .technicalDetails .panel,
+  .technicalDetails .dataNotes {
+    margin-left: 12px;
+    margin-right: 12px;
   }
 }

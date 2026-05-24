@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   Wallet,
 } from 'lucide-react';
-import { AnalyticsHealthBar } from '../components/AnalyticsHealthBar';
 import { AppShell } from '../components/AppShell';
 import { ChartPanel } from '../components/ChartPanel';
 import { ClusterSelector } from '../components/ClusterSelector';
@@ -25,7 +24,6 @@ import { MetricCard } from '../components/MetricCard';
 import { NetworkComparison } from '../components/NetworkComparison';
 import { ProtocolStatus } from '../components/ProtocolStatus';
 import { ShardTable } from '../components/ShardTable';
-import { StatusBar } from '../components/StatusBar';
 import { TimeWindowSelector } from '../components/TimeWindowSelector';
 import { CLUSTERS, DEFAULT_CLUSTER, type ClusterId } from '../solana/constants';
 import {
@@ -92,19 +90,39 @@ export function App() {
         </>
       }
     >
-      <StatusBar
-        cluster={cluster}
-        clusterLabel={CLUSTERS[cluster].label}
-        programId={stats?.programId ?? CLUSTERS[cluster].programAddress}
-        slot={stats?.slot}
-        fetchedAt={stats?.fetchedAt}
-      />
-
       {error ? (
         <ErrorState message={error} onRetry={() => void loadStats()} />
       ) : (
         <>
-          <AnalyticsHealthBar stats={dashboardStats} />
+          <section className="publicHeader" aria-label="Dashboard overview">
+            <div>
+              <h1>
+                LazorKit Dashboard <span>v1</span>
+              </h1>
+              <p>
+                Last updated:{' '}
+                {formatLastUpdated(dashboardStats?.generatedAt ?? stats?.fetchedAt)}
+                {' · '}
+                Status:{' '}
+                <span className="headerStatus">
+                  ● {formatProtocolStatus(dashboardStats?.health.protocolStatus)}
+                </span>
+              </p>
+            </div>
+            <div className="headerMeta">
+              <MetaPill label="Network" value={CLUSTERS[cluster].label} />
+              <MetaPill
+                label="Last indexed"
+                value={
+                  dashboardStats?.health.lastIndexedAt
+                    ? formatDateTime(dashboardStats.health.lastIndexedAt)
+                    : dashboardStats?.setupRequired
+                      ? 'Setup required'
+                      : 'No cursor'
+                }
+              />
+            </div>
+          </section>
 
           {dashboardStats?.setupRequired ? (
             <EmptyState
@@ -170,12 +188,12 @@ export function App() {
             <>
               <section className="chartsGrid" aria-label="Analytics charts">
                 <ChartPanel
-                  title="Transactions over time"
+                  title="Tx over time"
                   metric="txCount"
                   series={dashboardStats.series}
                 />
                 <ChartPanel
-                  title="Unique wallets over time"
+                  title="Unique wallets"
                   metric="uniqueWallets"
                   series={dashboardStats.series}
                 />
@@ -193,65 +211,6 @@ export function App() {
             </>
           ) : null}
 
-          <section className="metricsGrid secondaryMetricsGrid" aria-label="Protocol metrics">
-            <ProtocolStatus status={status} isLoading={isLoading} />
-            <MetricCard
-              label="Wallet Accounts"
-              value={
-                isLoading || !stats
-                  ? 'Loading'
-                  : formatInteger(stats.walletAccountCount)
-              }
-              detail="Current wallet PDAs"
-              icon={Wallet}
-              isLoading={isLoading}
-            />
-            <MetricCard
-              label="Lifetime Fees Recorded"
-              value={
-                isLoading || !stats
-                  ? 'Loading'
-                  : formatLamportsShort(stats.feeTotals.lifetimeFeesLamports)
-              }
-              detail="Cumulative, not treasury balance"
-              icon={CircleDollarSign}
-              isLoading={isLoading}
-            />
-            <MetricCard
-              label="Currently Collectible Fees"
-              value={
-                isLoading || !stats
-                  ? 'Loading'
-                  : formatLamportsShort(stats.collectibleFeesLamports)
-              }
-              detail="Shard balance minus rent"
-              icon={Coins}
-              isLoading={isLoading}
-            />
-            <MetricCard
-              label="Fee Payer Records"
-              value={
-                isLoading || !stats
-                  ? 'Loading'
-                  : formatInteger(stats.feeTotals.recordCount)
-              }
-              detail="FeeRecord account count"
-              icon={Database}
-              isLoading={isLoading}
-            />
-            <MetricCard
-              label="Fee-Paying Events"
-              value={
-                isLoading || !stats
-                  ? 'Loading'
-                  : formatInteger(stats.feeTotals.feePayingEvents)
-              }
-              detail="All-time wallets + txns"
-              icon={ShieldCheck}
-              isLoading={isLoading}
-            />
-          </section>
-
           {!isLoading && stats && !stats.initialized ? (
             <EmptyState
               title="Protocol not initialized"
@@ -260,7 +219,69 @@ export function App() {
           ) : null}
 
           {stats?.initialized ? (
-            <>
+            <details className="technicalDetails">
+              <summary>
+                <span>Technical protocol details</span>
+                <small>Protocol config, treasury shards, FeeRecord accounts</small>
+              </summary>
+              <section className="metricsGrid secondaryMetricsGrid" aria-label="Protocol metrics">
+                <ProtocolStatus status={status} isLoading={isLoading} />
+                <MetricCard
+                  label="Wallet Accounts"
+                  value={
+                    isLoading || !stats
+                      ? 'Loading'
+                      : formatInteger(stats.walletAccountCount)
+                  }
+                  detail="Current wallet PDAs"
+                  icon={Wallet}
+                  isLoading={isLoading}
+                />
+                <MetricCard
+                  label="Lifetime Fees Recorded"
+                  value={
+                    isLoading || !stats
+                      ? 'Loading'
+                      : formatLamportsShort(stats.feeTotals.lifetimeFeesLamports)
+                  }
+                  detail="Cumulative, not treasury balance"
+                  icon={CircleDollarSign}
+                  isLoading={isLoading}
+                />
+                <MetricCard
+                  label="Currently Collectible Fees"
+                  value={
+                    isLoading || !stats
+                      ? 'Loading'
+                      : formatLamportsShort(stats.collectibleFeesLamports)
+                  }
+                  detail="Shard balance minus rent"
+                  icon={Coins}
+                  isLoading={isLoading}
+                />
+                <MetricCard
+                  label="Fee Payer Records"
+                  value={
+                    isLoading || !stats
+                      ? 'Loading'
+                      : formatInteger(stats.feeTotals.recordCount)
+                  }
+                  detail="FeeRecord account count"
+                  icon={Database}
+                  isLoading={isLoading}
+                />
+                <MetricCard
+                  label="Fee-Paying Events"
+                  value={
+                    isLoading || !stats
+                      ? 'Loading'
+                      : formatInteger(stats.feeTotals.feePayingEvents)
+                  }
+                  detail="All-time wallets + txns"
+                  icon={ShieldCheck}
+                  isLoading={isLoading}
+                />
+              </section>
               <section className="panel" aria-label="Protocol configuration">
                 <div className="panelHeader">
                   <div>
@@ -322,7 +343,7 @@ export function App() {
               <DataNotes />
               <ShardTable cluster={cluster} shards={stats.shards} />
               <FeeRecordTable cluster={cluster} rows={stats.feeRecords} />
-            </>
+            </details>
           ) : null}
         </>
       )}
@@ -344,6 +365,34 @@ function ConfigItem({ label, value }: { label: string; value: string }) {
       <strong>{value}</strong>
     </div>
   );
+}
+
+function MetaPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="metaPill">
+      <span>{label}</span>
+      <strong title={value}>{value}</strong>
+    </div>
+  );
+}
+
+function formatLastUpdated(value: string | undefined): string {
+  if (!value) return 'Loading';
+  return new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'short',
+  }).format(new Date(value));
+}
+
+function formatProtocolStatus(
+  status: DashboardStats['health']['protocolStatus'] | undefined,
+): string {
+  if (status === 'enabled') return 'Enabled';
+  if (status === 'paused') return 'Paused';
+  if (status === 'not-initialized') return 'Not initialized';
+  return 'Loading';
 }
 
 function AddressConfigItem({

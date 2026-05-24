@@ -14,7 +14,7 @@ export function AppShell({
           <img src="/lazorkit-logo.png" alt="LazorKit" />
           <div>
             <p>LazorKit</p>
-            <span>Protocol Dashboard</span>
+            <span>Public Analytics</span>
           </div>
         </div>
         <div className="topActions">{actions}</div>
@@ -23,4 +23,3 @@ export function AppShell({
     </div>
   );
 }
-

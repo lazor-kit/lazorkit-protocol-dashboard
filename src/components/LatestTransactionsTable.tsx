@@ -1,4 +1,4 @@
-import { Copy, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import type { LatestTransaction } from '../solana/dashboardTypes';
 import type { ClusterId } from '../solana/constants';
 import {
@@ -37,12 +37,12 @@ export function LatestTransactionsTable({
             <thead>
               <tr>
                 <th>Time</th>
-                <th>Signature</th>
+                <th>Wallet</th>
                 <th>Fee Payer</th>
-                <th>Wallet PDA</th>
                 <th>Method</th>
                 <th>Status</th>
                 <th>Fee</th>
+                <th>Network</th>
               </tr>
             </thead>
             <tbody>
@@ -52,9 +52,8 @@ export function LatestTransactionsTable({
                   <td>
                     <AddressActions
                       cluster={cluster}
-                      address={row.signature}
-                      label="signature"
-                      href={explorerTxUrl(row.signature, cluster)}
+                      address={row.walletPda}
+                      label="wallet PDA"
                     />
                   </td>
                   <td>
@@ -64,24 +63,30 @@ export function LatestTransactionsTable({
                       label="fee payer"
                     />
                   </td>
-                  <td>
-                    <AddressActions
-                      cluster={cluster}
-                      address={row.walletPda}
-                      label="wallet PDA"
-                    />
-                  </td>
                   <td>{row.method}</td>
                   <td>
                     <span
-                      className={
-                        row.status === 'success' ? 'statusText' : 'warningText'
-                      }
+                      className={`statusBadge ${
+                        row.status === 'success' ? 'success' : 'failed'
+                      }`}
                     >
                       {row.status}
                     </span>
                   </td>
                   <td>{formatLamportsShort(row.feeLamports)}</td>
+                  <td>
+                    <a
+                      className="networkLink"
+                      href={explorerTxUrl(row.signature, cluster)}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="Open transaction in Explorer"
+                      title={row.signature}
+                    >
+                      {cluster}
+                      <ExternalLink size={13} />
+                    </a>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -106,17 +111,8 @@ function AddressActions({
   return (
     <div className="addressCell">
       <span title={address}>{shortenAddress(address)}</span>
-      <button
-        type="button"
-        className="miniIconButton"
-        onClick={() => void navigator.clipboard.writeText(address)}
-        aria-label={`Copy ${label}`}
-        title={`Copy ${label}`}
-      >
-        <Copy size={13} />
-      </button>
       <a
-        className="miniIconButton"
+        className="inlineExplorerLink"
         href={href ?? explorerUrl(address, cluster)}
         target="_blank"
         rel="noreferrer"
