@@ -16,19 +16,23 @@ const headers = {
   'content-type': 'application/json',
 };
 
-await request('/rest/v1/protocol_transactions?cluster=not.is.null', {
-  method: 'DELETE',
-});
-await request('/rest/v1/indexer_cursors?cluster=not.is.null', {
-  method: 'DELETE',
-});
-await request('/rest/v1/protocol_snapshots?cluster=not.is.null', {
-  method: 'DELETE',
-});
+void main();
 
-console.log(
-  'Reset analytics tables: protocol_transactions, indexer_cursors, protocol_snapshots',
-);
+async function main() {
+  await request('/rest/v1/protocol_transactions?cluster=not.is.null', {
+    method: 'DELETE',
+  });
+  await request('/rest/v1/indexer_cursors?cluster=not.is.null', {
+    method: 'DELETE',
+  });
+  await request('/rest/v1/protocol_snapshots?cluster=not.is.null', {
+    method: 'DELETE',
+  });
+
+  console.log(
+    'Reset analytics tables: protocol_transactions, indexer_cursors, protocol_snapshots',
+  );
+}
 
 async function request(path: string, init: RequestInit) {
   const response = await fetch(`${supabaseUrl}${path}`, {

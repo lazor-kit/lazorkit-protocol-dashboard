@@ -7,21 +7,25 @@ loadApiEnv();
 const clusterArg = process.argv[2] ?? 'all';
 const clusters = resolveClusters(clusterArg);
 
-for (const cluster of clusters) {
-  const result = await runIndexer(cluster);
-  const summary = {
-    cluster: result.cluster,
-    runStatus: result.runStatus,
-    fetchedSignatures: result.fetchedSignatures,
-    indexedTransactions: result.indexedTransactions,
-    skippedTransactions: result.skippedTransactions,
-    warningsCount: result.warningsCount,
-    backfillComplete: result.backfillComplete,
-    oldestIndexedAt: result.oldestIndexedAt,
-    newestIndexedAt: result.newestIndexedAt,
-    lastRunError: result.lastRunError,
-  };
-  console.log(JSON.stringify(summary, null, 2));
+void main();
+
+async function main() {
+  for (const cluster of clusters) {
+    const result = await runIndexer(cluster);
+    const summary = {
+      cluster: result.cluster,
+      runStatus: result.runStatus,
+      fetchedSignatures: result.fetchedSignatures,
+      indexedTransactions: result.indexedTransactions,
+      skippedTransactions: result.skippedTransactions,
+      warningsCount: result.warningsCount,
+      backfillComplete: result.backfillComplete,
+      oldestIndexedAt: result.oldestIndexedAt,
+      newestIndexedAt: result.newestIndexedAt,
+      lastRunError: result.lastRunError,
+    };
+    console.log(JSON.stringify(summary, null, 2));
+  }
 }
 
 function resolveClusters(value: string): ClusterId[] {
