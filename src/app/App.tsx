@@ -105,19 +105,20 @@ export function App() {
       ) : (
         <>
           <section className="publicHeader" aria-label="Dashboard overview">
-            <div>
-              <h1>
-                LazorKit Dashboard <span>v1</span>
-              </h1>
-              <p>
-                Last updated:{' '}
-                {formatLastUpdated(dashboardStats?.generatedAt ?? stats?.fetchedAt)}
-                {' · '}
-                Status:{' '}
-                <span className="headerStatus">
-                  ● {formatProtocolStatus(dashboardStats?.health.protocolStatus)}
-                </span>
-              </p>
+            <div className="brandHeader">
+              <img src="/lazorkit-logo.png" alt="LazorKit" className="brandLogo" />
+              <div>
+                <h1>LazorKit Dashboard</h1>
+                <p>
+                  Last updated:{' '}
+                  {formatLastUpdated(dashboardStats?.generatedAt ?? stats?.fetchedAt)}
+                  {' · '}
+                  Status:{' '}
+                  <span className="headerStatus">
+                    ● {formatProtocolStatus(dashboardStats?.health.protocolStatus)}
+                  </span>
+                </p>
+              </div>
             </div>
             <div className="publicControls">
               <ClusterSelector cluster={cluster} onChange={handleClusterChange} />
