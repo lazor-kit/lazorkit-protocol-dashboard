@@ -3,19 +3,21 @@
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  background: #07070a;
+  background: #070b16;
   color: #f7f7fa;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --bg: #07070a;
-  --surface: #101014;
-  --surface-elevated: #15151b;
-  --border: #24242d;
-  --border-strong: #343440;
-  --text: #f7f7fa;
-  --muted: #a4a4b2;
-  --quiet: #737381;
+  --bg: #070b16;
+  --surface: #111827;
+  --surface-elevated: #151d31;
+  --border: #26324f;
+  --border-strong: #34456c;
+  --text: #eef3ff;
+  --muted: #9ba7bf;
+  --quiet: #7f8ba4;
+  --accent: #7de3d4;
+  --accent-blue: #9cc6ff;
   --purple: #7557ff;
   --purple-soft: #9b86ff;
   --danger: #ff6b81;
@@ -55,86 +57,34 @@ a {
   min-height: 100vh;
 }
 
-.topNav {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  min-height: 72px;
-  padding: 16px clamp(16px, 3vw, 36px);
-  background: rgba(7, 7, 10, 0.94);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(16px);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.brand img {
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
-  flex: 0 0 auto;
-}
-
-.brand p,
-.brand span {
-  margin: 0;
-  letter-spacing: 0;
-}
-
-.brand p {
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.brand span {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.topActions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
 .dashboard {
-  width: min(1240px, 100%);
+  width: min(1520px, 100%);
   margin: 0 auto;
-  padding: 28px clamp(16px, 3vw, 36px) 56px;
+  padding: 34px clamp(16px, 3vw, 36px) 64px;
 }
 
 .publicHeader {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding-bottom: 8px;
+  min-height: 108px;
+  padding: 24px 26px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
 }
 
 .publicHeader h1 {
   margin: 0;
   color: var(--text);
-  font-size: clamp(24px, 3vw, 34px);
+  font-size: clamp(26px, 3vw, 34px);
   line-height: 1.06;
   letter-spacing: 0;
 }
 
 .publicHeader h1 span {
-  color: var(--purple-soft);
+  color: var(--accent);
 }
 
 .publicHeader p {
@@ -145,92 +95,68 @@ a {
 }
 
 .headerStatus {
-  color: var(--purple-soft);
+  color: var(--accent);
   font-weight: 700;
 }
 
-.headerMeta {
+.publicControls {
   display: flex;
-  align-items: stretch;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end;
-}
-
-.metaPill {
-  min-width: 132px;
-  display: grid;
-  gap: 4px;
-  padding: 10px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-
-.metaPill span {
-  color: var(--quiet);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.metaPill strong {
-  min-width: 0;
-  color: var(--text);
-  font-size: 12px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .clusterControl {
   display: grid;
   grid-template-columns: repeat(2, minmax(76px, 1fr));
-  gap: 2px;
-  padding: 3px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: 0;
 }
 
 .timeWindowControl {
   display: grid;
   grid-template-columns: repeat(3, minmax(52px, 1fr));
-  gap: 2px;
-  padding: 3px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: 0;
 }
 
 .timeWindowControl button {
-  min-height: 34px;
-  padding: 0 10px;
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  color: var(--muted);
+  min-height: 42px;
+  padding: 0 16px;
+  background: #10172a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
   cursor: pointer;
+  font-weight: 700;
 }
 
 .timeWindowControl button.active {
-  background: var(--purple);
-  color: white;
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .clusterControl button {
-  min-height: 34px;
-  padding: 0 12px;
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  color: var(--muted);
+  min-height: 42px;
+  padding: 0 16px;
+  background: #10172a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
   cursor: pointer;
+  font-weight: 700;
 }
 
 .clusterControl button.active {
-  background: var(--purple);
-  color: white;
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .iconButton,
@@ -240,7 +166,7 @@ a {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: #10172a;
   color: var(--text);
   cursor: pointer;
   transition:
@@ -263,7 +189,7 @@ a {
 .iconButton {
   width: 42px;
   height: 42px;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .miniIconButton {
@@ -337,7 +263,7 @@ a {
 .metricsGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 16px;
   margin-top: 16px;
 }
 
@@ -350,14 +276,14 @@ a {
 }
 
 .metricCard {
-  min-height: 118px;
+  min-height: 120px;
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 18px;
+  padding: 20px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 16px;
 }
 
 .kpiCard {
@@ -374,7 +300,7 @@ a {
 }
 
 .kpiCard .metricContent strong {
-  font-size: clamp(28px, 3vw, 40px);
+  font-size: clamp(28px, 3vw, 36px);
 }
 
 .metricCard.statusCard.enabled {
@@ -404,10 +330,10 @@ a {
 .eyebrow {
   margin: 0;
   color: var(--quiet);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 650;
   letter-spacing: 0;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .metricContent strong {
@@ -432,7 +358,11 @@ a {
 
 .positiveTrend,
 .statusText {
-  color: var(--purple-soft);
+  color: #56d49b;
+}
+
+.negativeTrend {
+  color: #ff7f7f;
 }
 
 .skeletonText {
@@ -456,17 +386,17 @@ a {
 
 .panel {
   margin-top: 16px;
-  padding: 18px;
+  padding: 20px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 16px;
 }
 
 .chartsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
 .chartsGrid .chartPanel:nth-child(3) {
@@ -475,10 +405,10 @@ a {
 
 .chartPanel,
 .networkComparison {
-  padding: 18px;
+  padding: 20px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 16px;
 }
 
 .chartHeader,
@@ -491,27 +421,51 @@ a {
 
 .chartHeader h2,
 .networkComparison h2 {
-  margin: 4px 0 0;
+  margin: 0;
   color: var(--text);
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.25;
   letter-spacing: 0;
 }
 
 .lineChart {
   width: 100%;
-  height: 170px;
+  height: 275px;
   margin-top: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #0b0b10;
 }
 
-.lineChart polyline {
+.chartGrid line {
+  stroke: #273451;
+  stroke-width: 0.28;
+}
+
+.chartBorder {
   fill: none;
-  stroke: var(--purple-soft);
-  stroke-width: 2;
+  stroke: #35466e;
+  stroke-width: 0.45;
+  stroke-dasharray: 1.2 1.2;
+}
+
+.chartArea {
+  fill: var(--accent);
+  opacity: 0.18;
+}
+
+.chartLine {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
+}
+
+.chartPanel-uniqueWallets .chartLine {
+  stroke: var(--accent-blue);
+}
+
+.chartPanel-feesLamports .lineChart {
+  height: 285px;
 }
 
 .networkComparison {
@@ -554,7 +508,7 @@ a {
 .barTrack div {
   height: 100%;
   min-width: 2px;
-  background: var(--purple);
+  background: var(--accent);
 }
 
 .technicalDetails {
@@ -732,30 +686,30 @@ a {
 .tableWrap {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border: 0;
+  border-radius: 0;
 }
 
 table {
   width: 100%;
   min-width: 720px;
   border-collapse: collapse;
-  background: var(--surface);
+  background: transparent;
 }
 
 th,
 td {
-  padding: 13px 14px;
+  padding: 14px 10px;
   text-align: left;
   border-bottom: 1px solid var(--border);
   color: var(--text);
-  font-size: 13px;
+  font-size: 15px;
   white-space: nowrap;
 }
 
 th {
   color: var(--quiet);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -765,7 +719,7 @@ tbody tr:last-child td {
 }
 
 tbody tr:hover td {
-  background: #13131a;
+  background: #141d31;
 }
 
 .addressCell {
@@ -790,7 +744,7 @@ tbody tr:hover td {
 
 .inlineExplorerLink:hover,
 .networkLink:hover {
-  color: var(--purple-soft);
+  color: var(--accent);
 }
 
 .networkLink {
@@ -811,9 +765,9 @@ tbody tr:hover td {
 }
 
 .statusBadge.success {
-  color: var(--purple-soft);
-  background: #171329;
-  border-color: rgba(117, 87, 255, 0.45);
+  color: #56d49b;
+  background: #0f2a27;
+  border-color: rgba(86, 212, 155, 0.5);
 }
 
 .statusBadge.failed {
@@ -867,17 +821,6 @@ tbody tr:hover td {
 }
 
 @media (max-width: 720px) {
-  .topNav {
-    position: static;
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .topActions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
   .clusterControl {
     flex: 1;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -896,8 +839,9 @@ tbody tr:hover td {
     flex-direction: column;
   }
 
-  .headerMeta,
-  .metaPill {
+  .publicControls,
+  .clusterControl,
+  .timeWindowControl {
     width: 100%;
   }
 

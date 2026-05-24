@@ -46,6 +46,7 @@ function formatTrend(percentChange: number | null): {
   const sign = percentChange > 0 ? '+' : '';
   return {
     label: `${sign}${percentChange.toFixed(1)}% `,
-    className: percentChange > 0 ? 'trendValue positiveTrend' : 'trendValue',
+    className:
+      percentChange > 0 ? 'trendValue positiveTrend' : 'trendValue negativeTrend',
   };
 }

@@ -72,24 +72,7 @@ export function App() {
   }, [stats]);
 
   return (
-    <AppShell
-      actions={
-        <>
-          <ClusterSelector cluster={cluster} onChange={setCluster} />
-          <TimeWindowSelector window={window} onChange={setWindow} />
-          <button
-            className="iconButton refreshButton"
-            type="button"
-            onClick={() => void loadStats()}
-            disabled={isLoading}
-            aria-label="Refresh dashboard"
-            title="Refresh dashboard"
-          >
-            <RefreshCw size={16} className={isLoading ? 'spin' : undefined} />
-          </button>
-        </>
-      }
-    >
+    <AppShell>
       {error ? (
         <ErrorState message={error} onRetry={() => void loadStats()} />
       ) : (
@@ -109,18 +92,19 @@ export function App() {
                 </span>
               </p>
             </div>
-            <div className="headerMeta">
-              <MetaPill label="Network" value={CLUSTERS[cluster].label} />
-              <MetaPill
-                label="Last indexed"
-                value={
-                  dashboardStats?.health.lastIndexedAt
-                    ? formatDateTime(dashboardStats.health.lastIndexedAt)
-                    : dashboardStats?.setupRequired
-                      ? 'Setup required'
-                      : 'No cursor'
-                }
-              />
+            <div className="publicControls">
+              <ClusterSelector cluster={cluster} onChange={setCluster} />
+              <TimeWindowSelector window={window} onChange={setWindow} />
+              <button
+                className="iconButton refreshButton"
+                type="button"
+                onClick={() => void loadStats()}
+                disabled={isLoading}
+                aria-label="Refresh dashboard"
+                title="Refresh dashboard"
+              >
+                <RefreshCw size={16} className={isLoading ? 'spin' : undefined} />
+              </button>
             </div>
           </section>
 
@@ -203,7 +187,6 @@ export function App() {
                   series={dashboardStats.series}
                 />
               </section>
-              <NetworkComparison comparison={dashboardStats.networkComparison} />
               <LatestTransactionsTable
                 cluster={cluster}
                 rows={dashboardStats.latestTransactions}
@@ -224,6 +207,9 @@ export function App() {
                 <span>Technical protocol details</span>
                 <small>Protocol config, treasury shards, FeeRecord accounts</small>
               </summary>
+              {dashboardStats ? (
+                <NetworkComparison comparison={dashboardStats.networkComparison} />
+              ) : null}
               <section className="metricsGrid secondaryMetricsGrid" aria-label="Protocol metrics">
                 <ProtocolStatus status={status} isLoading={isLoading} />
                 <MetricCard
@@ -363,15 +349,6 @@ function ConfigItem({ label, value }: { label: string; value: string }) {
     <div className="configItem">
       <span>{label}</span>
       <strong>{value}</strong>
-    </div>
-  );
-}
-
-function MetaPill({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="metaPill">
-      <span>{label}</span>
-      <strong title={value}>{value}</strong>
     </div>
   );
 }
