@@ -107,36 +107,19 @@ export function App() {
       ) : (
         <>
           <section className="publicHeader" aria-label="Dashboard overview">
-            <div className="heroMain">
-              <div className="brandHeader">
-                <img src="/lazorkit-logo.png" alt="LazorKit" className="brandLogo" />
-                <div>
-                  <p className="eyebrow">Public Protocol Analytics</p>
-                  <h1>LazorKit Dashboard</h1>
-                </div>
-              </div>
-              <div className="heroMetaGrid" aria-label="Protocol health summary">
-                <div className="heroMetaItem">
-                  <span>Protocol</span>
-                  <strong>
-                    <span className="statusDot" aria-hidden="true" />
-                    {formatProtocolStatus(dashboardStats?.health.protocolStatus)}
-                  </strong>
-                </div>
-                <div className="heroMetaItem">
-                  <span>Network</span>
-                  <strong>{cluster === 'mainnet' ? 'Mainnet' : 'Devnet'}</strong>
-                </div>
-                <div className="heroMetaItem">
-                  <span>Coverage</span>
-                  <strong>{formatHeroCoverage(dashboardStats)}</strong>
-                </div>
-                <div className="heroMetaItem">
-                  <span>Updated</span>
-                  <strong>
-                    {formatLastUpdated(dashboardStats?.generatedAt ?? stats?.fetchedAt)}
-                  </strong>
-                </div>
+            <div className="brandHeader">
+              <img src="/lazorkit-logo.png" alt="LazorKit" className="brandLogo" />
+              <div>
+                <h1>LazorKit Dashboard</h1>
+                <p>
+                  Last updated:{' '}
+                  {formatLastUpdated(dashboardStats?.generatedAt ?? stats?.fetchedAt)}
+                  {' · '}
+                  Status:{' '}
+                  <span className="headerStatus">
+                    ● {formatProtocolStatus(dashboardStats?.health.protocolStatus)}
+                  </span>
+                </p>
               </div>
             </div>
             <div className="publicControls">
@@ -244,7 +227,7 @@ export function App() {
             <>
               <section className="chartsGrid" aria-label="Analytics charts">
                 <ChartPanel
-                  title="Transaction volume"
+                  title="Tx over time"
                   metric="txCount"
                   window={window}
                   series={dashboardStats.series}
@@ -256,7 +239,7 @@ export function App() {
                   series={dashboardStats.series}
                 />
                 <ChartPanel
-                  title="Protocol fees"
+                  title="Fees over time"
                   metric="feesLamports"
                   window={window}
                   series={dashboardStats.series}
@@ -500,23 +483,6 @@ function formatProtocolStatus(
   if (status === 'paused') return 'Paused';
   if (status === 'not-initialized') return 'Not initialized';
   return 'Loading';
-}
-
-function formatHeroCoverage(stats: DashboardStats | null): string {
-  if (!stats) return 'Loading';
-  const oldest = stats.health.oldestIndexedAt;
-  const newest = stats.health.newestIndexedAt;
-  if (!oldest || !newest) return 'Preparing';
-
-  const start = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-  }).format(new Date(oldest));
-  const end = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-  }).format(new Date(newest));
-  return `${start} - ${end}`;
 }
 
 function formatAnalyticsStatus(
