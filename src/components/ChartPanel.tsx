@@ -46,82 +46,92 @@ export function ChartPanel({
             : formatInteger(model.total)}
         </span>
       </div>
-      <svg
-        className="lineChart"
-        viewBox="0 0 100 62"
-        preserveAspectRatio="none"
-        onPointerMove={(event) => {
-          setHoveredIndex(
-            getNearestSeriesIndex(
-              event.clientX,
-              event.currentTarget.getBoundingClientRect(),
-              series.length,
-            ),
-          );
-        }}
-        onPointerLeave={() => setHoveredIndex(null)}
-      >
-        <g className="chartGrid" aria-hidden="true">
-          {Array.from({ length: 7 }, (_, index) => (
-            <line
-              key={`v-${index}`}
-              x1={CHART.left + index * (CHART.width / 6)}
-              x2={CHART.left + index * (CHART.width / 6)}
-              y1={CHART.top}
-              y2={CHART.top + CHART.height}
-            />
-          ))}
-          {model.yTicks.map((tick) => (
-            <line
-              key={`h-${tick.value}`}
-              x1={CHART.left}
-              x2={CHART.left + CHART.width}
-              y1={tick.y}
-              y2={tick.y}
-            />
-          ))}
-        </g>
-        <rect
-          className="chartBorder"
-          x={CHART.left}
-          y={CHART.top}
-          width={CHART.width}
-          height={CHART.height}
-        />
-        {metric === 'feesLamports' ? (
-          <polygon className="chartArea" points={model.areaPoints} />
-        ) : null}
-        <polyline className="chartLine" points={model.linePoints} />
-        {hoveredPoint ? (
-          <g className="chartHoverLayer">
-            <line
-              className="chartCrosshair"
-              x1={hoveredPoint.x}
-              x2={hoveredPoint.x}
-              y1={CHART.top}
-              y2={CHART.top + CHART.height}
-            />
-            <circle
-              className="chartHoverPoint"
-              cx={hoveredPoint.x}
-              cy={hoveredPoint.y}
-              r="1.35"
-            />
+      <div className="chartCanvas">
+        <svg
+          className="lineChart"
+          viewBox="0 0 100 62"
+          preserveAspectRatio="none"
+          onPointerMove={(event) => {
+            setHoveredIndex(
+              getNearestSeriesIndex(
+                event.clientX,
+                event.currentTarget.getBoundingClientRect(),
+                series.length,
+              ),
+            );
+          }}
+          onPointerLeave={() => setHoveredIndex(null)}
+        >
+          <g className="chartGrid" aria-hidden="true">
+            {Array.from({ length: 7 }, (_, index) => (
+              <line
+                key={`v-${index}`}
+                x1={CHART.left + index * (CHART.width / 6)}
+                x2={CHART.left + index * (CHART.width / 6)}
+                y1={CHART.top}
+                y2={CHART.top + CHART.height}
+              />
+            ))}
+            {model.yTicks.map((tick) => (
+              <line
+                key={`h-${tick.value}`}
+                x1={CHART.left}
+                x2={CHART.left + CHART.width}
+                y1={tick.y}
+                y2={tick.y}
+              />
+            ))}
           </g>
-        ) : null}
-        <g className="chartAxis">
+          <rect
+            className="chartBorder"
+            x={CHART.left}
+            y={CHART.top}
+            width={CHART.width}
+            height={CHART.height}
+          />
+          {metric === 'feesLamports' ? (
+            <polygon className="chartArea" points={model.areaPoints} />
+          ) : null}
+          <polyline className="chartLine" points={model.linePoints} />
+          {hoveredPoint ? (
+            <g className="chartHoverLayer">
+              <line
+                className="chartCrosshair"
+                x1={hoveredPoint.x}
+                x2={hoveredPoint.x}
+                y1={CHART.top}
+                y2={CHART.top + CHART.height}
+              />
+              <circle
+                className="chartHoverPoint"
+                cx={hoveredPoint.x}
+                cy={hoveredPoint.y}
+                r="1.35"
+              />
+            </g>
+          ) : null}
+        </svg>
+        <div className="chartYAxis" aria-hidden="true">
           {model.yTicks.map((tick) => (
-            <text key={tick.value} x="8.2" y={tick.y + 1.2} textAnchor="end">
+            <span
+              key={tick.value}
+              style={{ top: `${viewBoxYToPercent(tick.y)}%` }}
+            >
               {formatAxisValue(tick.value, metric)}
-            </text>
+            </span>
           ))}
+        </div>
+        <div className="chartXAxis" aria-hidden="true">
           {model.xTicks.map((tick) => (
-            <text key={tick.index} x={tick.x} y="60" textAnchor="middle">
+            <span
+              key={tick.index}
+              style={{ left: `${tick.x}%` }}
+            >
               {formatBucketLabel(series[tick.index]?.bucket, window)}
-            </text>
+            </span>
           ))}
-        </g>
-      </svg>
+        </div>
+      </div>
       {hoveredPoint && hoveredSeriesPoint ? (
         <div
           className="chartTooltip"
@@ -156,14 +166,18 @@ export function getNearestSeriesIndex(
   length: number,
 ): number | null {
   if (length === 0 || rect.width <= 0) return null;
-  const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+  const viewBoxX = ((clientX - rect.left) / rect.width) * 100;
+  const ratio = Math.min(
+    1,
+    Math.max(0, (viewBoxX - CHART.left) / CHART.width),
+  );
   return Math.min(length - 1, Math.max(0, Math.round(ratio * (length - 1))));
 }
 
 export function buildChartModel(series: SeriesPoint[], metric: ChartMetric) {
   const values = series.map((point) => getChartValue(point, metric));
-  const maxValue = Math.max(1, ...values);
-  const yMax = niceMax(maxValue);
+  const maxValue = Math.max(0, ...values);
+  const yMax = niceMax(maxValue, metric);
   const points = values.map((value, index) => {
     const x =
       CHART.left +
@@ -217,8 +231,9 @@ export function buildXAxisTicks(length: number) {
   });
 }
 
-function niceMax(value: number): number {
-  if (value <= 1) return 1;
+function niceMax(value: number, metric: ChartMetric): number {
+  if (metric !== 'feesLamports' && value <= 4) return 4;
+  if (metric === 'feesLamports' && value < 4_000_000) return 4_000_000;
   const magnitude = 10 ** Math.floor(Math.log10(value));
   const normalized = value / magnitude;
   const niceNormalized =
@@ -226,9 +241,29 @@ function niceMax(value: number): number {
   return niceNormalized * magnitude;
 }
 
-function formatAxisValue(value: number, metric: ChartMetric): string {
-  if (metric === 'feesLamports') return formatLamportsShort(BigInt(Math.round(value)));
+export function formatAxisValue(value: number, metric: ChartMetric): string {
+  if (metric === 'feesLamports') return formatFeeAxisValue(value);
   return formatInteger(Math.round(value));
+}
+
+function formatFeeAxisValue(lamports: number): string {
+  if (lamports === 0) return '0 SOL';
+  const sol = lamports / 1_000_000_000;
+  if (sol < 0.001) {
+    return `${trimDecimals(sol, 6)} SOL`;
+  }
+  if (sol < 1) {
+    return `${trimDecimals(sol, 4)} SOL`;
+  }
+  return `${trimDecimals(sol, 2)} SOL`;
+}
+
+function trimDecimals(value: number, digits: number): string {
+  return value.toFixed(digits).replace(/\.?0+$/, '');
+}
+
+function viewBoxYToPercent(y: number): number {
+  return (y / 62) * 100;
 }
 
 function formatBucketLabel(bucket: string | undefined, window: DashboardWindow): string {

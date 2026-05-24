@@ -429,10 +429,16 @@ a {
   letter-spacing: 0;
 }
 
+.chartCanvas {
+  position: relative;
+  width: 100%;
+  height: 286px;
+  margin-top: 16px;
+}
+
 .lineChart {
   width: 100%;
-  height: 275px;
-  margin-top: 16px;
+  height: 100%;
 }
 
 .chartGrid line {
@@ -459,12 +465,6 @@ a {
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
-}
-
-.chartAxis text {
-  fill: var(--quiet);
-  font-size: 2.7px;
-  font-weight: 650;
 }
 
 .chartCrosshair {
@@ -508,11 +508,37 @@ a {
   font-weight: 750;
 }
 
+.chartYAxis,
+.chartXAxis {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--quiet);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chartYAxis span {
+  position: absolute;
+  left: 0;
+  width: 8.5%;
+  text-align: right;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+.chartXAxis span {
+  position: absolute;
+  top: 91%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
 .chartPanel-uniqueWallets .chartLine {
   stroke: var(--accent-soft);
 }
 
-.chartPanel-feesLamports .lineChart {
+.chartPanel-feesLamports .chartCanvas {
   height: 285px;
 }
 

@@ -2,6 +2,7 @@ import {
   buildChartModel,
   buildXAxisTicks,
   buildYAxisTicks,
+  formatAxisValue,
   getChartValue,
   getNearestSeriesIndex,
 } from './ChartPanel';
@@ -26,6 +27,7 @@ describe('chart panel helpers', () => {
     const model = buildChartModel([point({}), point({})], 'txCount');
     expect(model.points).toHaveLength(2);
     expect(model.yTicks).toHaveLength(5);
+    expect(model.yTicks.map((tick) => tick.value)).toEqual([4, 3, 2, 1, 0]);
     expect(model.linePoints).not.toBe('');
   });
 
@@ -36,6 +38,12 @@ describe('chart panel helpers', () => {
     expect(buildXAxisTicks(24)).toHaveLength(5);
     expect(buildXAxisTicks(7)).toHaveLength(5);
     expect(buildXAxisTicks(30)).toHaveLength(5);
+  });
+
+  it('formats y-axis labels without oversized lamports text', () => {
+    expect(formatAxisValue(4_000_000, 'feesLamports')).toBe('0.004 SOL');
+    expect(formatAxisValue(0, 'feesLamports')).toBe('0 SOL');
+    expect(formatAxisValue(4, 'txCount')).toBe('4');
   });
 
   it('finds nearest point from pointer x position', () => {
