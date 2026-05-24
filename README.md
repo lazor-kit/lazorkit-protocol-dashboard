@@ -172,10 +172,11 @@ The indexer endpoint is protected by `CRON_SECRET`:
 curl "https://your-domain/api/cron/indexer?cluster=all&secret=$CRON_SECRET"
 ```
 
-Vercel Cron runs `/api/cron/indexer?cluster=all` every five minutes. Vercel
-sends `Authorization: Bearer $CRON_SECRET` when the env var is configured.
-The indexer stores one row per transaction signature and upserts by
-`(cluster, signature)`.
+Vercel Hobby only supports daily cron, so the checked-in Vercel cron runs
+`/api/cron/indexer?cluster=all` once per day. For fresher analytics on Hobby,
+use an external scheduler to call the same endpoint every 5-15 minutes with
+`Authorization: Bearer $CRON_SECRET`. The indexer stores one row per
+transaction signature and upserts by `(cluster, signature)`.
 
 Backfill runs newest activity first, then walks older signature pages until the
 configured `INDEXER_BACKFILL_DAYS` cutoff. Keep
