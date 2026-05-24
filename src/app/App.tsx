@@ -205,21 +205,21 @@ export function App() {
                   <AddressConfigItem
                     cluster={cluster}
                     label="Admin"
-                    value={stats.config!.admin.toBase58()}
+                    value={stats.config!.admin}
                   />
                   <AddressConfigItem
                     cluster={cluster}
                     label="Treasury"
-                    value={stats.config!.treasury.toBase58()}
+                    value={stats.config!.treasury}
                   />
                   <ConfigItem label="Cluster" value={CLUSTERS[cluster].label} />
                   <ConfigItem
                     label="Creation Fee"
-                    value={formatLamportsShort(stats.config!.creationFee)}
+                    value={formatLamportsShort(stats.config!.creationFeeLamports)}
                   />
                   <ConfigItem
                     label="Execution Fee"
-                    value={formatLamportsShort(stats.config!.executionFee)}
+                    value={formatLamportsShort(stats.config!.executionFeeLamports)}
                   />
                   <ConfigItem
                     label="Shard Count"

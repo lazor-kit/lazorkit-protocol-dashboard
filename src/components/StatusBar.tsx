@@ -13,7 +13,7 @@ export function StatusBar({
   clusterLabel: string;
   programId: string;
   slot?: number;
-  fetchedAt?: Date;
+  fetchedAt?: string;
 }) {
   return (
     <section className="statusBar" aria-label="Connection status">
@@ -27,7 +27,7 @@ export function StatusBar({
       <Info label="Slot" value={slot === undefined ? 'Loading' : slot.toLocaleString()} />
       <Info
         label="Updated"
-        value={fetchedAt ? fetchedAt.toLocaleTimeString() : 'Loading'}
+        value={fetchedAt ? new Date(fetchedAt).toLocaleTimeString() : 'Loading'}
       />
     </section>
   );

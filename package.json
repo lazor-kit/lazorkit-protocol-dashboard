@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck:api": "tsc --noEmit --target ES2022 --module ESNext --moduleResolution Bundler --types node --skipLibCheck api/protocol-stats.ts api/_lib/protocolStats.ts vite.config.ts"
   },
   "dependencies": {
     "@solana/web3.js": "^1.98.4",

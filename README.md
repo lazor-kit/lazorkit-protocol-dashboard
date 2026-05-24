@@ -2,8 +2,8 @@
 
 Public read-only dashboard for LazorKit protocol usage and fee metrics.
 
-The dashboard reads current on-chain state directly from Solana RPC. It has no
-wallet connection, no backend, no indexer, and no admin controls.
+The dashboard reads current on-chain state through a server-side cached API.
+It has no wallet connection, no admin controls, and no browser-exposed RPC key.
 
 ## Metrics
 
@@ -43,23 +43,25 @@ npm install
 npm run dev
 ```
 
-Open the local Vite URL printed by the dev server.
+Open the local Vite URL printed by the dev server. The Vite dev server also
+serves the local `/api/protocol-stats` route, so no second local process is
+required.
 
 ## Environment
 
-Copy `.env.example` to `.env.local` only for public browser-safe RPC URLs.
+Copy `.env.example` to `.env.local` for local development. RPC variables do
+not use the `VITE_` prefix because they are read only by the server-side API.
 
 ```text
-VITE_MAINNET_RPC_URL=https://api.mainnet-beta.solana.com
-VITE_DEVNET_RPC_URL=https://api.devnet.solana.com
-VITE_LOCALNET_RPC_URL=http://127.0.0.1:8899
+MAINNET_RPC_URL=https://api.mainnet-beta.solana.com
+DEVNET_RPC_URL=https://api.devnet.solana.com
+LOCALNET_RPC_URL=http://127.0.0.1:8899
 VITE_DEFAULT_CLUSTER=mainnet
 ```
 
-Never put private or key-bearing RPC URLs in `VITE_` variables unless the team
-accepts that the URL is visible in browser JavaScript. V1 intentionally does
-not render the RPC URL in the UI, but Vite environment variables are still
-compiled into the client bundle.
+Use `MAINNET_RPC_URL` for a full Helius or other private RPC URL in Vercel
+environment variables. Do not create `VITE_MAINNET_RPC_URL`; `VITE_` values are
+compiled into browser JavaScript.
 
 ## Checks
 
@@ -70,10 +72,22 @@ npm run build
 
 ## RPC Limitations
 
-This v1 app uses browser-side direct RPC. Public RPC endpoints may rate-limit
-large `getProgramAccounts` scans. If that becomes a problem, the next version
-should add a small backend cache or indexer.
+The `/api/protocol-stats` route fetches from RPC server-side and caches results
+for 30 seconds per cluster. Public RPC endpoints may still rate-limit large
+`getProgramAccounts` scans, so production should use a dedicated server-side
+RPC URL.
 
-Private or key-bearing RPC URLs cannot be hidden in a frontend-only app. To use
-a private RPC key safely, fetch and aggregate stats in a server-side API route
-or indexer, then return only dashboard JSON to the browser.
+Private or key-bearing RPC URLs cannot be hidden in a frontend-only app. This
+repo now keeps RPC URLs in the backend API and returns only dashboard JSON to
+the browser.
+
+## Deployment
+
+Deploy as a Vercel project:
+
+- Framework: Vite
+- Build command: `npm run build`
+- Output directory: `dist`
+- Serverless API: `api/protocol-stats.ts`
+- Required production env: `MAINNET_RPC_URL`
+- Optional env: `DEVNET_RPC_URL`, `LOCALNET_RPC_URL`, `VITE_DEFAULT_CLUSTER`

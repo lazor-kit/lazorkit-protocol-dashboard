@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { ACCOUNT_SIZES, DISCRIMINATORS } from './constants';
+import { ACCOUNT_SIZES, DISCRIMINATORS } from './shared';
 
 export interface ProtocolConfigAccount {
   discriminator: number;
@@ -101,4 +101,3 @@ export function decodeTreasuryShard(data: Uint8Array): TreasuryShardAccount {
     shardId: data[2],
   };
 }
-

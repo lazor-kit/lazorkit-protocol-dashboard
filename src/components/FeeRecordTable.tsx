@@ -73,7 +73,7 @@ export function FeeRecordTable({
                       </a>
                     </div>
                   </td>
-                  <td>{formatLamportsShort(row.totalFeesPaid)}</td>
+                  <td>{formatLamportsShort(row.totalFeesPaidLamports)}</td>
                   <td>{formatInteger(row.walletCount)}</td>
                   <td>{formatInteger(row.txCount)}</td>
                   <td>{formatInteger(row.registeredAt)}</td>

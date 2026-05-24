@@ -1,20 +1,14 @@
-import { PublicKey } from '@solana/web3.js';
 import {
   aggregateFeeRecords,
   computeCollectibleLamports,
-  type FeeRecordRow,
-} from './fetchProtocolStats';
+  type FeeRecordAmountRow,
+} from './statsMath';
 
-function row(partial: Partial<FeeRecordRow>): FeeRecordRow {
+function row(partial: Partial<FeeRecordAmountRow>): FeeRecordAmountRow {
   return {
-    address: PublicKey.unique().toBase58(),
-    discriminator: 6,
-    bump: 1,
-    version: 1,
-    totalFeesPaid: 0n,
+    totalFeesPaidLamports: 0n,
     txCount: 0,
     walletCount: 0,
-    registeredAt: 0n,
     ...partial,
   };
 }
@@ -23,7 +17,7 @@ describe('protocol stats aggregation', () => {
   it('aggregates empty fee records', () => {
     expect(aggregateFeeRecords([])).toEqual({
       recordCount: 0,
-      lifetimeFeesLamports: 0n,
+      lifetimeFeesLamports: '0',
       txCount: 0,
       walletCount: 0,
       feePayingEvents: 0,
@@ -32,12 +26,12 @@ describe('protocol stats aggregation', () => {
 
   it('aggregates fee records', () => {
     const totals = aggregateFeeRecords([
-      row({ totalFeesPaid: 10n, txCount: 2, walletCount: 1 }),
-      row({ totalFeesPaid: 25n, txCount: 5, walletCount: 3 }),
+      row({ totalFeesPaidLamports: 10n, txCount: 2, walletCount: 1 }),
+      row({ totalFeesPaidLamports: '25', txCount: 5, walletCount: 3 }),
     ]);
 
     expect(totals.recordCount).toBe(2);
-    expect(totals.lifetimeFeesLamports).toBe(35n);
+    expect(totals.lifetimeFeesLamports).toBe('35');
     expect(totals.txCount).toBe(7);
     expect(totals.walletCount).toBe(4);
     expect(totals.feePayingEvents).toBe(11);
@@ -49,4 +43,3 @@ describe('protocol stats aggregation', () => {
     expect(computeCollectibleLamports(5n, 10n)).toBe(0n);
   });
 });
-
