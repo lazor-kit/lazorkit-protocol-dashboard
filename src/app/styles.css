@@ -405,6 +405,7 @@ a {
 
 .chartPanel,
 .networkComparison {
+  position: relative;
   padding: 20px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -458,6 +459,53 @@ a {
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
+}
+
+.chartAxis text {
+  fill: var(--quiet);
+  font-size: 2.7px;
+  font-weight: 650;
+}
+
+.chartCrosshair {
+  stroke: var(--accent-soft);
+  stroke-width: 0.5;
+  stroke-dasharray: 1 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.chartHoverPoint {
+  fill: var(--accent);
+  stroke: var(--text);
+  stroke-width: 0.35;
+  vector-effect: non-scaling-stroke;
+}
+
+.chartTooltip {
+  position: absolute;
+  z-index: 3;
+  min-width: 156px;
+  display: grid;
+  gap: 6px;
+  padding: 11px 12px;
+  background: #0d1324;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32);
+}
+
+.chartTooltip strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.chartTooltip span.active {
+  color: var(--accent-soft);
+  font-weight: 750;
 }
 
 .chartPanel-uniqueWallets .chartLine {
@@ -533,16 +581,61 @@ a {
   display: none;
 }
 
-.technicalDetails > summary span {
+.technicalSummaryMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.technicalSummaryMain > svg {
+  flex: 0 0 auto;
+  color: var(--accent-soft);
+}
+
+.technicalSummaryMain span {
+  display: grid;
+  gap: 5px;
   color: var(--text);
   font-size: 15px;
   font-weight: 700;
 }
 
-.technicalDetails > summary small {
+.technicalSummaryMain small {
   color: var(--muted);
   font-size: 12px;
-  text-align: right;
+  font-weight: 500;
+}
+
+.technicalSummaryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.technicalSummaryAction svg {
+  transition: transform 160ms ease;
+}
+
+.technicalDetails[open] .technicalSummaryAction svg {
+  transform: rotate(180deg);
+}
+
+.technicalDetails .hideLabel,
+.technicalDetails[open] .showLabel {
+  display: none;
+}
+
+.technicalDetails[open] .hideLabel {
+  display: inline;
 }
 
 .technicalDetails[open] {
@@ -722,6 +815,44 @@ tbody tr:hover td {
   background: #141d31;
 }
 
+.paginationBar {
+  min-width: 720px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 10px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.paginationControls button {
+  min-width: 34px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #10172a;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.paginationControls button.active {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+.paginationControls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .addressCell {
   display: flex;
   align-items: center;
@@ -867,8 +998,9 @@ tbody tr:hover td {
     flex-direction: column;
   }
 
-  .technicalDetails > summary small {
-    text-align: left;
+  .technicalSummaryAction {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .technicalDetails .secondaryMetricsGrid,
@@ -876,5 +1008,10 @@ tbody tr:hover td {
   .technicalDetails .dataNotes {
     margin-left: 12px;
     margin-right: 12px;
+  }
+
+  .paginationBar {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

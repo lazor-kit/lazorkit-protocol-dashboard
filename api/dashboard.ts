@@ -1,4 +1,8 @@
-import { getDashboardStats, parseDashboardWindow } from './_lib/analytics';
+import {
+  getDashboardStats,
+  parseDashboardPagination,
+  parseDashboardWindow,
+} from './_lib/analytics';
 import { isDashboardWindow } from '../src/solana/dashboardTypes';
 import { isClusterId } from '../src/solana/shared';
 
@@ -25,6 +29,10 @@ export default async function handler(
 
   const cluster = firstQueryValue(request.query.cluster) ?? 'mainnet';
   const window = firstQueryValue(request.query.window) ?? '24h';
+  const pagination = parseDashboardPagination({
+    txPage: firstQueryValue(request.query.txPage),
+    txLimit: firstQueryValue(request.query.txLimit),
+  });
 
   if (!isClusterId(cluster)) {
     return response.status(400).json({ error: 'Unsupported cluster' });
@@ -32,9 +40,16 @@ export default async function handler(
   if (!isDashboardWindow(window)) {
     return response.status(400).json({ error: 'Unsupported window' });
   }
+  if (!pagination) {
+    return response.status(400).json({ error: 'Unsupported pagination' });
+  }
 
   try {
-    const stats = await getDashboardStats(cluster, parseDashboardWindow(window));
+    const stats = await getDashboardStats(
+      cluster,
+      parseDashboardWindow(window),
+      pagination,
+    );
     response.setHeader(
       'cache-control',
       `s-maxage=${stats.health.cacheTtlSeconds}, stale-while-revalidate=120`,

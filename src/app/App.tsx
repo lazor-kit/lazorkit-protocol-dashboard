@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Activity,
+  ChevronDown,
   CircleDollarSign,
   Coins,
   Copy,
@@ -43,6 +44,7 @@ import {
 export function App() {
   const [cluster, setCluster] = useState<ClusterId>(DEFAULT_CLUSTER);
   const [window, setWindow] = useState<DashboardWindow>('24h');
+  const [txPage, setTxPage] = useState(1);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [stats, setStats] = useState<ProtocolStats | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const nextDashboardStats = await fetchDashboardStats(cluster, window);
+      const nextDashboardStats = await fetchDashboardStats(cluster, window, txPage, 10);
       setDashboardStats(nextDashboardStats);
       setStats(nextDashboardStats.protocolStats);
     } catch (err) {
@@ -60,7 +62,17 @@ export function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [cluster, window]);
+  }, [cluster, window, txPage]);
+
+  const handleClusterChange = useCallback((nextCluster: ClusterId) => {
+    setCluster(nextCluster);
+    setTxPage(1);
+  }, []);
+
+  const handleWindowChange = useCallback((nextWindow: DashboardWindow) => {
+    setWindow(nextWindow);
+    setTxPage(1);
+  }, []);
 
   useEffect(() => {
     void loadStats();
@@ -93,8 +105,8 @@ export function App() {
               </p>
             </div>
             <div className="publicControls">
-              <ClusterSelector cluster={cluster} onChange={setCluster} />
-              <TimeWindowSelector window={window} onChange={setWindow} />
+              <ClusterSelector cluster={cluster} onChange={handleClusterChange} />
+              <TimeWindowSelector window={window} onChange={handleWindowChange} />
               <button
                 className="iconButton refreshButton"
                 type="button"
@@ -174,22 +186,27 @@ export function App() {
                 <ChartPanel
                   title="Tx over time"
                   metric="txCount"
+                  window={window}
                   series={dashboardStats.series}
                 />
                 <ChartPanel
                   title="Unique wallets"
                   metric="uniqueWallets"
+                  window={window}
                   series={dashboardStats.series}
                 />
                 <ChartPanel
                   title="Fees over time"
                   metric="feesLamports"
+                  window={window}
                   series={dashboardStats.series}
                 />
               </section>
               <LatestTransactionsTable
                 cluster={cluster}
                 rows={dashboardStats.latestTransactions}
+                pagination={dashboardStats.latestTransactionsPagination}
+                onPageChange={setTxPage}
               />
             </>
           ) : null}
@@ -204,8 +221,18 @@ export function App() {
           {stats?.initialized ? (
             <details className="technicalDetails">
               <summary>
-                <span>Technical protocol details</span>
-                <small>Protocol config, treasury shards, FeeRecord accounts</small>
+                <div className="technicalSummaryMain">
+                  <Database size={18} />
+                  <span>
+                    Technical protocol details
+                    <small>Protocol config, treasury shards, FeeRecord accounts</small>
+                  </span>
+                </div>
+                <div className="technicalSummaryAction">
+                  <span className="showLabel">Show details</span>
+                  <span className="hideLabel">Hide details</span>
+                  <ChevronDown size={18} />
+                </div>
               </summary>
               {dashboardStats ? (
                 <NetworkComparison comparison={dashboardStats.networkComparison} />

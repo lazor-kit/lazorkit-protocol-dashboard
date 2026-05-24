@@ -1,7 +1,9 @@
 import {
   buildKpis,
   buildNetworkComparison,
+  buildPagination,
   buildSeries,
+  parseDashboardPagination,
 } from './analytics';
 import type { DashboardTransactionRow } from './database';
 
@@ -72,5 +74,32 @@ describe('analytics aggregation', () => {
       row({ cluster: 'devnet' }),
     ]);
     expect(comparison).toEqual({ mainnetTxCount: 2, devnetTxCount: 1 });
+  });
+
+  it('parses and builds latest transaction pagination', () => {
+    expect(parseDashboardPagination({})).toEqual({ txPage: 1, txLimit: 10 });
+    expect(parseDashboardPagination({ txPage: '2', txLimit: '15' })).toEqual({
+      txPage: 2,
+      txLimit: 15,
+    });
+    expect(parseDashboardPagination({ txPage: '0', txLimit: '10' })).toBeNull();
+    expect(parseDashboardPagination({ txPage: '1', txLimit: '20' })).toBeNull();
+
+    expect(buildPagination(2, 10, 35)).toEqual({
+      page: 2,
+      limit: 10,
+      total: 35,
+      totalPages: 4,
+      hasPreviousPage: true,
+      hasNextPage: true,
+    });
+    expect(buildPagination(1, 10, 0)).toEqual({
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 1,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    });
   });
 });

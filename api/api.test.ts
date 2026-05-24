@@ -42,6 +42,28 @@ describe('api handlers', () => {
     expect(invalidWindow.state.code).toBe(400);
   });
 
+  it('rejects invalid dashboard pagination', async () => {
+    const invalidPage = response();
+    await dashboardHandler(
+      {
+        method: 'GET',
+        query: { cluster: 'mainnet', window: '24h', txPage: '0' },
+      },
+      invalidPage.res,
+    );
+    expect(invalidPage.state.code).toBe(400);
+
+    const invalidLimit = response();
+    await dashboardHandler(
+      {
+        method: 'GET',
+        query: { cluster: 'mainnet', window: '24h', txLimit: '20' },
+      },
+      invalidLimit.res,
+    );
+    expect(invalidLimit.state.code).toBe(400);
+  });
+
   it('returns setup-safe dashboard json without secrets when Supabase is absent', async () => {
     const prevUrl = process.env.SUPABASE_URL;
     const prevKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -62,6 +84,7 @@ describe('api handlers', () => {
     expect(bodyText).not.toContain('RPC_URL');
     expect(bodyText).not.toContain('SUPABASE');
     expect(bodyText).not.toContain('service');
+    expect(bodyText).toContain('latestTransactionsPagination');
   });
 
   it('rejects cron requests without the configured secret', async () => {

@@ -4,6 +4,7 @@ import type {
   DashboardWindow,
   KpiValue,
   LatestTransaction,
+  LatestTransactionsPagination,
   NetworkComparison,
   SeriesPoint,
 } from '../../src/solana/dashboardTypes';
@@ -19,6 +20,14 @@ import {
 import { getCachedProtocolStats } from './protocolStats';
 
 export const DASHBOARD_CACHE_TTL_SECONDS = 30;
+export const DEFAULT_TX_PAGE = 1;
+export const DEFAULT_TX_LIMIT = 10;
+export const ALLOWED_TX_LIMITS = [10, 15] as const;
+
+export interface DashboardPaginationOptions {
+  txPage: number;
+  txLimit: 10 | 15;
+}
 
 interface DashboardCacheEntry {
   expiresAt: number;
@@ -37,12 +46,32 @@ export function windowToMs(window: DashboardWindow): number {
   return 30 * 24 * 60 * 60 * 1000;
 }
 
+export function parseDashboardPagination(params: {
+  txPage?: unknown;
+  txLimit?: unknown;
+}): DashboardPaginationOptions | null {
+  const txPage = parseOptionalPositiveInteger(params.txPage, DEFAULT_TX_PAGE);
+  const txLimit = parseOptionalPositiveInteger(params.txLimit, DEFAULT_TX_LIMIT);
+
+  if (txPage === null || txLimit === null) return null;
+  if (!ALLOWED_TX_LIMITS.includes(txLimit as 10 | 15)) return null;
+
+  return {
+    txPage,
+    txLimit: txLimit as 10 | 15,
+  };
+}
+
 export async function getDashboardStats(
   cluster: ClusterId,
   window: DashboardWindow,
+  pagination: DashboardPaginationOptions = {
+    txPage: DEFAULT_TX_PAGE,
+    txLimit: DEFAULT_TX_LIMIT,
+  },
 ): Promise<DashboardStats> {
   const now = Date.now();
-  const cacheKey = `${cluster}:${window}`;
+  const cacheKey = `${cluster}:${window}:${pagination.txPage}:${pagination.txLimit}`;
   const cached = dashboardCache.get(cacheKey);
   if (cached && cached.expiresAt > now) {
     return {
@@ -55,7 +84,7 @@ export async function getDashboardStats(
     };
   }
 
-  const stats = await buildDashboardStats(cluster, window, now);
+  const stats = await buildDashboardStats(cluster, window, now, pagination);
   dashboardCache.set(cacheKey, {
     stats,
     expiresAt: now + DASHBOARD_CACHE_TTL_SECONDS * 1000,
@@ -67,6 +96,7 @@ async function buildDashboardStats(
   cluster: ClusterId,
   window: DashboardWindow,
   now: number,
+  pagination: DashboardPaginationOptions,
 ): Promise<DashboardStats> {
   let db: SupabaseRestClient;
   try {
@@ -90,6 +120,7 @@ async function buildDashboardStats(
               : 'paused'
           : 'not-initialized',
         protocolStats,
+        pagination,
       );
     }
     throw error;
@@ -100,13 +131,21 @@ async function buildDashboardStats(
   const previousStart = new Date(now - duration * 2).toISOString();
   const currentEnd = new Date(now).toISOString();
 
-  const [rows, cursor, protocolStats] = await Promise.all([
+  const latestOffset = (pagination.txPage - 1) * pagination.txLimit;
+  const [rows, latestTransactionsResult, cursor, protocolStats] = await Promise.all([
     db.selectDashboardTransactions({
       clusters: ['mainnet', 'devnet'],
       sinceIso: previousStart,
       untilIso: currentEnd,
       order: 'desc',
       limit: 20000,
+    }),
+    db.selectLatestDashboardTransactions({
+      cluster,
+      sinceIso: currentStart,
+      untilIso: currentEnd,
+      limit: pagination.txLimit,
+      offset: latestOffset,
     }),
     db.getCursor(cluster),
     getCachedProtocolStats(cluster).catch(() => null),
@@ -144,8 +183,30 @@ async function buildDashboardStats(
     },
     kpis: buildKpis(currentRows, previousRows),
     series: buildSeries(currentRows, window, now),
-    latestTransactions: currentRows.slice(0, 20).map(toLatestTransaction),
+    latestTransactions: latestTransactionsResult.rows.map(toLatestTransaction),
+    latestTransactionsPagination: buildPagination(
+      pagination.txPage,
+      pagination.txLimit,
+      latestTransactionsResult.total,
+    ),
     networkComparison: buildNetworkComparison(comparisonRows),
+  };
+}
+
+export function buildPagination(
+  page: number,
+  limit: 10 | 15,
+  total: number,
+): LatestTransactionsPagination {
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  return {
+    page: safePage,
+    limit,
+    total,
+    totalPages,
+    hasPreviousPage: safePage > 1,
+    hasNextPage: safePage < totalPages,
   };
 }
 
@@ -266,6 +327,10 @@ function emptyDashboardStats(
   setupRequired: boolean,
   protocolStatus: DashboardStats['health']['protocolStatus'] = 'not-initialized',
   protocolStats: ProtocolStats | null = null,
+  pagination: DashboardPaginationOptions = {
+    txPage: DEFAULT_TX_PAGE,
+    txLimit: DEFAULT_TX_LIMIT,
+  },
 ): DashboardStats {
   const cursor: IndexerCursorRow | null = null;
   return {
@@ -284,6 +349,19 @@ function emptyDashboardStats(
     kpis: buildKpis([], []),
     series: buildSeries([], window, now),
     latestTransactions: [],
+    latestTransactionsPagination: buildPagination(
+      pagination.txPage,
+      pagination.txLimit,
+      0,
+    ),
     networkComparison: { mainnetTxCount: 0, devnetTxCount: 0 },
   };
+}
+
+function parseOptionalPositiveInteger(value: unknown, fallback: number): number | null {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value !== 'string') return null;
+  if (!/^[1-9]\d*$/.test(value)) return null;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isSafeInteger(parsed) ? parsed : null;
 }

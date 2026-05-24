@@ -41,6 +41,15 @@ export interface NetworkComparison {
   devnetTxCount: number;
 }
 
+export interface LatestTransactionsPagination {
+  page: number;
+  limit: 10 | 15;
+  total: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 export interface DashboardStats {
   cluster: ClusterId;
   window: DashboardWindow;
@@ -57,6 +66,7 @@ export interface DashboardStats {
   kpis: DashboardKpis;
   series: SeriesPoint[];
   latestTransactions: LatestTransaction[];
+  latestTransactionsPagination: LatestTransactionsPagination;
   networkComparison: NetworkComparison;
 }
 

@@ -42,6 +42,11 @@ export interface IndexerCursorRow {
   updated_at?: string;
 }
 
+export interface PaginatedDashboardTransactions {
+  rows: DashboardTransactionRow[];
+  total: number;
+}
+
 type SupabaseConfig = Extract<ReturnType<typeof getSupabaseConfig>, { configured: true }>;
 
 export class SupabaseNotConfiguredError extends Error {
@@ -113,6 +118,45 @@ export class SupabaseRestClient {
     );
   }
 
+  async selectLatestDashboardTransactions(params: {
+    cluster: ClusterId;
+    sinceIso: string;
+    untilIso: string;
+    limit: number;
+    offset: number;
+  }): Promise<PaginatedDashboardTransactions> {
+    const search = new URLSearchParams();
+    search.set(
+      'select',
+      [
+        'cluster',
+        'signature',
+        'slot',
+        'block_time',
+        'fee_payer',
+        'wallet_pda',
+        'method',
+        'status',
+        'protocol_fee_lamports',
+      ].join(','),
+    );
+    search.set('cluster', `eq.${params.cluster}`);
+    search.set('block_time', `gte.${params.sinceIso}`);
+    search.append('block_time', `lt.${params.untilIso}`);
+    search.set('order', 'block_time.desc');
+    search.set('limit', String(params.limit));
+    search.set('offset', String(params.offset));
+
+    const response = await this.requestWithHeaders<DashboardTransactionRow[]>(
+      `/rest/v1/protocol_transactions?${search.toString()}`,
+      { headers: { prefer: 'count=exact' } },
+    );
+    return {
+      rows: response.body,
+      total: parseContentRangeTotal(response.headers.get('content-range')),
+    };
+  }
+
   async upsertProtocolTransactions(rows: ProtocolTransactionRow[]): Promise<void> {
     if (rows.length === 0) return;
     await this.request('/rest/v1/protocol_transactions?on_conflict=cluster,signature', {
@@ -165,4 +209,38 @@ export class SupabaseRestClient {
     const text = await response.text();
     return (text ? JSON.parse(text) : undefined) as T;
   }
+
+  private async requestWithHeaders<T = unknown>(
+    path: string,
+    init: RequestInit & { headers?: Record<string, string> } = {},
+  ): Promise<{ body: T; headers: Headers }> {
+    const response = await fetch(`${this.config.url}${path}`, {
+      ...init,
+      headers: {
+        apikey: this.config.serviceRoleKey,
+        authorization: `Bearer ${this.config.serviceRoleKey}`,
+        'content-type': 'application/json',
+        ...(init.headers ?? {}),
+      },
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new Error(`Supabase request failed ${response.status}: ${body}`);
+    }
+
+    const text = await response.text();
+    return {
+      body: (text ? JSON.parse(text) : undefined) as T,
+      headers: response.headers,
+    };
+  }
+}
+
+function parseContentRangeTotal(value: string | null): number {
+  if (!value) return 0;
+  const total = value.split('/')[1];
+  if (!total || total === '*') return 0;
+  const parsed = Number.parseInt(total, 10);
+  return Number.isFinite(parsed) ? parsed : 0;
 }

@@ -1,5 +1,8 @@
 import { ExternalLink } from 'lucide-react';
-import type { LatestTransaction } from '../solana/dashboardTypes';
+import type {
+  LatestTransaction,
+  LatestTransactionsPagination,
+} from '../solana/dashboardTypes';
 import type { ClusterId } from '../solana/constants';
 import {
   explorerUrl,
@@ -13,10 +16,19 @@ import { EmptyState } from './EmptyState';
 export function LatestTransactionsTable({
   cluster,
   rows,
+  pagination,
+  onPageChange,
 }: {
   cluster: ClusterId;
   rows: LatestTransaction[];
+  pagination: LatestTransactionsPagination;
+  onPageChange: (page: number) => void;
 }) {
+  const firstRow = pagination.total === 0
+    ? 0
+    : (pagination.page - 1) * pagination.limit + 1;
+  const lastRow = Math.min(pagination.total, pagination.page * pagination.limit);
+
   return (
     <section className="panel" aria-label="Latest transactions">
       <div className="panelHeader">
@@ -91,9 +103,50 @@ export function LatestTransactionsTable({
               ))}
             </tbody>
           </table>
+          <div className="paginationBar">
+            <span>
+              Showing {firstRow}-{lastRow} of {pagination.total}
+            </span>
+            <div className="paginationControls">
+              <button
+                type="button"
+                onClick={() => onPageChange(pagination.page - 1)}
+                disabled={!pagination.hasPreviousPage}
+              >
+                Previous
+              </button>
+              {paginationPages(pagination.totalPages, pagination.page).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  className={page === pagination.page ? 'active' : undefined}
+                  onClick={() => onPageChange(page)}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => onPageChange(pagination.page + 1)}
+                disabled={!pagination.hasNextPage}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>
+  );
+}
+
+function paginationPages(totalPages: number, currentPage: number): number[] {
+  const start = Math.max(1, currentPage - 2);
+  const end = Math.min(totalPages, start + 4);
+  const adjustedStart = Math.max(1, end - 4);
+  return Array.from(
+    { length: end - adjustedStart + 1 },
+    (_, index) => adjustedStart + index,
   );
 }
 

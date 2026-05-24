@@ -8,8 +8,16 @@ import { isClusterId, type ClusterId } from './shared';
 export async function fetchDashboardStats(
   cluster: ClusterId,
   window: DashboardWindow,
+  txPage = 1,
+  txLimit: 10 | 15 = 10,
 ): Promise<DashboardStats> {
-  const response = await fetch(`/api/dashboard?cluster=${cluster}&window=${window}`, {
+  const params = new URLSearchParams({
+    cluster,
+    window,
+    txPage: String(txPage),
+    txLimit: String(txLimit),
+  });
+  const response = await fetch(`/api/dashboard?${params.toString()}`, {
     headers: { accept: 'application/json' },
   });
 
@@ -48,6 +56,8 @@ function isDashboardStats(value: unknown): value is DashboardStats {
     stats.kpis !== null &&
     Array.isArray(stats.series) &&
     Array.isArray(stats.latestTransactions) &&
+    typeof stats.latestTransactionsPagination === 'object' &&
+    stats.latestTransactionsPagination !== null &&
     typeof stats.networkComparison === 'object' &&
     stats.networkComparison !== null
   );
