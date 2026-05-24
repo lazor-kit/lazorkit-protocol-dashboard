@@ -367,6 +367,7 @@ export function buildSeries(
     bucket: new Date(start + index * bucketMs).toISOString(),
     txCount: 0,
     wallets: new Set<string>(),
+    createWalletCount: 0,
     feesLamports: 0n,
     feeEventCount: 0,
   }));
@@ -380,6 +381,7 @@ export function buildSeries(
     const bucket = buckets[index];
     bucket.txCount += 1;
     bucket.wallets.add(row.wallet_pda);
+    if (row.method === 'CreateWallet') bucket.createWalletCount += 1;
     const feeLamports = BigInt(row.protocol_fee_lamports);
     if (row.status === 'success' && feeLamports > 0n) {
       bucket.feesLamports += feeLamports;
@@ -391,6 +393,7 @@ export function buildSeries(
     bucket: bucket.bucket,
     txCount: bucket.txCount,
     uniqueWallets: bucket.wallets.size,
+    createWalletCount: bucket.createWalletCount,
     feesLamports: bucket.feesLamports.toString(),
     feeEventCount: bucket.feeEventCount,
   }));
@@ -408,6 +411,7 @@ export function buildSeriesFromBuckets(
   const buckets = Array.from({ length: bucketCount }, (_, index) => ({
     bucket: new Date(start + index * bucketMs).toISOString(),
     txCount: 0,
+    createWalletCount: 0,
     feesLamports: 0n,
     feeEventCount: 0,
   }));
@@ -420,6 +424,7 @@ export function buildSeriesFromBuckets(
     );
     const bucket = buckets[index];
     bucket.txCount += row.tx_count;
+    bucket.createWalletCount += row.create_wallet_count;
     bucket.feesLamports += BigInt(row.fee_lamports);
     bucket.feeEventCount += row.success_count;
   }
@@ -428,6 +433,7 @@ export function buildSeriesFromBuckets(
     bucket: bucket.bucket,
     txCount: bucket.txCount,
     uniqueWallets: walletAccountCount,
+    createWalletCount: bucket.createWalletCount,
     feesLamports: bucket.feesLamports.toString(),
     feeEventCount: bucket.feeEventCount,
   }));

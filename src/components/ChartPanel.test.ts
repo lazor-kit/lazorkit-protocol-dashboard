@@ -15,6 +15,7 @@ function point(partial: Partial<SeriesPoint>): SeriesPoint {
     bucket: '2026-05-24T00:00:00.000Z',
     txCount: 0,
     uniqueWallets: 0,
+    createWalletCount: 0,
     feesLamports: '0',
     feeEventCount: 0,
     ...partial,
@@ -32,6 +33,7 @@ describe('chart panel helpers', () => {
         bucket: '2026-05-24T00:00:00.000Z',
         txCount: 3,
         uniqueWallets: 2,
+        createWalletCount: 0,
         feesLamports: 5_000_000,
         feeEventCount: 0,
       },
@@ -81,5 +83,15 @@ describe('chart panel helpers', () => {
 
     expect(buildChartSummaryValue(data, 'uniqueWallets')).toBe(37);
     expect(buildChartSummaryValue(data, 'txCount')).toBe(0);
+  });
+
+  it('summarizes wallets-created charts as period activity', () => {
+    const data = toChartData([
+      point({ createWalletCount: 2 }),
+      point({ createWalletCount: 3 }),
+      point({ createWalletCount: 4 }),
+    ]);
+
+    expect(buildChartSummaryValue(data, 'createWalletCount')).toBe(9);
   });
 });

@@ -13,19 +13,25 @@ import {
 import type { DashboardWindow, SeriesPoint } from '../solana/dashboardTypes';
 import { formatInteger, formatLamportsShort } from '../solana/format';
 
-export type ChartMetric = 'txCount' | 'uniqueWallets' | 'feesLamports';
+export type ChartMetric =
+  | 'txCount'
+  | 'uniqueWallets'
+  | 'createWalletCount'
+  | 'feesLamports';
 
 interface ChartDatum {
   bucket: string;
   txCount: number;
   uniqueWallets: number;
+  createWalletCount: number;
   feesLamports: number;
   feeEventCount: number;
 }
 
 const METRIC_LABELS: Record<ChartMetric, string> = {
   txCount: 'Txns',
-  uniqueWallets: 'Wallets',
+  uniqueWallets: 'Wallet accounts',
+  createWalletCount: 'Wallets created',
   feesLamports: 'Fees',
 };
 
@@ -120,7 +126,11 @@ export const ChartPanel = memo(function ChartPanel({
               <Line
                 type="monotone"
                 dataKey={metric}
-                stroke={metric === 'uniqueWallets' ? '#9b86ff' : '#7557ff'}
+                stroke={
+                  metric === 'uniqueWallets' || metric === 'createWalletCount'
+                    ? '#9b86ff'
+                    : '#7557ff'
+                }
                 strokeWidth={2.25}
                 dot={false}
                 activeDot={{ r: 4, stroke: '#eef3ff', strokeWidth: 1 }}
@@ -139,6 +149,7 @@ export function toChartData(series: SeriesPoint[]): ChartDatum[] {
     bucket: point.bucket,
     txCount: point.txCount,
     uniqueWallets: point.uniqueWallets,
+    createWalletCount: point.createWalletCount,
     feesLamports: Number(point.feesLamports),
     feeEventCount: point.feeEventCount,
   }));
@@ -251,6 +262,9 @@ function ChartTooltip({
       </span>
       <span className={metric === 'uniqueWallets' ? 'active' : undefined}>
         {METRIC_LABELS.uniqueWallets}: {formatInteger(datum.uniqueWallets)}
+      </span>
+      <span className={metric === 'createWalletCount' ? 'active' : undefined}>
+        {METRIC_LABELS.createWalletCount}: {formatInteger(datum.createWalletCount)}
       </span>
       <span className={metric === 'feesLamports' ? 'active' : undefined}>
         {METRIC_LABELS.feesLamports}: {formatSolFromLamports(datum.feesLamports)}

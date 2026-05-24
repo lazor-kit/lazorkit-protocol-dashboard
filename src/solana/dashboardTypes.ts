@@ -31,6 +31,7 @@ export interface SeriesPoint {
   bucket: string;
   txCount: number;
   uniqueWallets: number;
+  createWalletCount: number;
   feesLamports: string;
   feeEventCount: number;
 }

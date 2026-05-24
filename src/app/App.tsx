@@ -231,8 +231,8 @@ export function App() {
                   series={dashboardStats.series}
                 />
                 <ChartPanel
-                  title="Wallet accounts"
-                  metric="uniqueWallets"
+                  title="Wallets created"
+                  metric="createWalletCount"
                   window={window}
                   series={dashboardStats.series}
                 />

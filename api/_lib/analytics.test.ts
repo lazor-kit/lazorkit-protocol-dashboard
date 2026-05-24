@@ -94,6 +94,7 @@ describe('analytics aggregation', () => {
           block_time: '2026-05-23T23:00:00.000Z',
           wallet_pda: 'wallet-a',
           protocol_fee_lamports: '10',
+          method: 'CreateWallet',
         }),
         row({
           block_time: '2026-05-23T23:10:00.000Z',
@@ -108,6 +109,7 @@ describe('analytics aggregation', () => {
     expect(series).toHaveLength(24);
     expect(series.at(-1)?.txCount).toBe(2);
     expect(series.at(-1)?.uniqueWallets).toBe(1);
+    expect(series.at(-1)?.createWalletCount).toBe(1);
     expect(series.at(-1)?.feesLamports).toBe('25');
     expect(series.at(-1)?.feeEventCount).toBe(2);
     expect(buildSeries([], 'all', now)).toHaveLength(30);
@@ -125,6 +127,7 @@ describe('analytics aggregation', () => {
           tx_count: 2,
           success_count: 2,
           fee_lamports: '25',
+          create_wallet_count: 1,
         }),
       ],
       '24h',
@@ -135,6 +138,7 @@ describe('analytics aggregation', () => {
     expect(series).toHaveLength(24);
     expect(series.at(-1)?.txCount).toBe(2);
     expect(series.at(-1)?.uniqueWallets).toBe(37);
+    expect(series.at(-1)?.createWalletCount).toBe(1);
     expect(series.at(-1)?.feesLamports).toBe('25');
     expect(series.at(-1)?.feeEventCount).toBe(2);
   });
