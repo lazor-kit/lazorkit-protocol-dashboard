@@ -16,10 +16,13 @@ export const ACCOUNT_SIZES = {
 } as const;
 
 export const DISCRIMINATORS = {
+  createWallet: 0,
   wallet: 1,
+  execute: 4,
   protocolConfig: 5,
   feeRecord: 6,
   treasuryShard: 7,
+  executeDeferred: 7,
 } as const;
 
 export function isClusterId(value: unknown): value is ClusterId {

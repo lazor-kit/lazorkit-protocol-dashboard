@@ -31,9 +31,6 @@ export const CLUSTERS: Record<
 };
 
 export const DEFAULT_CLUSTER: ClusterId =
-  import.meta.env.VITE_DEFAULT_CLUSTER === 'devnet' ||
-  import.meta.env.VITE_DEFAULT_CLUSTER === 'localnet'
-    ? import.meta.env.VITE_DEFAULT_CLUSTER
-    : 'mainnet';
+  import.meta.env.VITE_DEFAULT_CLUSTER === 'devnet' ? 'devnet' : 'mainnet';
 
 export { ACCOUNT_SIZES, DISCRIMINATORS, programIdForCluster, type ClusterId };

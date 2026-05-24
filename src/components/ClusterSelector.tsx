@@ -1,5 +1,7 @@
 import { CLUSTERS, type ClusterId } from '../solana/constants';
 
+const DASHBOARD_CLUSTERS: ClusterId[] = ['mainnet', 'devnet'];
+
 export function ClusterSelector({
   cluster,
   onChange,
@@ -9,7 +11,7 @@ export function ClusterSelector({
 }) {
   return (
     <div className="clusterControl" role="radiogroup" aria-label="Cluster">
-      {(Object.keys(CLUSTERS) as ClusterId[]).map((id) => (
+      {DASHBOARD_CLUSTERS.map((id) => (
         <button
           key={id}
           type="button"
@@ -22,4 +24,3 @@ export function ClusterSelector({
     </div>
   );
 }
-

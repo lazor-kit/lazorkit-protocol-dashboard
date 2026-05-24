@@ -6,21 +6,33 @@ import {
   Copy,
   Database,
   ExternalLink,
+  Percent,
   RefreshCw,
   ShieldCheck,
   Wallet,
 } from 'lucide-react';
+import { AnalyticsHealthBar } from '../components/AnalyticsHealthBar';
 import { AppShell } from '../components/AppShell';
+import { ChartPanel } from '../components/ChartPanel';
 import { ClusterSelector } from '../components/ClusterSelector';
 import { DataNotes } from '../components/DataNotes';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { FeeRecordTable } from '../components/FeeRecordTable';
+import { KpiCard } from '../components/KpiCard';
+import { LatestTransactionsTable } from '../components/LatestTransactionsTable';
 import { MetricCard } from '../components/MetricCard';
+import { NetworkComparison } from '../components/NetworkComparison';
 import { ProtocolStatus } from '../components/ProtocolStatus';
 import { ShardTable } from '../components/ShardTable';
 import { StatusBar } from '../components/StatusBar';
+import { TimeWindowSelector } from '../components/TimeWindowSelector';
 import { CLUSTERS, DEFAULT_CLUSTER, type ClusterId } from '../solana/constants';
+import {
+  type DashboardStats,
+  type DashboardWindow,
+} from '../solana/dashboardTypes';
+import { fetchDashboardStats } from '../solana/fetchDashboardStats';
 import { fetchProtocolStats, type ProtocolStats } from '../solana/fetchProtocolStats';
 import {
   formatDateTime,
@@ -32,6 +44,8 @@ import {
 
 export function App() {
   const [cluster, setCluster] = useState<ClusterId>(DEFAULT_CLUSTER);
+  const [window, setWindow] = useState<DashboardWindow>('24h');
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [stats, setStats] = useState<ProtocolStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,14 +54,18 @@ export function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const nextStats = await fetchProtocolStats(cluster);
-      setStats(nextStats);
+      const [nextDashboardStats, nextProtocolStats] = await Promise.all([
+        fetchDashboardStats(cluster, window),
+        fetchProtocolStats(cluster),
+      ]);
+      setDashboardStats(nextDashboardStats);
+      setStats(nextProtocolStats);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load protocol stats');
     } finally {
       setIsLoading(false);
     }
-  }, [cluster]);
+  }, [cluster, window]);
 
   useEffect(() => {
     void loadStats();
@@ -63,6 +81,7 @@ export function App() {
       actions={
         <>
           <ClusterSelector cluster={cluster} onChange={setCluster} />
+          <TimeWindowSelector window={window} onChange={setWindow} />
           <button
             className="iconButton refreshButton"
             type="button"
@@ -88,7 +107,96 @@ export function App() {
         <ErrorState message={error} onRetry={() => void loadStats()} />
       ) : (
         <>
-          <section className="metricsGrid" aria-label="Protocol metrics">
+          <AnalyticsHealthBar stats={dashboardStats} />
+
+          {dashboardStats?.setupRequired ? (
+            <EmptyState
+              title="Analytics setup required"
+              body="Set Supabase server environment variables and run the indexer to populate time-based metrics. Protocol snapshot data remains available below."
+            />
+          ) : null}
+
+          <section className="metricsGrid kpiGrid" aria-label="Dashboard KPIs">
+            <KpiCard
+              label="Total Transactions"
+              value={
+                isLoading || !dashboardStats
+                  ? 'Loading'
+                  : formatInteger(dashboardStats.kpis.totalTransactions.value)
+              }
+              detail={`vs previous ${window}`}
+              percentChange={dashboardStats?.kpis.totalTransactions.percentChange ?? 0}
+              icon={Activity}
+              isLoading={isLoading}
+            />
+            <KpiCard
+              label="Unique Wallets"
+              value={
+                isLoading || !dashboardStats
+                  ? 'Loading'
+                  : formatInteger(dashboardStats.kpis.uniqueWallets.value)
+              }
+              detail={`vs previous ${window}`}
+              percentChange={dashboardStats?.kpis.uniqueWallets.percentChange ?? 0}
+              icon={Wallet}
+              isLoading={isLoading}
+            />
+            <KpiCard
+              label="Total Fees"
+              value={
+                isLoading || !dashboardStats
+                  ? 'Loading'
+                  : formatLamportsShort(
+                      String(dashboardStats.kpis.totalFeesLamports.value),
+                    )
+              }
+              detail={`vs previous ${window}`}
+              percentChange={dashboardStats?.kpis.totalFeesLamports.percentChange ?? 0}
+              icon={CircleDollarSign}
+              isLoading={isLoading}
+            />
+            <KpiCard
+              label="Success Rate"
+              value={
+                isLoading || !dashboardStats
+                  ? 'Loading'
+                  : formatPercent(dashboardStats.kpis.successRate.value)
+              }
+              detail={`vs previous ${window}`}
+              percentChange={dashboardStats?.kpis.successRate.percentChange ?? 0}
+              icon={Percent}
+              isLoading={isLoading}
+            />
+          </section>
+
+          {dashboardStats ? (
+            <>
+              <section className="chartsGrid" aria-label="Analytics charts">
+                <ChartPanel
+                  title="Transactions over time"
+                  metric="txCount"
+                  series={dashboardStats.series}
+                />
+                <ChartPanel
+                  title="Unique wallets over time"
+                  metric="uniqueWallets"
+                  series={dashboardStats.series}
+                />
+                <ChartPanel
+                  title="Fees over time"
+                  metric="feesLamports"
+                  series={dashboardStats.series}
+                />
+              </section>
+              <NetworkComparison comparison={dashboardStats.networkComparison} />
+              <LatestTransactionsTable
+                cluster={cluster}
+                rows={dashboardStats.latestTransactions}
+              />
+            </>
+          ) : null}
+
+          <section className="metricsGrid secondaryMetricsGrid" aria-label="Protocol metrics">
             <ProtocolStatus status={status} isLoading={isLoading} />
             <MetricCard
               label="Wallet Accounts"
@@ -99,39 +207,6 @@ export function App() {
               }
               detail="Current wallet PDAs"
               icon={Wallet}
-              isLoading={isLoading}
-            />
-            <MetricCard
-              label="Wallets Recorded"
-              value={
-                isLoading || !stats
-                  ? 'Loading'
-                  : formatInteger(stats.feeTotals.walletCount)
-              }
-              detail="Sum of FeeRecord.wallet_count"
-              icon={ShieldCheck}
-              isLoading={isLoading}
-            />
-            <MetricCard
-              label="LazorKit Txns"
-              value={
-                isLoading || !stats
-                  ? 'Loading'
-                  : formatInteger(stats.feeTotals.txCount)
-              }
-              detail="Execute + ExecuteDeferred"
-              icon={Activity}
-              isLoading={isLoading}
-            />
-            <MetricCard
-              label="Fee-Paying Events"
-              value={
-                isLoading || !stats
-                  ? 'Loading'
-                  : formatInteger(stats.feeTotals.feePayingEvents)
-              }
-              detail="Wallets + txns"
-              icon={Database}
               isLoading={isLoading}
             />
             <MetricCard
@@ -165,6 +240,17 @@ export function App() {
               }
               detail="FeeRecord account count"
               icon={Database}
+              isLoading={isLoading}
+            />
+            <MetricCard
+              label="Fee-Paying Events"
+              value={
+                isLoading || !stats
+                  ? 'Loading'
+                  : formatInteger(stats.feeTotals.feePayingEvents)
+              }
+              detail="All-time wallets + txns"
+              icon={ShieldCheck}
               isLoading={isLoading}
             />
           </section>
@@ -245,6 +331,13 @@ export function App() {
       )}
     </AppShell>
   );
+}
+
+function formatPercent(value: number | string): string {
+  const numeric = typeof value === 'string' ? Number(value) : value;
+  return `${new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 1,
+  }).format(numeric * 100)}%`;
 }
 
 function ConfigItem({ label, value }: { label: string; value: string }) {

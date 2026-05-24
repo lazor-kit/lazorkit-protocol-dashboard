@@ -45,6 +45,13 @@ export function explorerUrl(address: string, cluster: ClusterId): string {
   return base;
 }
 
+export function explorerTxUrl(signature: string, cluster: ClusterId): string {
+  const base = `https://explorer.solana.com/tx/${signature}`;
+  if (cluster === 'mainnet') return base;
+  if (cluster === 'devnet') return `${base}?cluster=devnet`;
+  return base;
+}
+
 export function formatDateTime(date: Date | string): string {
   return new Intl.DateTimeFormat('en-US', {
     hour: '2-digit',

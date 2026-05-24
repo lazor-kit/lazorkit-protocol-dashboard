@@ -2,8 +2,9 @@
 
 Public read-only dashboard for LazorKit protocol usage and fee metrics.
 
-The dashboard reads current on-chain state through a server-side cached API.
-It has no wallet connection, no admin controls, and no browser-exposed RPC key.
+The dashboard reads on-chain state through server-side APIs. A lightweight
+indexer stores LazorKit transaction history in Supabase Postgres so the UI can
+show traffic, fee, and success-rate trends without exposing RPC keys.
 
 ## Metrics
 
@@ -15,6 +16,12 @@ It has no wallet connection, no admin controls, and no browser-exposed RPC key.
 - **Lifetime Fees Recorded**: sum of `FeeRecord.total_fees_paid`.
 - **Currently Collectible Fees**: treasury shard balances minus rent reserve.
 - **Shard Balances Including Rent**: raw shard lamport balances.
+- **Total Transactions**: landed transactions containing a fee-eligible
+  LazorKit instruction in the selected window.
+- **Unique Wallets**: distinct LazorKit wallet PDAs parsed from those
+  transactions.
+- **Success Rate**: successful indexed transactions divided by all indexed
+  transactions in the selected window.
 
 `Lifetime Fees Recorded` and `Currently Collectible Fees` are intentionally
 separate. Treasury shards can be withdrawn, while `FeeRecord.total_fees_paid`
@@ -56,6 +63,11 @@ not use the `VITE_` prefix because they are read only by the server-side API.
 MAINNET_RPC_URL=https://api.mainnet-beta.solana.com
 DEVNET_RPC_URL=https://api.devnet.solana.com
 LOCALNET_RPC_URL=http://127.0.0.1:8899
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+CRON_SECRET=
+INDEXER_BACKFILL_DAYS=60
+INDEXER_MAX_SIGNATURES_PER_RUN=100
 VITE_DEFAULT_CLUSTER=mainnet
 ```
 
@@ -63,11 +75,16 @@ Use `MAINNET_RPC_URL` for a full Helius or other private RPC URL in Vercel
 environment variables. Do not create `VITE_MAINNET_RPC_URL`; `VITE_` values are
 compiled into browser JavaScript.
 
+Run `supabase/schema.sql` in the Supabase SQL editor before enabling the
+indexer. The dashboard returns an empty setup-safe analytics state until
+Supabase variables are configured.
+
 ## Checks
 
 ```bash
 npm test
 npm run build
+npm run typecheck:api
 ```
 
 ## RPC Limitations
@@ -81,6 +98,19 @@ Private or key-bearing RPC URLs cannot be hidden in a frontend-only app. This
 repo now keeps RPC URLs in the backend API and returns only dashboard JSON to
 the browser.
 
+## Indexer
+
+The indexer endpoint is protected by `CRON_SECRET`:
+
+```bash
+curl "https://your-domain/api/cron/indexer?cluster=all&secret=$CRON_SECRET"
+```
+
+Vercel Cron runs `/api/cron/indexer?cluster=all` every five minutes. Vercel
+sends `Authorization: Bearer $CRON_SECRET` when the env var is configured.
+The indexer stores one row per transaction signature and upserts by
+`(cluster, signature)`.
+
 ## Deployment
 
 Deploy as a Vercel project:
@@ -89,5 +119,9 @@ Deploy as a Vercel project:
 - Build command: `npm run build`
 - Output directory: `dist`
 - Serverless API: `api/protocol-stats.ts`
-- Required production env: `MAINNET_RPC_URL`
-- Optional env: `DEVNET_RPC_URL`, `LOCALNET_RPC_URL`, `VITE_DEFAULT_CLUSTER`
+- Serverless API: `api/dashboard.ts`
+- Cron API: `api/cron/indexer.ts`
+- Required production env: `MAINNET_RPC_URL`, `SUPABASE_URL`,
+  `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`
+- Optional env: `DEVNET_RPC_URL`, `LOCALNET_RPC_URL`, `VITE_DEFAULT_CLUSTER`,
+  `INDEXER_BACKFILL_DAYS`, `INDEXER_MAX_SIGNATURES_PER_RUN`

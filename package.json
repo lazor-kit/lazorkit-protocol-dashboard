@@ -9,10 +9,11 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck:api": "tsc --noEmit --target ES2022 --module ESNext --moduleResolution Bundler --types node --skipLibCheck api/protocol-stats.ts api/_lib/protocolStats.ts vite.config.ts"
+    "typecheck:api": "tsc --noEmit --target ES2022 --module ESNext --moduleResolution Bundler --types node --skipLibCheck api/protocol-stats.ts api/dashboard.ts api/cron/indexer.ts api/_lib/analytics.ts api/_lib/database.ts api/_lib/env.ts api/_lib/indexer.ts api/_lib/protocolStats.ts api/_lib/transactionParser.ts vite.config.ts"
   },
   "dependencies": {
     "@solana/web3.js": "^1.98.4",
+    "bs58": "^6.0.0",
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

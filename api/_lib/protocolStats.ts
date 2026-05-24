@@ -25,12 +25,7 @@ import {
   aggregateFeeRecords,
   computeCollectibleLamports,
 } from '../../src/solana/statsMath';
-
-const DEFAULT_RPC_URLS: Record<ClusterId, string> = {
-  mainnet: 'https://api.mainnet-beta.solana.com',
-  devnet: 'https://api.devnet.solana.com',
-  localnet: 'http://127.0.0.1:8899',
-};
+import { rpcUrlForCluster } from './env';
 
 export const CACHE_TTL_SECONDS = 30;
 
@@ -40,11 +35,6 @@ interface CacheEntry {
 }
 
 const cache = new Map<ClusterId, CacheEntry>();
-
-function rpcUrlForCluster(cluster: ClusterId): string {
-  const envKey = `${cluster.toUpperCase()}_RPC_URL`;
-  return process.env[envKey] ?? DEFAULT_RPC_URLS[cluster];
-}
 
 function discriminatorFilter(discriminator: number): GetProgramAccountsFilter {
   return {

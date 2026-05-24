@@ -119,12 +119,37 @@ a {
 
 .clusterControl {
   display: grid;
-  grid-template-columns: repeat(3, minmax(76px, 1fr));
+  grid-template-columns: repeat(2, minmax(76px, 1fr));
   gap: 2px;
   padding: 3px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
+}
+
+.timeWindowControl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(52px, 1fr));
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.timeWindowControl button {
+  min-height: 34px;
+  padding: 0 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.timeWindowControl button.active {
+  background: var(--purple);
+  color: white;
 }
 
 .clusterControl button {
@@ -215,6 +240,10 @@ a {
   background: var(--border);
 }
 
+.analyticsHealthBar {
+  margin-top: 16px;
+}
+
 .statusItem {
   min-width: 0;
   min-height: 62px;
@@ -243,6 +272,14 @@ a {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+  margin-top: 16px;
+}
+
+.kpiGrid {
+  margin-top: 16px;
+}
+
+.secondaryMetricsGrid {
   margin-top: 16px;
 }
 
@@ -305,6 +342,16 @@ a {
   line-height: 1.45;
 }
 
+.trendValue {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.positiveTrend,
+.statusText {
+  color: var(--purple-soft);
+}
+
 .skeletonText {
   color: transparent !important;
   background: #24242d;
@@ -330,6 +377,96 @@ a {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.chartPanel,
+.networkComparison {
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.chartHeader,
+.networkComparison {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.chartHeader h2,
+.networkComparison h2 {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.lineChart {
+  width: 100%;
+  height: 150px;
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-elevated);
+}
+
+.lineChart polyline {
+  fill: none;
+  stroke: var(--purple);
+  stroke-width: 2.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.networkComparison {
+  margin-top: 16px;
+}
+
+.networkBars {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 12px;
+}
+
+.networkBar {
+  display: grid;
+  gap: 8px;
+}
+
+.networkBarMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.networkBarMeta strong {
+  color: var(--text);
+}
+
+.barTrack {
+  height: 8px;
+  overflow: hidden;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.barTrack div {
+  height: 100%;
+  min-width: 2px;
+  background: var(--purple);
 }
 
 .dataNotes {
@@ -536,6 +673,10 @@ tbody tr:hover td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+
   .statusBar,
   .configGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -556,7 +697,11 @@ tbody tr:hover td {
 
   .clusterControl {
     flex: 1;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .timeWindowControl {
+    width: 100%;
   }
 
   .dashboard {
@@ -574,8 +719,9 @@ tbody tr:hover td {
   }
 
   .panelHeader,
-  .errorState {
-    grid-template-columns: 1fr;
+  .errorState,
+  .networkComparison {
+    flex-direction: column;
     align-items: flex-start;
   }
 }

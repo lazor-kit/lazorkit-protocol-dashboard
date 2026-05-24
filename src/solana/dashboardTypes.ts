@@ -1,0 +1,63 @@
+import type { ClusterId } from './shared';
+
+export type DashboardWindow = '24h' | '7d' | '30d';
+export type LazorKitMethod = 'CreateWallet' | 'Execute' | 'ExecuteDeferred';
+export type TransactionStatus = 'success' | 'failed';
+
+export interface KpiValue {
+  value: number | string;
+  previousValue: number | string;
+  percentChange: number | null;
+}
+
+export interface DashboardKpis {
+  totalTransactions: KpiValue;
+  uniqueWallets: KpiValue;
+  totalFeesLamports: KpiValue;
+  successRate: KpiValue;
+}
+
+export interface SeriesPoint {
+  bucket: string;
+  txCount: number;
+  uniqueWallets: number;
+  feesLamports: string;
+}
+
+export interface LatestTransaction {
+  signature: string;
+  blockTime: string;
+  slot: number;
+  feePayer: string;
+  walletPda: string;
+  method: LazorKitMethod;
+  status: TransactionStatus;
+  feeLamports: string;
+}
+
+export interface NetworkComparison {
+  mainnetTxCount: number;
+  devnetTxCount: number;
+}
+
+export interface DashboardStats {
+  cluster: ClusterId;
+  window: DashboardWindow;
+  generatedAt: string;
+  setupRequired: boolean;
+  health: {
+    protocolStatus: 'enabled' | 'paused' | 'not-initialized';
+    lastIndexedSlot: number | null;
+    lastIndexedAt: string | null;
+    cacheHit: boolean;
+    cacheTtlSeconds: number;
+  };
+  kpis: DashboardKpis;
+  series: SeriesPoint[];
+  latestTransactions: LatestTransaction[];
+  networkComparison: NetworkComparison;
+}
+
+export function isDashboardWindow(value: unknown): value is DashboardWindow {
+  return value === '24h' || value === '7d' || value === '30d';
+}
