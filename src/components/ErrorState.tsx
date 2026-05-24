@@ -18,7 +18,7 @@ export function ErrorState({
         <h2>{rateLimited ? 'RPC rate limit reached' : 'Unable to load dashboard'}</h2>
         <p>
           {rateLimited
-            ? 'Public RPC endpoints may throttle dashboard scans. Try again shortly or configure a dedicated RPC URL.'
+            ? 'Public RPC endpoints may throttle dashboard scans. Try again shortly or use a browser-safe public endpoint.'
             : message}
         </p>
       </div>
@@ -28,4 +28,3 @@ export function ErrorState({
     </section>
   );
 }
-

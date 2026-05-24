@@ -6,14 +6,12 @@ export function StatusBar({
   cluster,
   clusterLabel,
   programId,
-  rpcUrl,
   slot,
   fetchedAt,
 }: {
   cluster: ClusterId;
   clusterLabel: string;
   programId: string;
-  rpcUrl: string;
   slot?: number;
   fetchedAt?: Date;
 }) {
@@ -26,7 +24,6 @@ export function StatusBar({
         value={shortenAddress(programId, 5)}
         copy={programId}
       />
-      <Info label="RPC" value={rpcUrl.replace(/^https?:\/\//, '')} />
       <Info label="Slot" value={slot === undefined ? 'Loading' : slot.toLocaleString()} />
       <Info
         label="Updated"

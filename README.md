@@ -36,7 +36,7 @@ Open the local Vite URL printed by the dev server.
 
 ## Environment
 
-Copy `.env.example` to `.env.local` if you want custom RPC URLs.
+Copy `.env.example` to `.env.local` only for public browser-safe RPC URLs.
 
 ```text
 VITE_MAINNET_RPC_URL=https://api.mainnet-beta.solana.com
@@ -45,8 +45,10 @@ VITE_LOCALNET_RPC_URL=http://127.0.0.1:8899
 VITE_DEFAULT_CLUSTER=mainnet
 ```
 
-Do not put private RPC keys in `VITE_` variables unless you accept that they
-are visible in browser JavaScript.
+Never put private or key-bearing RPC URLs in `VITE_` variables unless the team
+accepts that the URL is visible in browser JavaScript. V1 intentionally does
+not render the RPC URL in the UI, but Vite environment variables are still
+compiled into the client bundle.
 
 ## Checks
 
@@ -60,4 +62,3 @@ npm run build
 This v1 app uses browser-side direct RPC. Public RPC endpoints may rate-limit
 large `getProgramAccounts` scans. If that becomes a problem, the next version
 should add a small backend cache or indexer.
-

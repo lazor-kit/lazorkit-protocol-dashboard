@@ -79,7 +79,6 @@ export function App() {
         cluster={cluster}
         clusterLabel={CLUSTERS[cluster].label}
         programId={stats?.programId ?? CLUSTERS[cluster].programAddress}
-        rpcUrl={CLUSTERS[cluster].rpcUrl}
         slot={stats?.slot}
         fetchedAt={stats?.fetchedAt}
       />

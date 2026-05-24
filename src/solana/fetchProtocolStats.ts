@@ -41,7 +41,6 @@ export interface AggregatedFeeRecords {
 
 export interface ProtocolStats {
   cluster: ClusterId;
-  rpcUrl: string;
   programId: string;
   protocolConfigAddress: string;
   slot: number;
@@ -218,7 +217,6 @@ export async function fetchProtocolStats(
   if (!configInfo) {
     return {
       cluster,
-      rpcUrl,
       programId: programId.toBase58(),
       protocolConfigAddress: protocolConfigAddress.toBase58(),
       slot,
@@ -254,7 +252,6 @@ export async function fetchProtocolStats(
 
   return {
     cluster,
-    rpcUrl,
     programId: programId.toBase58(),
     protocolConfigAddress: protocolConfigAddress.toBase58(),
     slot,
@@ -270,4 +267,3 @@ export async function fetchProtocolStats(
     skippedAccounts: feeRecordsResult.skipped + shardResult.skipped,
   };
 }
-
