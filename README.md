@@ -2,9 +2,10 @@
 
 Public read-only dashboard for LazorKit protocol usage and fee metrics.
 
-The dashboard reads on-chain state through server-side APIs. A lightweight
-indexer stores LazorKit transaction history in Supabase Postgres so the UI can
-show traffic, fee, and success-rate trends without exposing RPC keys.
+The dashboard serves a static Vite frontend from Vercel. Its Vercel API routes
+are intentionally thin: they only read Supabase data and cached snapshots. A
+GitHub Actions worker runs the Solana RPC/indexer work on a schedule, then
+writes dashboard-ready data back to Supabase.
 
 ## Metrics
 
@@ -75,7 +76,8 @@ The deploy layout is:
 
 ```text
 src/        React/Vite frontend
-api/        Vercel serverless backend and local API dev server
+api/        Thin Vercel read APIs and local API dev server
+scripts/    GitHub Actions/local worker entrypoints
 supabase/   Supabase migrations and local project config
 ```
 
@@ -96,7 +98,6 @@ DEVNET_RPC_URL=https://api.devnet.solana.com
 LOCALNET_RPC_URL=http://127.0.0.1:8899
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
-CRON_SECRET=
 INDEXER_BACKFILL_DAYS=60
 INDEXER_MAX_SIGNATURES_PER_RUN=50
 INDEXER_BACKFILL_MAX_PAGES_PER_RUN=1
@@ -116,8 +117,8 @@ API_DEV_TARGET=http://127.0.0.1:8787
 VITE_DEFAULT_CLUSTER=mainnet
 ```
 
-Use `MAINNET_RPC_URL` for a full Helius or other private RPC URL in Vercel
-environment variables. Do not create `VITE_MAINNET_RPC_URL`; `VITE_` values are
+Use `MAINNET_RPC_URL` and `DEVNET_RPC_URL` only in local backend env files and
+GitHub Actions secrets. Do not create `VITE_MAINNET_RPC_URL`; `VITE_` values are
 compiled into browser JavaScript.
 
 Run `supabase/schema.sql` in the Supabase SQL editor before enabling the
@@ -148,35 +149,36 @@ npm run indexer:devnet
 npm run indexer:all
 ```
 
-After a reset the dashboard should say `No indexed data yet`, not `0 activity`.
-After the first indexer pass it may say `Backfilling` or `Partial data` while
-coverage grows. Re-run the indexer to watch the coverage range move backward
-until the configured backfill window is complete.
+After a reset the dashboard should show a preparing-data state, not confident
+zero activity. After the first indexer pass, the UI will show the latest
+available activity while coverage grows. Re-run the indexer to watch the
+coverage range move backward until the configured backfill window is complete.
 
 ## RPC Limitations
 
-The `/api/protocol-stats` route fetches from RPC server-side and caches results
-for 30 seconds per cluster. Public RPC endpoints may still rate-limit large
-`getProgramAccounts` scans, so production should use a dedicated server-side
-RPC URL.
+The Vercel API does not call Solana RPC. Protocol stats are refreshed by the
+indexer worker and stored at `protocol_snapshots.snapshot.protocolStats`.
+Public RPC endpoints may still rate-limit large `getProgramAccounts` scans, so
+production indexing should use a dedicated server-side RPC URL.
 
 Private or key-bearing RPC URLs cannot be hidden in a frontend-only app. This
-repo now keeps RPC URLs in the backend API and returns only dashboard JSON to
-the browser.
+repo keeps RPC URLs out of the browser and out of Vercel Functions. GitHub
+Actions holds the RPC secrets and returns only dashboard JSON through Supabase
+and the thin Vercel API.
 
-## Indexer
+## Indexer Worker
 
-The indexer endpoint is protected by `CRON_SECRET`:
+The indexer runs locally or in GitHub Actions:
 
 ```bash
-curl "https://your-domain/api/cron/indexer?cluster=all&secret=$CRON_SECRET"
+npm run indexer:all
 ```
 
-Vercel Hobby only supports daily cron, so the checked-in Vercel cron runs
-`/api/cron/indexer?cluster=all` once per day. For fresher analytics on Hobby,
-use an external scheduler to call the same endpoint every 5-15 minutes with
-`Authorization: Bearer $CRON_SECRET`. The indexer stores one row per
-transaction signature and upserts by `(cluster, signature)`.
+GitHub Actions runs `.github/workflows/indexer.yml` every 10 minutes and also
+supports manual dispatch. It stores one row per transaction signature and
+upserts by `(cluster, signature)`. The worker also refreshes protocol snapshots:
+protocol config, wallet account count, FeeRecord totals, treasury shard
+balances, and cached dashboard/indexer health.
 
 Backfill runs newest activity first, then walks older signature pages until the
 configured `INDEXER_BACKFILL_DAYS` cutoff. Keep
@@ -185,8 +187,36 @@ indexer stores progress in `protocol_snapshots` and continues on the next cron
 run. The default `INDEXER_MAX_SIGNATURES_PER_RUN=50` and
 `INDEXER_PARSE_DELAY_MS=200` are intentionally conservative for RPC plans around
 10 requests per second; raising them can trigger 429s. `INDEXER_MAX_RUNTIME_MS`
-keeps the cron inside the Vercel runtime budget; if the budget is reached, the
-run is recorded as partial and continues on the next pass.
+keeps each run bounded; if the budget is reached, the run is recorded as partial
+and continues on the next pass.
+
+## GitHub Actions Setup
+
+Add these repository secrets in GitHub:
+
+```text
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+MAINNET_RPC_URL
+DEVNET_RPC_URL
+```
+
+Optional repository variables:
+
+```text
+INDEXER_BACKFILL_DAYS=60
+INDEXER_MAX_SIGNATURES_PER_RUN=50
+INDEXER_BACKFILL_MAX_PAGES_PER_RUN=1
+INDEXER_PARSE_DELAY_MS=200
+INDEXER_MAX_RUNTIME_MS=45000
+```
+
+Run the workflow manually once after adding secrets. Then verify Supabase:
+
+```sql
+select count(*) from protocol_transactions;
+select cluster, snapshot from protocol_snapshots;
+```
 
 ## Deployment
 
@@ -197,10 +227,20 @@ Deploy as a Vercel project:
 - Output directory: `dist`
 - Serverless API: `api/protocol-stats.ts`
 - Serverless API: `api/dashboard.ts`
-- Cron API: `api/cron/indexer.ts`
-- Required production env: `MAINNET_RPC_URL`, `SUPABASE_URL`,
-  `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`
-- Optional env: `DEVNET_RPC_URL`, `LOCALNET_RPC_URL`, `VITE_DEFAULT_CLUSTER`,
-  `INDEXER_BACKFILL_DAYS`, `INDEXER_MAX_SIGNATURES_PER_RUN`,
-  `INDEXER_BACKFILL_MAX_PAGES_PER_RUN`, `INDEXER_PARSE_DELAY_MS`,
-  `INDEXER_MAX_RUNTIME_MS`
+- Required production env: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+- Optional env: `VITE_DEFAULT_CLUSTER`
+
+Do not configure Vercel cron for this project. `/api/cron/indexer` is disabled
+on purpose so Vercel never imports or executes the Solana RPC stack. Do not set
+`MAINNET_RPC_URL`, `DEVNET_RPC_URL`, `CRON_SECRET`, or `INDEXER_*` in Vercel
+unless a future thin route explicitly needs them.
+
+After deploy:
+
+```bash
+curl "https://your-domain/api/dashboard?cluster=mainnet"
+curl "https://your-domain/api/protocol-stats?cluster=mainnet"
+```
+
+Both endpoints should return JSON without `ERR_MODULE_NOT_FOUND`,
+`ERR_REQUIRE_ESM`, or Solana dependency runtime errors in Vercel logs.

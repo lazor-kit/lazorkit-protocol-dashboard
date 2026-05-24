@@ -4,7 +4,7 @@ import {
   computePositiveLamportDelta,
   parseLazorKitTransaction,
 } from './transactionParser.js';
-import { programIdForCluster } from '../../src/solana/shared.js';
+import { programIdForCluster } from '../../src/solana/programId.js';
 
 function txFixture(params: {
   discriminator: number;

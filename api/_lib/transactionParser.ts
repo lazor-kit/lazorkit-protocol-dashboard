@@ -12,9 +12,9 @@ import type {
 } from '../../src/solana/dashboardTypes.js';
 import {
   DISCRIMINATORS,
-  programIdForCluster,
   type ClusterId,
 } from '../../src/solana/shared.js';
+import { programIdForCluster } from '../../src/solana/programId.js';
 import type { ProtocolTransactionRow } from './database.js';
 
 export interface ParsedLazorKitTransaction {

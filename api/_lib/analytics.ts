@@ -20,7 +20,6 @@ import {
   type IndexerCursorRow,
   type IndexerState,
 } from './database.js';
-import { getCachedProtocolStats } from './protocolStats.js';
 
 export const DASHBOARD_CACHE_TTL_SECONDS = 30;
 export const DEFAULT_TX_PAGE = 1;
@@ -134,23 +133,13 @@ async function buildDashboardStats(
     db = existingDb ?? new SupabaseRestClient();
   } catch (error) {
     if (error instanceof SupabaseNotConfiguredError) {
-      const protocolStats =
-        process.env.NODE_ENV === 'test'
-          ? null
-          : await getCachedProtocolStats(cluster).catch(() => null);
       return emptyDashboardStats(
         cluster,
         window,
         now,
         true,
-        protocolStats
-          ? protocolStats.initialized === false
-            ? 'not-initialized'
-            : protocolStats.config?.enabled
-              ? 'enabled'
-              : 'paused'
-          : 'not-initialized',
-        protocolStats,
+        'not-initialized',
+        null,
         pagination,
       );
     }
@@ -195,7 +184,7 @@ async function buildDashboardStats(
     db.getIndexerState(cluster),
     db.getOldestIndexedTransaction(cluster),
     db.getNewestIndexedTransaction(cluster),
-    getCachedProtocolStats(cluster).catch(() => null),
+    db.getProtocolStatsSnapshot(cluster),
   ]);
 
   const selectedRows = rows.filter((row) => row.cluster === cluster);
@@ -211,7 +200,7 @@ async function buildDashboardStats(
   const comparisonRows = rows.filter((row) => row.block_time >= currentStart);
 
   const protocolStatus =
-    protocolStats?.initialized === false
+    !protocolStats || protocolStats.initialized === false
       ? 'not-initialized'
       : protocolStats?.config?.enabled
         ? 'enabled'

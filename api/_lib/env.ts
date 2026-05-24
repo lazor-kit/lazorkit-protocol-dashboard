@@ -8,7 +8,7 @@ const DEFAULT_RPC_URLS: Record<ClusterId, string> = {
 
 export function rpcUrlForCluster(cluster: ClusterId): string {
   const envKey = `${cluster.toUpperCase()}_RPC_URL`;
-  return process.env[envKey] ?? DEFAULT_RPC_URLS[cluster];
+  return process.env[envKey] || DEFAULT_RPC_URLS[cluster];
 }
 
 export function getBackfillDays(): number {

@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/indexer?cluster=all",
-      "schedule": "0 0 * * *"
-    }
-  ]
-}

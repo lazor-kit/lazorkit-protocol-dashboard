@@ -1,0 +1,38 @@
+name: LazorKit Dashboard Indexer
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  indexer:
+    name: Refresh analytics data
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+      DEVNET_RPC_URL: ${{ secrets.DEVNET_RPC_URL }}
+      INDEXER_BACKFILL_DAYS: ${{ vars.INDEXER_BACKFILL_DAYS || '60' }}
+      INDEXER_MAX_SIGNATURES_PER_RUN: ${{ vars.INDEXER_MAX_SIGNATURES_PER_RUN || '50' }}
+      INDEXER_BACKFILL_MAX_PAGES_PER_RUN: ${{ vars.INDEXER_BACKFILL_MAX_PAGES_PER_RUN || '1' }}
+      INDEXER_PARSE_DELAY_MS: ${{ vars.INDEXER_PARSE_DELAY_MS || '200' }}
+      INDEXER_MAX_RUNTIME_MS: ${{ vars.INDEXER_MAX_RUNTIME_MS || '45000' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run indexer
+        run: npm run indexer:all

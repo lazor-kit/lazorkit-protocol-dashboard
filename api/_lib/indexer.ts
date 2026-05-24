@@ -1,5 +1,6 @@
 import { Connection, type SignaturesForAddressOptions } from '@solana/web3.js';
-import { type ClusterId, programIdForCluster } from '../../src/solana/shared.js';
+import { type ClusterId } from '../../src/solana/shared.js';
+import { programIdForCluster } from '../../src/solana/programId.js';
 import {
   getBackfillDays,
   getIndexerBackfillMaxPages,
@@ -14,6 +15,7 @@ import {
   type IndexerState,
   type ProtocolTransactionRow,
 } from './database.js';
+import { getCachedProtocolStats } from './protocolStats.js';
 import { parseLazorKitTransaction } from './transactionParser.js';
 
 export interface IndexerRunResult {
@@ -150,6 +152,8 @@ export async function runIndexer(
       db.getOldestIndexedTransaction(cluster),
       db.getNewestIndexedTransaction(cluster),
     ]);
+    await refreshProtocolStatsSnapshot(cluster, db, warnings);
+
     const backfillComplete = backfill.complete || backfillAlreadyComplete;
     const runStatus: IndexerState['lastRunStatus'] =
       warnings.length > 0 || !backfillComplete ? 'partial' : 'success';
@@ -231,6 +235,25 @@ export async function runIndexer(
       runStatus: 'failed',
       lastRunError: message,
     });
+  }
+}
+
+async function refreshProtocolStatsSnapshot(
+  cluster: ClusterId,
+  db: SupabaseRestClient,
+  warnings: string[],
+): Promise<void> {
+  try {
+    const protocolStats = await getCachedProtocolStats(cluster);
+    await db.upsertProtocolStatsSnapshot(cluster, {
+      ...protocolStats,
+      cache: {
+        hit: false,
+        ttlSeconds: 30,
+      },
+    });
+  } catch (error) {
+    warnings.push(`Protocol snapshot refresh failed: ${formatFetchError(error)}`);
   }
 }
 

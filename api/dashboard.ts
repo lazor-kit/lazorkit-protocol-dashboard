@@ -4,7 +4,6 @@ import {
   parseDashboardWindow,
 } from './_lib/analytics.js';
 import { isDashboardWindow } from '../src/solana/dashboardTypes.js';
-import { isClusterId } from '../src/solana/shared.js';
 
 interface ApiRequest {
   method?: string;
@@ -64,4 +63,8 @@ export default async function handler(
 
 function firstQueryValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function isClusterId(value: unknown): value is 'mainnet' | 'devnet' | 'localnet' {
+  return value === 'mainnet' || value === 'devnet' || value === 'localnet';
 }

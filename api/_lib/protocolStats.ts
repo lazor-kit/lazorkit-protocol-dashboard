@@ -18,9 +18,9 @@ import type {
 import {
   ACCOUNT_SIZES,
   DISCRIMINATORS,
-  programIdForCluster,
   type ClusterId,
 } from '../../src/solana/shared.js';
+import { programIdForCluster } from '../../src/solana/programId.js';
 import {
   aggregateFeeRecords,
   computeCollectibleLamports,

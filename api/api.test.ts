@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import dashboardHandler from './dashboard.js';
 import cronHandler from './cron/indexer.js';
+import protocolStatsHandler from './protocol-stats.js';
 
 function response() {
   const state = {
@@ -89,9 +92,7 @@ describe('api handlers', () => {
     expect(bodyText).toContain('not_configured');
   });
 
-  it('rejects cron requests without the configured secret', async () => {
-    const prevSecret = process.env.CRON_SECRET;
-    process.env.CRON_SECRET = 'secret';
+  it('keeps the Vercel cron endpoint disabled', async () => {
     const result = response();
 
     await cronHandler(
@@ -99,8 +100,62 @@ describe('api handlers', () => {
       result.res,
     );
 
-    restoreEnv('CRON_SECRET', prevSecret);
-    expect(result.state.code).toBe(401);
+    expect(result.state.code).toBe(410);
+    expect(JSON.stringify(result.state.body)).toContain('GitHub Actions');
+  });
+
+  it('returns setup-safe protocol stats without Supabase', async () => {
+    const prevUrl = process.env.SUPABASE_URL;
+    const prevKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    const result = response();
+    await protocolStatsHandler(
+      { method: 'GET', query: { cluster: 'mainnet' } },
+      result.res,
+    );
+
+    restoreEnv('SUPABASE_URL', prevUrl);
+    restoreEnv('SUPABASE_SERVICE_ROLE_KEY', prevKey);
+
+    expect(result.state.code).toBe(200);
+    expect(result.state.body).toMatchObject({
+      cluster: 'mainnet',
+      initialized: false,
+      feeRecords: [],
+      shards: [],
+    });
+  });
+
+  it('keeps deployed Vercel API routes free of Solana RPC imports', () => {
+    const apiFiles = [
+      'api/dashboard.ts',
+      'api/protocol-stats.ts',
+      'api/cron/indexer.ts',
+      'api/_lib/analytics.ts',
+      'api/_lib/database.ts',
+      'api/_lib/env.ts',
+    ];
+    const forbidden = [
+      '@solana/web3.js',
+      'rpc-websockets',
+      './protocolStats',
+      './protocolStats.js',
+      '../_lib/indexer',
+      '../_lib/indexer.js',
+      './indexer',
+      './indexer.js',
+      './transactionParser',
+      './transactionParser.js',
+    ];
+
+    for (const file of apiFiles) {
+      const source = readFileSync(join(process.cwd(), file), 'utf8');
+      for (const pattern of forbidden) {
+        expect(source, `${file} imports ${pattern}`).not.toContain(pattern);
+      }
+    }
   });
 });
 

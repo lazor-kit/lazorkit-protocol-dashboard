@@ -2,7 +2,6 @@ import {
   ACCOUNT_SIZES,
   DISCRIMINATORS,
   PROGRAM_ADDRESSES,
-  programIdForCluster,
   type ClusterId,
 } from './shared.js';
 
@@ -33,4 +32,4 @@ export const CLUSTERS: Record<
 export const DEFAULT_CLUSTER: ClusterId =
   import.meta.env.VITE_DEFAULT_CLUSTER === 'devnet' ? 'devnet' : 'mainnet';
 
-export { ACCOUNT_SIZES, DISCRIMINATORS, programIdForCluster, type ClusterId };
+export { ACCOUNT_SIZES, DISCRIMINATORS, type ClusterId };

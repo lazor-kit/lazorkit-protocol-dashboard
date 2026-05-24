@@ -1,5 +1,3 @@
-import { PublicKey } from '@solana/web3.js';
-
 export type ClusterId = 'mainnet' | 'devnet' | 'localnet';
 
 export const PROGRAM_ADDRESSES: Record<ClusterId, string> = {
@@ -27,8 +25,4 @@ export const DISCRIMINATORS = {
 
 export function isClusterId(value: unknown): value is ClusterId {
   return value === 'mainnet' || value === 'devnet' || value === 'localnet';
-}
-
-export function programIdForCluster(cluster: ClusterId): PublicKey {
-  return new PublicKey(PROGRAM_ADDRESSES[cluster]);
 }

@@ -5,6 +5,7 @@ import type {
   LazorKitMethod,
   TransactionStatus,
 } from '../../src/solana/dashboardTypes.js';
+import type { ProtocolStats } from '../../src/solana/protocolStatsTypes.js';
 import { type ClusterId } from '../../src/solana/shared.js';
 
 export interface ProtocolTransactionRow {
@@ -66,6 +67,7 @@ interface ProtocolSnapshotRow {
   snapshot: {
     indexer?: Partial<IndexerState>;
     dashboard?: Record<string, DashboardSnapshotEntry>;
+    protocolStats?: ProtocolStats;
     [key: string]: unknown;
   };
   fetched_at: string;
@@ -364,6 +366,41 @@ export class SupabaseRestClient {
     });
   }
 
+  async getProtocolStatsSnapshot(cluster: ClusterId): Promise<ProtocolStats | null> {
+    const existing = await this.getProtocolSnapshot(cluster);
+    const protocolStats = existing?.snapshot.protocolStats;
+    if (!isProtocolStatsSnapshot(protocolStats, cluster)) return null;
+    return {
+      ...protocolStats,
+      cache: {
+        hit: true,
+        ttlSeconds: 30,
+      },
+    };
+  }
+
+  async upsertProtocolStatsSnapshot(
+    cluster: ClusterId,
+    protocolStats: ProtocolStats,
+  ): Promise<void> {
+    const existing = await this.getProtocolSnapshot(cluster);
+    const now = new Date().toISOString();
+    await this.request('/rest/v1/protocol_snapshots?on_conflict=cluster', {
+      method: 'POST',
+      headers: { prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify([
+        {
+          cluster,
+          snapshot: {
+            ...(existing?.snapshot ?? {}),
+            protocolStats,
+          },
+          fetched_at: protocolStats.fetchedAt || now,
+        },
+      ]),
+    });
+  }
+
   private async getProtocolSnapshot(
     cluster: ClusterId,
   ): Promise<ProtocolSnapshotRow | null> {
@@ -452,4 +489,25 @@ function readRunStatus(value: unknown): IndexerRunStatus {
     value === 'failed'
     ? value
     : 'idle';
+}
+
+function isProtocolStatsSnapshot(
+  value: unknown,
+  cluster: ClusterId,
+): value is ProtocolStats {
+  if (typeof value !== 'object' || value === null) return false;
+  const stats = value as Partial<ProtocolStats>;
+  return (
+    stats.cluster === cluster &&
+    typeof stats.programId === 'string' &&
+    typeof stats.protocolConfigAddress === 'string' &&
+    typeof stats.slot === 'number' &&
+    typeof stats.fetchedAt === 'string' &&
+    typeof stats.initialized === 'boolean' &&
+    Array.isArray(stats.feeRecords) &&
+    Array.isArray(stats.shards) &&
+    typeof stats.walletAccountCount === 'number' &&
+    typeof stats.collectibleFeesLamports === 'string' &&
+    typeof stats.shardBalancesLamports === 'string'
+  );
 }
