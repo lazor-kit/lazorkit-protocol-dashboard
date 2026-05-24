@@ -42,7 +42,7 @@ export default async function handler(
   try {
     const db = new SupabaseRestClient();
     const stats = await db.getProtocolStatsSnapshot(cluster);
-    response.setHeader('cache-control', 's-maxage=30, stale-while-revalidate=120');
+    response.setHeader('cache-control', 's-maxage=300, stale-while-revalidate=600');
     return response.status(200).json(stats ?? preparingProtocolStats(cluster));
   } catch (error) {
     if (error instanceof SupabaseNotConfiguredError) {

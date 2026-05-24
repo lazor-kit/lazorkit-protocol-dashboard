@@ -21,7 +21,7 @@ import {
   type IndexerState,
 } from './database.js';
 
-export const DASHBOARD_CACHE_TTL_SECONDS = 30;
+export const DASHBOARD_CACHE_TTL_SECONDS = 300;
 export const DEFAULT_TX_PAGE = 1;
 export const DEFAULT_TX_LIMIT = 10;
 export const ALLOWED_TX_LIMITS = [10, 15] as const;
@@ -118,6 +118,32 @@ export async function getDashboardStats(
       })
       .catch(() => undefined);
   }
+  return stats;
+}
+
+export async function refreshDashboardSnapshot(
+  cluster: ClusterId,
+  window: DashboardWindow,
+  pagination: DashboardPaginationOptions = {
+    txPage: DEFAULT_TX_PAGE,
+    txLimit: DEFAULT_TX_LIMIT,
+  },
+): Promise<DashboardStats> {
+  const now = Date.now();
+  const cacheKey = `${cluster}:${window}:${pagination.txPage}:${pagination.txLimit}`;
+  const db = new SupabaseRestClient();
+  const stats = await buildDashboardStats(cluster, window, now, pagination, db);
+
+  dashboardCache.set(cacheKey, {
+    stats,
+    expiresAt: now + DASHBOARD_CACHE_TTL_SECONDS * 1000,
+  });
+  await db.upsertDashboardSnapshot({
+    cluster,
+    cacheKey,
+    stats,
+    ttlSeconds: DASHBOARD_CACHE_TTL_SECONDS,
+  });
   return stats;
 }
 

@@ -9,6 +9,7 @@ import {
   getIndexerParseDelayMs,
   rpcUrlForCluster,
 } from './env.js';
+import { refreshDashboardSnapshot } from './analytics.js';
 import {
   SupabaseRestClient,
   type IndexedTransactionBoundary,
@@ -17,6 +18,7 @@ import {
 } from './database.js';
 import { getCachedProtocolStats } from './protocolStats.js';
 import { parseLazorKitTransaction } from './transactionParser.js';
+import type { DashboardWindow } from '../../src/solana/dashboardTypes.js';
 
 export interface IndexerRunResult {
   cluster: ClusterId;
@@ -153,6 +155,7 @@ export async function runIndexer(
       db.getNewestIndexedTransaction(cluster),
     ]);
     await refreshProtocolStatsSnapshot(cluster, db, warnings);
+    await refreshDashboardSnapshots(cluster, warnings);
 
     const backfillComplete = backfill.complete || backfillAlreadyComplete;
     const runStatus: IndexerState['lastRunStatus'] =
@@ -235,6 +238,22 @@ export async function runIndexer(
       runStatus: 'failed',
       lastRunError: message,
     });
+  }
+}
+
+async function refreshDashboardSnapshots(
+  cluster: ClusterId,
+  warnings: string[],
+): Promise<void> {
+  const windows: DashboardWindow[] = ['all', '24h', '7d', '30d'];
+  for (const window of windows) {
+    try {
+      await refreshDashboardSnapshot(cluster, window, { txPage: 1, txLimit: 10 });
+    } catch (error) {
+      warnings.push(
+        `Dashboard snapshot refresh failed for ${window}: ${formatFetchError(error)}`,
+      );
+    }
   }
 }
 
