@@ -45,14 +45,39 @@ pubkey directly.
 
 ## Development
 
+The project keeps the Vercel deployment layout, but local development can run
+frontend and backend as separate processes.
+
+Install once:
+
 ```bash
 npm install
-npm run dev
+```
+
+Terminal 1, backend API:
+
+```bash
+npm run dev:api
+```
+
+Terminal 2, frontend web app:
+
+```bash
+npm run dev:web
 ```
 
 Open the local Vite URL printed by the dev server. The Vite dev server also
-serves the local `/api/protocol-stats` route, so no second local process is
-required.
+proxies `/api/*` requests to the backend API at `http://127.0.0.1:8787`, so FE
+and BE logs stay separate while browser requests still use same-origin `/api`
+URLs.
+
+The deploy layout is:
+
+```text
+src/        React/Vite frontend
+api/        Vercel serverless backend and local API dev server
+supabase/   Supabase migrations and local project config
+```
 
 ## Environment
 
@@ -68,6 +93,8 @@ SUPABASE_SERVICE_ROLE_KEY=
 CRON_SECRET=
 INDEXER_BACKFILL_DAYS=60
 INDEXER_MAX_SIGNATURES_PER_RUN=100
+API_PORT=8787
+API_DEV_TARGET=http://127.0.0.1:8787
 VITE_DEFAULT_CLUSTER=mainnet
 ```
 
