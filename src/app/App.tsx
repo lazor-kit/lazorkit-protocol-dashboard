@@ -136,20 +136,16 @@ export function App() {
             </div>
           </section>
 
-          {dashboardStats?.health.analyticsStatus === 'error' ? (
+          {dashboardStats?.health.analyticsStatus === 'error' &&
+          !shouldShowActivitySections ? (
             <EmptyState
-              title="Data update delayed"
-              body="The dashboard is showing the latest available activity while the next update is prepared."
+              title="Activity data is temporarily unavailable"
+              body="Live protocol metrics are still available below. Activity charts will return automatically when the next data refresh completes."
             />
           ) : dashboardStats?.health.analyticsStatus === 'empty' ? (
             <EmptyState
               title="Preparing activity data"
               body="Live protocol metrics are available below. Traffic, fee, and transaction views will appear as soon as activity data is ready."
-            />
-          ) : dashboardStats?.health.analyticsStatus === 'stale' ? (
-            <EmptyState
-              title="Data update in progress"
-              body="The dashboard is showing the latest available activity while fresh data is prepared."
             />
           ) : null}
 

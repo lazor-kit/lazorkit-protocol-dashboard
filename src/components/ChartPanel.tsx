@@ -41,11 +41,12 @@ export const ChartPanel = memo(function ChartPanel({
   series: SeriesPoint[];
 }) {
   const data = useMemo(() => toChartData(series), [series]);
-  const total = useMemo(
-    () => data.reduce((sum, point) => sum + point[metric], 0),
+  const summaryValue = useMemo(
+    () => buildChartSummaryValue(data, metric),
     [data, metric],
   );
   const yDomain = useMemo(() => buildYAxisDomain(data, metric), [data, metric]);
+  const yTicks = useMemo(() => buildYAxisTicks(yDomain), [yDomain]);
   const xTicks = useMemo(() => buildXAxisTicks(data), [data]);
 
   const chartProps = {
@@ -69,7 +70,7 @@ export const ChartPanel = memo(function ChartPanel({
       <YAxis
         width={metric === 'feesLamports' ? 76 : 64}
         domain={yDomain}
-        tickCount={5}
+        ticks={yTicks}
         allowDecimals={metric === 'feesLamports'}
         tickFormatter={(value) => formatYAxisTick(Number(value), metric)}
         tick={{ fill: '#7f8ba4', fontSize: 12, fontWeight: 700 }}
@@ -92,8 +93,8 @@ export const ChartPanel = memo(function ChartPanel({
         </div>
         <span className="mutedText">
           {metric === 'feesLamports'
-            ? formatLamportsShort(BigInt(Math.round(total)))
-            : formatInteger(total)}
+            ? formatLamportsShort(BigInt(Math.round(summaryValue)))
+            : formatInteger(summaryValue)}
         </span>
       </div>
       <div className="chartCanvas">
@@ -151,7 +152,15 @@ export function buildYAxisDomain(
   if (metric === 'feesLamports') {
     return [0, niceMax(maxValue)];
   }
-  return [0, Math.max(4, niceMax(maxValue))];
+  const step = niceStep(Math.max(1, Math.ceil(Math.max(4, maxValue) / 4)));
+  return [0, step * 4];
+}
+
+export function buildYAxisTicks(domain: readonly [number, number]): number[] {
+  const max = domain[1];
+  if (max <= 0) return [0];
+  const step = max / 4;
+  return Array.from({ length: 5 }, (_, index) => step * index);
 }
 
 export function buildXAxisTicks(data: readonly ChartDatum[]): string[] {
@@ -175,13 +184,23 @@ export function formatXAxisTick(bucket: string, window: DashboardWindow): string
   if (window === 'all') {
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
-      year: '2-digit',
+      day: 'numeric',
     }).format(date);
   }
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
   }).format(date);
+}
+
+export function buildChartSummaryValue(
+  data: readonly ChartDatum[],
+  metric: ChartMetric,
+): number {
+  if (metric === 'uniqueWallets') {
+    return data.reduce((max, point) => Math.max(max, point.uniqueWallets), 0);
+  }
+  return data.reduce((sum, point) => sum + point[metric], 0);
 }
 
 export function formatTooltipLabel(
@@ -255,6 +274,14 @@ function ChartTooltip({
 
 function niceMax(value: number): number {
   if (value <= 0) return 1;
+  const magnitude = 10 ** Math.floor(Math.log10(value));
+  const normalized = value / magnitude;
+  const niceNormalized = normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  return niceNormalized * magnitude;
+}
+
+function niceStep(value: number): number {
+  if (value <= 1) return 1;
   const magnitude = 10 ** Math.floor(Math.log10(value));
   const normalized = value / magnitude;
   const niceNormalized = normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;

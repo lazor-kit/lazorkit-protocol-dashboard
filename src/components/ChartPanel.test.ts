@@ -1,6 +1,8 @@
 import {
+  buildChartSummaryValue,
   buildXAxisTicks,
   buildYAxisDomain,
+  buildYAxisTicks,
   formatTooltipLabel,
   formatXAxisTick,
   formatYAxisTick,
@@ -38,14 +40,16 @@ describe('chart panel helpers', () => {
 
   it('builds stable y domains for empty and populated charts', () => {
     expect(buildYAxisDomain([], 'txCount')).toEqual([0, 4]);
-    expect(buildYAxisDomain([toChartData([point({ txCount: 7 })])[0]], 'txCount')).toEqual([
-      0,
-      10,
-    ]);
+    expect(buildYAxisDomain([toChartData([point({ txCount: 7 })])[0]], 'txCount')).toEqual([0, 8]);
     expect(buildYAxisDomain([], 'feesLamports')).toEqual([0, 1]);
     expect(
       buildYAxisDomain([toChartData([point({ feesLamports: '5000' })])[0]], 'feesLamports'),
     ).toEqual([0, 5000]);
+  });
+
+  it('builds explicit y ticks so integer labels do not duplicate', () => {
+    expect(buildYAxisTicks([0, 4])).toEqual([0, 1, 2, 3, 4]);
+    expect(buildYAxisTicks([0, 20])).toEqual([0, 5, 10, 15, 20]);
   });
 
   it('limits x-axis ticks to readable positions', () => {
@@ -64,7 +68,18 @@ describe('chart panel helpers', () => {
     expect(formatYAxisTick(4_000_000, 'feesLamports')).toBe('0.004');
     expect(formatYAxisTick(4, 'txCount')).toBe('4');
     expect(formatXAxisTick('2026-05-24T13:00:00.000Z', '24h')).toContain('PM');
-    expect(formatXAxisTick('2026-05-24T13:00:00.000Z', 'all')).toContain('May');
+    expect(formatXAxisTick('2026-05-24T13:00:00.000Z', 'all')).toBe('May 24');
     expect(formatTooltipLabel('2026-05-24T13:00:00.000Z', '30d')).toContain('2026');
+  });
+
+  it('summarizes wallet account charts by current count instead of summing buckets', () => {
+    const data = toChartData([
+      point({ uniqueWallets: 37 }),
+      point({ uniqueWallets: 37 }),
+      point({ uniqueWallets: 37 }),
+    ]);
+
+    expect(buildChartSummaryValue(data, 'uniqueWallets')).toBe(37);
+    expect(buildChartSummaryValue(data, 'txCount')).toBe(0);
   });
 });
