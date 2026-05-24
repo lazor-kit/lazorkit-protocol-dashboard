@@ -245,6 +245,7 @@ export function buildSeries(
     txCount: 0,
     wallets: new Set<string>(),
     feesLamports: 0n,
+    feeEventCount: 0,
   }));
 
   for (const row of rows) {
@@ -256,8 +257,10 @@ export function buildSeries(
     const bucket = buckets[index];
     bucket.txCount += 1;
     bucket.wallets.add(row.wallet_pda);
-    if (row.status === 'success') {
-      bucket.feesLamports += BigInt(row.protocol_fee_lamports);
+    const feeLamports = BigInt(row.protocol_fee_lamports);
+    if (row.status === 'success' && feeLamports > 0n) {
+      bucket.feesLamports += feeLamports;
+      bucket.feeEventCount += 1;
     }
   }
 
@@ -266,6 +269,7 @@ export function buildSeries(
     txCount: bucket.txCount,
     uniqueWallets: bucket.wallets.size,
     feesLamports: bucket.feesLamports.toString(),
+    feeEventCount: bucket.feeEventCount,
   }));
 }
 

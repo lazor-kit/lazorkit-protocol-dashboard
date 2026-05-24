@@ -64,6 +64,7 @@ describe('analytics aggregation', () => {
     expect(series.at(-1)?.txCount).toBe(2);
     expect(series.at(-1)?.uniqueWallets).toBe(1);
     expect(series.at(-1)?.feesLamports).toBe('25');
+    expect(series.at(-1)?.feeEventCount).toBe(2);
     expect(buildSeries([], 'all', now)).toHaveLength(30);
     expect(buildSeries([], '7d', now)).toHaveLength(7);
     expect(buildSeries([], '30d', now)).toHaveLength(30);
@@ -93,6 +94,7 @@ describe('analytics aggregation', () => {
     expect(
       series.reduce((sum, point) => sum + BigInt(point.feesLamports), 0n),
     ).toBe(25n);
+    expect(series.reduce((sum, point) => sum + point.feeEventCount, 0)).toBe(2);
   });
 
   it('compares mainnet and devnet activity', () => {

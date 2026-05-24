@@ -20,6 +20,7 @@ interface ChartDatum {
   txCount: number;
   uniqueWallets: number;
   feesLamports: number;
+  feeEventCount: number;
 }
 
 const METRIC_LABELS: Record<ChartMetric, string> = {
@@ -66,7 +67,7 @@ export const ChartPanel = memo(function ChartPanel({
         interval="preserveStartEnd"
       />
       <YAxis
-        width={64}
+        width={metric === 'feesLamports' ? 76 : 64}
         domain={yDomain}
         tickCount={5}
         allowDecimals={metric === 'feesLamports'}
@@ -138,6 +139,7 @@ export function toChartData(series: SeriesPoint[]): ChartDatum[] {
     txCount: point.txCount,
     uniqueWallets: point.uniqueWallets,
     feesLamports: Number(point.feesLamports),
+    feeEventCount: point.feeEventCount,
   }));
 }
 
@@ -232,8 +234,21 @@ function ChartTooltip({
         {METRIC_LABELS.uniqueWallets}: {formatInteger(datum.uniqueWallets)}
       </span>
       <span className={metric === 'feesLamports' ? 'active' : undefined}>
-        {METRIC_LABELS.feesLamports}: {formatLamportsShort(String(datum.feesLamports))}
+        {METRIC_LABELS.feesLamports}: {formatSolFromLamports(datum.feesLamports)}
       </span>
+      {metric === 'feesLamports' ? (
+        <>
+          <span>Paid events: {formatInteger(datum.feeEventCount)}</span>
+          <span>
+            Avg fee/event:{' '}
+            {formatSolFromLamports(
+              datum.feeEventCount === 0
+                ? 0
+                : datum.feesLamports / datum.feeEventCount,
+            )}
+          </span>
+        </>
+      ) : null}
     </div>
   );
 }
@@ -248,10 +263,17 @@ function niceMax(value: number): number {
 
 function formatFeeAxisValue(lamports: number): string {
   if (lamports === 0) return '0';
-  if (lamports < 1_000) return `${Math.round(lamports)}`;
-  if (lamports < 1_000_000) return `${trimDecimals(lamports / 1_000, 1)}k`;
-  const sol = lamports / 1_000_000_000;
-  if (sol < 0.001) return trimDecimals(sol, 6);
+  return formatSolNumber(lamports / 1_000_000_000);
+}
+
+function formatSolFromLamports(lamports: number): string {
+  if (lamports === 0) return '0 SOL';
+  return `${formatSolNumber(lamports / 1_000_000_000)} SOL`;
+}
+
+function formatSolNumber(sol: number): string {
+  if (sol < 0.000001) return trimDecimals(sol, 9);
+  if (sol < 0.01) return trimDecimals(sol, 6);
   if (sol < 1) return trimDecimals(sol, 4);
   return trimDecimals(sol, 2);
 }

@@ -23,6 +23,7 @@ export interface SeriesPoint {
   txCount: number;
   uniqueWallets: number;
   feesLamports: string;
+  feeEventCount: number;
 }
 
 export interface LatestTransaction {

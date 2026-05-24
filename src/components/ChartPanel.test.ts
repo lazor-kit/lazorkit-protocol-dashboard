@@ -14,6 +14,7 @@ function point(partial: Partial<SeriesPoint>): SeriesPoint {
     txCount: 0,
     uniqueWallets: 0,
     feesLamports: '0',
+    feeEventCount: 0,
     ...partial,
   };
 }
@@ -30,6 +31,7 @@ describe('chart panel helpers', () => {
         txCount: 3,
         uniqueWallets: 2,
         feesLamports: 5_000_000,
+        feeEventCount: 0,
       },
     ]);
   });
@@ -58,7 +60,7 @@ describe('chart panel helpers', () => {
   });
 
   it('formats axis and tooltip labels compactly', () => {
-    expect(formatYAxisTick(5000, 'feesLamports')).toBe('5k');
+    expect(formatYAxisTick(5000, 'feesLamports')).toBe('0.000005');
     expect(formatYAxisTick(4_000_000, 'feesLamports')).toBe('0.004');
     expect(formatYAxisTick(4, 'txCount')).toBe('4');
     expect(formatXAxisTick('2026-05-24T13:00:00.000Z', '24h')).toContain('PM');
