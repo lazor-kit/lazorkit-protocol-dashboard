@@ -36,7 +36,9 @@ export function validateDashboardPayload(value: unknown): string[] {
   if (!(value.dbSchemaVersion === null || isNumber(value.dbSchemaVersion))) problems.push('dbSchemaVersion: invalid');
   const range = value.range;
   if (!isObject(range) || !(range.start === null || isIso(range.start)) || !isIso(range.end) ||
-      !(range.previousStart === null || isIso(range.previousStart)) || !['hour', 'day'].includes(range.bucket as string)) {
+      !(range.previousStart === null || isIso(range.previousStart)) ||
+      !(range.previousEnd === undefined || range.previousEnd === null || isIso(range.previousEnd)) ||
+      !['hour', 'day'].includes(range.bucket as string)) {
     problems.push('range: invalid');
   }
   const freshness = value.freshness;
@@ -119,7 +121,11 @@ export function validateDashboardPayload(value: unknown): string[] {
         problems.push(`latest[${i}]: invalid`);
       }
     });
-    if (value.latest.length > 50) problems.push('latest: more than 50 rows');
+    const perProgram = new Map<unknown, number>();
+    for (const row of value.latest as Array<Record<string, unknown>>) {
+      perProgram.set(row?.programKey, (perProgram.get(row?.programKey) ?? 0) + 1);
+    }
+    if ([...perProgram.values()].some((n) => n > 50)) problems.push('latest: more than 50 rows for one program');
   }
   return problems;
 }

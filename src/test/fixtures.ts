@@ -26,4 +26,4 @@ export const FIXTURES: Record<string, () => DashboardPayload> = {
 export const setupRequiredPayload = () => asPayload(setupRequired);
 
 /** 20 minutes after the fixtures were captured. */
-export const FIXTURE_NOW = Date.parse('2026-10-01T19:17:00Z');
+export const FIXTURE_NOW = Date.parse('2026-10-01T21:50:00Z');

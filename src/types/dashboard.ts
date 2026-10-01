@@ -35,7 +35,8 @@ export interface DashboardPayload {
   cluster: Cluster;
   window: DashboardWindow;
   generatedAt: string;
-  range: { start: string | null; end: string; previousStart: string | null; bucket: 'hour' | 'day' };
+  // previous period = [previousStart, previousEnd): the same elapsed span as the current one, one period earlier
+  range: { start: string | null; end: string; previousStart: string | null; previousEnd?: string | null; bucket: 'hour' | 'day' };
   freshness: Freshness;
   programs: ProgramView[]; // ordered v1, v2
   kpis: Partial<Record<ScopeKey, { current: Kpis; previous: Kpis | null }>>; // 'cluster' + each programKey
@@ -43,7 +44,7 @@ export interface DashboardPayload {
   breakdowns: Partial<Record<ScopeKey, Breakdowns>>;
   migration: MigrationView | null;
   binaries: KnownBinary[];
-  latest: LatestRow[]; // <= 50
+  latest: LatestRow[]; // the 50 newest per program, newest first
   runs: RunRow[]; // last 20
 }
 

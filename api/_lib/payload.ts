@@ -42,7 +42,7 @@ export function dashboardFromRaw(raw: RawDashboard, now: Date): DashboardPayload
 }
 
 function emptyRange(now: Date): DashboardPayload['range'] {
-  return { start: null, end: now.toISOString(), previousStart: null, bucket: 'day' };
+  return { start: null, end: now.toISOString(), previousStart: null, previousEnd: null, bucket: 'day' };
 }
 
 export function setupRequiredDashboard(cluster: Cluster, window: DashboardWindow, now: Date, detail: string): DashboardPayload {

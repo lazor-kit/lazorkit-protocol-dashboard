@@ -45,7 +45,7 @@ export const METRIC_NOTES: Array<{ term: string; definition: string }> = [
   {
     term: 'Time ranges',
     definition:
-      'All times are UTC. 24 hours = the last 24 whole hours, the newest one partial. 7 and 30 days = whole UTC days including today. The comparison is the period of the same length right before. All history starts at each program’s deploy transaction.',
+      'All times are UTC. 24 hours = the last 24 hours, by hour, the newest one partial. 7 and 30 days = whole UTC days including today so far. The comparison covers the same span one period earlier: it ends exactly 24 hours, 7 days or 30 days before now, so a partly elapsed hour or day is compared with the same part of the hour or day before. All history starts at each program’s deploy transaction.',
   },
   {
     term: 'Data complete through',

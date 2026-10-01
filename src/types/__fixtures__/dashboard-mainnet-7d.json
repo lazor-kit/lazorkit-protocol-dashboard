@@ -32,33 +32,33 @@
     "walletsCreatedPasskey": 27
    },
    "previous": {
-    "ixs": 81,
-    "txs": 81,
+    "ixs": 76,
+    "txs": 76,
     "apps": 7,
     "txv1": 0,
-    "txsOk": 81,
+    "txsOk": 76,
     "payers": 4,
     "executes": 37,
     "noiseTxs": 0,
-    "feeEvents": 21,
+    "feeEvents": 18,
     "txsFailed": 0,
     "migrations": 0,
-    "signatures": 81,
+    "signatures": 76,
     "failByClass": {},
-    "feeLamports": "105000",
-    "feeSuffixOk": 21,
+    "feeLamports": "90000",
+    "feeSuffixOk": 18,
     "unparsedTxs": 0,
     "retiredCalls": 0,
-    "activeWallets": 18,
-    "feeEligibleOk": 56,
-    "netFeeLamports": "9907707",
-    "walletsCreated": 13,
+    "activeWallets": 17,
+    "feeEligibleOk": 53,
+    "netFeeLamports": "9872707",
+    "walletsCreated": 12,
     "cleanupLamports": "0",
     "migratedLamports": "0",
     "withdrawnLamports": "0",
     "shardFundingLamports": "0",
     "migratedTokenAccounts": 0,
-    "walletsCreatedPasskey": 13
+    "walletsCreatedPasskey": 12
    }
   },
   "2": {
@@ -152,60 +152,55 @@
     "walletsCreatedPasskey": 27
    },
    "previous": {
-    "ixs": 81,
-    "txs": 81,
+    "ixs": 76,
+    "txs": 76,
     "apps": 7,
     "txv1": 0,
-    "txsOk": 81,
+    "txsOk": 76,
     "payers": 4,
     "executes": 37,
     "noiseTxs": 0,
-    "feeEvents": 21,
+    "feeEvents": 18,
     "txsFailed": 0,
     "migrations": 0,
-    "signatures": 81,
+    "signatures": 76,
     "failByClass": {},
-    "feeLamports": "105000",
-    "feeSuffixOk": 21,
+    "feeLamports": "90000",
+    "feeSuffixOk": 18,
     "unparsedTxs": 0,
     "retiredCalls": 0,
-    "activeWallets": 18,
-    "feeEligibleOk": 56,
-    "netFeeLamports": "9907707",
-    "walletsCreated": 13,
+    "activeWallets": 17,
+    "feeEligibleOk": 53,
+    "netFeeLamports": "9872707",
+    "walletsCreated": 12,
     "cleanupLamports": "0",
     "migratedLamports": "0",
     "withdrawnLamports": "0",
     "shardFundingLamports": "0",
     "migratedTokenAccounts": 0,
-    "walletsCreatedPasskey": 13
+    "walletsCreatedPasskey": 12
    }
   }
  },
  "runs": [
   {
-   "runId": "local-2026-10-01T18:57:18.687Z",
+   "runId": "local-2026-10-01T21:29:33.085Z",
    "status": "ok",
-   "startedAt": "2026-10-01T18:57:18.687+00:00",
-   "finishedAt": "2026-10-01T18:57:22.196+00:00"
+   "startedAt": "2026-10-01T21:29:33.086+00:00",
+   "finishedAt": "2026-10-01T21:29:36.984+00:00"
   },
   {
-   "runId": "local-2026-10-01T18:56:40.171Z",
+   "runId": "local-2026-10-01T21:28:31.584Z",
    "status": "ok",
-   "startedAt": "2026-10-01T18:56:40.172+00:00",
-   "finishedAt": "2026-10-01T18:56:43.669+00:00"
-  },
-  {
-   "runId": "local-2026-10-01T18:15:12.864Z",
-   "status": "ok",
-   "startedAt": "2026-10-01T18:15:12.865+00:00",
-   "finishedAt": "2026-10-01T18:54:20.535+00:00"
+   "startedAt": "2026-10-01T21:28:31.585+00:00",
+   "finishedAt": "2026-10-01T21:28:53.436+00:00"
   }
  ],
  "range": {
-  "end": "2026-10-01T18:57:37.700379+00:00",
+  "end": "2026-10-01T21:29:49.760259+00:00",
   "start": "2026-09-25T00:00:00+00:00",
   "bucket": "day",
+  "previousEnd": "2026-09-24T21:29:49.760259+00:00",
   "previousStart": "2026-09-18T00:00:00+00:00"
  },
  "latest": [
@@ -1504,21 +1499,21 @@
     "ingested": 1449,
     "activeGen": 1,
     "lastError": null,
-    "discoveredAt": "2026-10-01T18:57:20.11+00:00",
+    "discoveredAt": "2026-10-01T21:29:34.649+00:00",
     "historyProof": "deploy_tx",
     "lastRunStatus": "ok",
-    "lastSuccessAt": "2026-10-01T18:57:22.176474+00:00",
+    "lastSuccessAt": "2026-10-01T21:29:36.901829+00:00",
     "parserVersion": 1,
     "lastActivityAt": "2026-10-01T18:10:31+00:00",
-    "completeThrough": "2026-10-01T18:57:20.11+00:00",
+    "completeThrough": "2026-10-01T21:29:34.649+00:00",
     "firstActivityAt": "2026-04-29T16:56:40+00:00",
     "backfillComplete": true,
-    "lastRunFinishedAt": "2026-10-01T18:57:22.175+00:00",
+    "lastRunFinishedAt": "2026-10-01T21:29:36.867+00:00",
     "consecutiveFailures": 0
    },
    "label": "v1 mainnet",
    "state": {
-    "slot": 452374536,
+    "slot": 452408567,
     "config": {
      "admin": "24fx48GAib7xmRFu9b6Wz16UzroEE3comWzPC4Et2ASF",
      "address": "8mnK3NDPKJEgwDnq2h73sEbdPAvtMrGXaTZimsG5wzeA",
@@ -1660,7 +1655,7 @@
     "withdrawableNowLamports": "6305880"
    },
    "programId": "LazorjRFNavitUaBu5m3WaNPjU1maipvSW2rZfAFAKi",
-   "stateSlot": 452374536,
+   "stateSlot": 452408567,
    "deployment": {
     "sha256": "8ad5abf5dd8a2443fea6b26b5effa9ce11477ce85ba9564f5c43663744c3255b",
     "status": "live",
@@ -1806,7 +1801,7 @@
      }
     ]
    },
-   "stateFetchedAt": "2026-10-01T18:57:19.525+00:00"
+   "stateFetchedAt": "2026-10-01T21:29:33.992+00:00"
   },
   {
    "sync": {
@@ -1819,13 +1814,13 @@
     "discoveredAt": null,
     "historyProof": null,
     "lastRunStatus": "not_deployed",
-    "lastSuccessAt": "2026-10-01T18:57:22.187188+00:00",
+    "lastSuccessAt": "2026-10-01T21:29:36.94233+00:00",
     "parserVersion": 1,
     "lastActivityAt": null,
     "completeThrough": null,
     "firstActivityAt": null,
     "backfillComplete": false,
-    "lastRunFinishedAt": "2026-10-01T18:57:22.187+00:00",
+    "lastRunFinishedAt": "2026-10-01T21:29:36.909+00:00",
     "consecutiveFailures": 0
    },
    "label": "v2 mainnet",
@@ -2154,12 +2149,12 @@
    ]
   }
  },
- "generatedAt": "2026-10-01T18:57:37.700379+00:00",
+ "generatedAt": "2026-10-01T21:29:49.760259+00:00",
  "dbSchemaVersion": 1,
  "freshness": {
   "state": "live",
-  "completeThrough": "2026-10-01T18:57:20.11+00:00",
-  "lastWorkerRunAt": "2026-10-01T18:57:22.257411+00:00",
+  "completeThrough": "2026-10-01T21:29:34.649+00:00",
+  "lastWorkerRunAt": "2026-10-01T21:29:37.246246+00:00",
   "workflow": {
    "state": "unknown",
    "checkedAt": null,

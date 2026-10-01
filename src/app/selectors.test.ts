@@ -90,7 +90,7 @@ describe('selectBanner (spec §10.3 / §11.2 copy)', () => {
       programs,
       freshness: baseFreshness({
         state: 'delayed',
-        lastWorkerRunAt: '2026-10-01T10:17:00Z',
+        lastWorkerRunAt: '2026-10-01T12:50:00Z',
         reasons: [{ code: 'program_failing', programKey: 1, detail: 'v1 mainnet: 3 failed runs in a row' }],
       }),
     });
@@ -128,8 +128,8 @@ describe('selectBanner (spec §10.3 / §11.2 copy)', () => {
 
   it('unavailable mentions the saved copy, or its absence', () => {
     const freshness = baseFreshness({ state: 'unavailable' });
-    expect(selectBanner({ freshness, programs, now: FIXTURE_NOW, cachedAt: '2026-10-01T18:00:00Z' })?.messages[0]).toBe(
-      'Data service unavailable (the database may be paused). Showing the copy saved in this browser from 2026-10-01 18:00 UTC (1.3 h ago).',
+    expect(selectBanner({ freshness, programs, now: FIXTURE_NOW, cachedAt: '2026-10-01T20:33:00Z' })?.messages[0]).toBe(
+      'Data service unavailable (the database may be paused). Showing the copy saved in this browser from 2026-10-01 20:33 UTC (1.3 h ago).',
     );
     expect(selectBanner({ freshness, programs, now: FIXTURE_NOW, cachedAt: null })?.messages[0]).toContain('no copy saved in this browser');
   });

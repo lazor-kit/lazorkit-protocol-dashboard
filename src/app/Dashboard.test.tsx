@@ -58,6 +58,30 @@ describe('Dashboard renders every fixture', () => {
     expect(html).toMatch(/href="https:\/\/explorer\.solana\.com\/tx\/[1-9A-HJ-NP-Za-km-z]{60,90}\?cluster=devnet"/);
   });
 
+  it('devnet with the v1 filter lists v1 transactions even though v2 dominates recent traffic', () => {
+    const page = text(render(FIXTURES['devnet-7d'](), '1'));
+    expect(page).toContain('Latest activity');
+    expect(page).toContain('Newest 50 with a LazorKit instruction');
+    expect(page).not.toContain('No recent transactions');
+    expect(page).not.toContain('Transactions appear here');
+  });
+
+  it('a version without recent transactions says when its last one was, not that nothing was indexed', () => {
+    const payload = FIXTURES['devnet-7d']();
+    payload.latest = payload.latest.filter((row) => row.version !== 1);
+    const page = text(render(payload, '1'));
+    expect(page).toContain('No recent transactions');
+    expect(page).toContain('The newest one was');
+    expect(page).toContain('older activity is counted in the figures above');
+    expect(page).not.toContain('after the indexer has ingested them');
+  });
+
+  it('all versions list the newest 50 of the cluster', () => {
+    const payload = FIXTURES['devnet-7d']();
+    expect(payload.latest.length).toBeGreaterThan(50);
+    expect(text(render(payload, 'all'))).toContain('Newest 50 with a LazorKit instruction');
+  });
+
   it('explorer links on mainnet carry no cluster parameter', () => {
     const html = render(FIXTURES['mainnet-7d']());
     expect(html).toContain('https://explorer.solana.com/tx/');

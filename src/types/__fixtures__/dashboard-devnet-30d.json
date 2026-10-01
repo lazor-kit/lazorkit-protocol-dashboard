@@ -190,28 +190,23 @@
  },
  "runs": [
   {
-   "runId": "local-2026-10-01T18:57:18.687Z",
+   "runId": "local-2026-10-01T21:29:33.085Z",
    "status": "ok",
-   "startedAt": "2026-10-01T18:57:18.687+00:00",
-   "finishedAt": "2026-10-01T18:57:22.196+00:00"
+   "startedAt": "2026-10-01T21:29:33.086+00:00",
+   "finishedAt": "2026-10-01T21:29:36.984+00:00"
   },
   {
-   "runId": "local-2026-10-01T18:56:40.171Z",
+   "runId": "local-2026-10-01T21:28:31.584Z",
    "status": "ok",
-   "startedAt": "2026-10-01T18:56:40.172+00:00",
-   "finishedAt": "2026-10-01T18:56:43.669+00:00"
-  },
-  {
-   "runId": "local-2026-10-01T18:15:12.864Z",
-   "status": "ok",
-   "startedAt": "2026-10-01T18:15:12.865+00:00",
-   "finishedAt": "2026-10-01T18:54:20.535+00:00"
+   "startedAt": "2026-10-01T21:28:31.585+00:00",
+   "finishedAt": "2026-10-01T21:28:53.436+00:00"
   }
  ],
  "range": {
-  "end": "2026-10-01T18:57:37.956613+00:00",
+  "end": "2026-10-01T21:29:50.160705+00:00",
   "start": "2026-09-02T00:00:00+00:00",
   "bucket": "day",
+  "previousEnd": "2026-09-01T21:29:50.160705+00:00",
   "previousStart": "2026-08-03T00:00:00+00:00"
  },
  "latest": [
@@ -1214,6 +1209,1020 @@
    "txVersion": 0,
    "programKey": 4,
    "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 504855839,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": "GZzwzsVv6Fg7yBQfe7oar2wXrbT3S64eeffrpf16oRYs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-27T17:14:11+00:00",
+   "failClass": null,
+   "signature": "3ZmSQJ5aVT2NRVuzACx4F1DsBXFdzX9Lq1oXD58X7a2vQBVGj7mVAFBhcsf6gMhRxgRoDdEZTYxoyEbXR24fgqfQ",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": null,
+   "slot": 503354706,
+   "inner": false,
+   "kinds": [
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": null,
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-24T07:18:11+00:00",
+   "failClass": null,
+   "signature": "4fRDuiPk48pQJ6NEDNJdbntnS4HTaKwHHXZGEX6oh9GGuoLxTpdQ7JFc64cSm1cjVoVvpWFAe9cPsZTJvQnvtAr2",
+   "txVersion": -1,
+   "programKey": 3,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": null,
+   "slot": 503354693,
+   "inner": false,
+   "kinds": [
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": null,
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-24T07:18:09+00:00",
+   "failClass": null,
+   "signature": "43sTJgivrjr9vfMbejdmxfAo9p2P6Hga5BtvHWnyxBTsjC2LrMrsBmo1W1N73gkF6QAtGUV2P6CV3QV6EhFJ94mU",
+   "txVersion": -1,
+   "programKey": 3,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 494652415,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": "J2kpCsjwV8pgCfbUyD11wZgcvfuaFPEh2vkDYFDoNX6r",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-07T15:39:33+00:00",
+   "failClass": null,
+   "signature": "3kFuHMGyzBEaTwfeZ8oLA1uB4tj2cgcGkTSP1EMB2ctT6tBAK6QCXQ7pLsyP4xMgaNmy54effBeHq7tp57G75SH9",
+   "txVersion": -1,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 494612404,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": "DTfYwmDsxhoM9Zv5Rsc6jJXmEzMAfbrYVknvJ2iJA65Z",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-07T13:48:52+00:00",
+   "failClass": null,
+   "signature": "4PMMKrBxRYD5MwXyA3gfNxWjD8S51NSDBSDZkFkhuCrrfc2HNyCPa81RdMDoUVtKhtUhtf8A8KjXK4oubwpUpqe",
+   "txVersion": -1,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 494025542,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": "5WqVupHkHU1NnZf2vWyTg5d7vLsw7i8WSpDwVJCLJeVh",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-06T10:47:28+00:00",
+   "failClass": null,
+   "signature": "648ifKp4JN92Qr772imh7p6QdktgMD7xNqUY1mnWZP3vnX4GK6gxwF58NeMj9Dx8dcfUNRnEqPbLusjKxiHDFk2B",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 494025043,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": "BRG4bbmGHifA25SFTLssL5ukU4LGu4HUpcGzQhDBg5f8",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-06T10:46:06+00:00",
+   "failClass": null,
+   "signature": "3bJQAckQ6dL5DYbnC8AjGzUg9yozLFzuWHhrvi6BBUNvPkg7xH7RgiKqK5w5RhTLYFaXJ39JnSaySYxMXNsr37dg",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 494024674,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": "8C6bQFNHjxXW1QBDxdXZb3VN78abQXP4PiECCuDWcJn1",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-06T10:45:05+00:00",
+   "failClass": null,
+   "signature": "5zivR2iSfFfbV1kr6kwYpxP2kdfUnfmkWrwfK11gYSNERPogo15iAM8R44yVyDfZr74oEv4bHVn74cgTUVzSWTvc",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 494024215,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": "GJVC7PiLBSf4oWH5SLAKvwxjekcqjECrhvq5Tx6CaPBt",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-06T10:43:49+00:00",
+   "failClass": null,
+   "signature": "2xJCmyRpJ3Hdp71an8pzpVdFPCz8nqNHLsLikhd9vYzP79Nc51i8EV7XypSX9wHd4MioLcxA9i3szXfuDKZ1oURU",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 494023640,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": "DuCFxPqAq3mQh9BNEMzxbwapZNPRDHMMqJgP8zpaPMUC",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-06T10:42:14+00:00",
+   "failClass": null,
+   "signature": "5aktEwr9bAEx4DWanUPBdE9srufnU7zGQ7sD3gsUpmpH4i1gJMdCCTwQtUL5Fq4XJkqCnyqZ2pb2F3Ry1Q12t7dz",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 494022993,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": "9dkyi3rdehxJ7NpzJzhnW9RevR7YHzNLLDQzyZzapWN2",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-06T10:40:27+00:00",
+   "failClass": null,
+   "signature": "4xrxAUdnS9qAHdJqWJNGJrZrT94mZ95GqBqaBSRsV93mszgGhjFXrhw7Rgz4Kh5nxYyghWh5nGtEhqP4ARi9fJK1",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 494021783,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": "592g2YJf7fg6LMMGA5Qq5C9uA53tsNfa9nQ5ot5gfpW3",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-06T10:37:06+00:00",
+   "failClass": null,
+   "signature": "4f7knxT22CQdjZJeHSqde1tS9gZ3MqHWCzraoqy86ZYXWG7BnwXGydtVzURfDMAZ6ye6wUFex4WcuG689NDy6Wuf",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 494021425,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed",
+   "wallet": "CLyhm5mEauUdEy5VRHAZDr9jcF1GE6TBw7kicNLVgxHJ",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-09-06T10:36:06+00:00",
+   "failClass": null,
+   "signature": "5CaQNM1uX3uBq5cpkBnmrdRb3mHYGyGGku5Jq1NHcxskB8c8FQjFro4s2vA4muGtnH45qxAp76r5UVGo4ZbtSwtJ",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 490167968,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "BL2YWSG65ozzZCe3uTE2GWSRk45fPUzwqTNofvNf8bJS",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-30T01:11:43+00:00",
+   "failClass": null,
+   "signature": "46asoe8GbeXB3KpnwYtW43aRnFdPyDafgethsTFJza6Kt3GC2z4v8RdpfaU8isK7BBXzKWAJsQiC9ENvRpxCC68v",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490154756,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "6Vi3SLMxdKhsMFbeZSZ586uAg16bA7f52M9AwPdzLvP2",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-30T00:35:11+00:00",
+   "failClass": null,
+   "signature": "3MWR9rKgnqkENQBeYs3wdF2nN7Yb5o5uj1VPRbRegD1JLh1EYP3xB5o9dc17NiJEjWHzn19mLUNLvA4gLgF2dNnw",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490154532,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "6Vi3SLMxdKhsMFbeZSZ586uAg16bA7f52M9AwPdzLvP2",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-30T00:34:34+00:00",
+   "failClass": null,
+   "signature": "2nTxYeJAK3PWH8FV3BKt1gUGTAC2w9uuQ7g9KfarQYhLsD9kF1UjCpDadwtfdRDNbLEhiwT34Hi7U8bNghLW5z6H",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 490154342,
+   "inner": false,
+   "kinds": [
+    5
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "6Vi3SLMxdKhsMFbeZSZ586uAg16bA7f52M9AwPdzLvP2",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-30T00:34:02+00:00",
+   "failClass": null,
+   "signature": "2g2uUgFFGYpimLacubXSVQDQC1dbjAt3ZadiMApWeHBYEg8ab9JvZtPrxFUrbCt4uTU9FrJEhtAAcxfpfPczc5h8",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 490142340,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "6Vi3SLMxdKhsMFbeZSZ586uAg16bA7f52M9AwPdzLvP2",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-30T00:00:53+00:00",
+   "failClass": null,
+   "signature": "5mCB3KB3mqW9hCCEs3bQaubRK5oawgvLQrxP8LnsZKeqiU7dC5k9NhcjftGiUTU4ybhR6QMJyAcbu3UbheToV96E",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "5000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490107636,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:25:03+00:00",
+   "failClass": null,
+   "signature": "3TQGLpRcLq3YZ3suMn8apAZg8oZharExMNGzS4TJEjdfxAviSGkpQT2tP1HKjA64cgog5fdSRHwd7aMZ5FmnxXQy",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490107468,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:24:35+00:00",
+   "failClass": null,
+   "signature": "5LgFingmQ8t7ohZFMdhJcnd3gq2WsjGoGGr57ZmiSKEFBD2W72upYvHWUptZnWGemQbG4s5bcgG2ZsD8ReEyksiV",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490104948,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:17:37+00:00",
+   "failClass": null,
+   "signature": "3p7eR1Rta5oLNE1ji7VzBKiEf3R9juX7rpADdvJ8rNHsstY74Zm3oFUzbWEjcmKvAWGZrdrJ5it8zMxN6AJksrdN",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490104866,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:17:23+00:00",
+   "failClass": null,
+   "signature": "23XUhRMWqK2CNydn6BDXfe2hWpmx5zMPwKVayAh8FCahc4ayzG6h3jiJnaTr6ddzE7NcWUYgPUbLUX7j3zNBFhFK",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490104581,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:16:36+00:00",
+   "failClass": null,
+   "signature": "4gyyLCEgKEE9xcweQHoQjjUwbHrN4S6NuXDfJ3UAuRX2Z83WERa8wkkrn44Z454wRuvMXSvmcMtcBrobKkNknWdr",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490104497,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:16:22+00:00",
+   "failClass": null,
+   "signature": "79fyh2yj7SJWExFg94175rsDKdpjFsCdGdSYjGYch5qefuwtVosibHbGs1Cc8kR2BCC3yo3ge9FvaqY4K51BnWS",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490104320,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:15:52+00:00",
+   "failClass": null,
+   "signature": "2qCCT9exg7nA8AxQfWUXz1w2t6XVJxrRSmRQZoGkGqQC3KPxDqWCSr2Y8w6715YfjKdRUyJQ3f3siK8y4TydQXm5",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490104125,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:15:20+00:00",
+   "failClass": null,
+   "signature": "5MGensemyXbuFULgMnVsPuVxAmAXgkrhM2BPpsnvqsX3nv7Ede7ynTm8mWrk4RzPxeoDTGco4pguw9o8is7aEMwg",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490103443,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:13:27+00:00",
+   "failClass": null,
+   "signature": "5vMT5bePoxKdmUoz9NxHaJEdunm2osXJHtQjo4mPEYYmsFCgVfP4e4AupFd2sjGdhTM6v3XaJKHjosp7bbTt8bUV",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490103067,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:12:25+00:00",
+   "failClass": null,
+   "signature": "5VtBQbMXqmxTA8tiKaxpqDsjQ2qUbvejaMHv1ESarWMegj4BbBwqk1ehMj6o4q2zTWEsA3r3a5ws68zvNkYnLf6b",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490102545,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:10:59+00:00",
+   "failClass": null,
+   "signature": "2en1Raqc3JP3ebzsyGMbxkiRTLnE27er3GFqcy1Xz2G9fQqNcFBsiWHNu9ZpxKgKQVUyXQ52WpeLoXSZ1S6fUdus",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490102401,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:10:35+00:00",
+   "failClass": null,
+   "signature": "5fswaLeQh6QY4QHtqFuzKhUi7DQ7AKRueWPsahNgbMJQBTc5vwsQaP7KEkDFH7kStsVL3y6fFSqShht1pzdU8Ssi",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490102347,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:10:27+00:00",
+   "failClass": null,
+   "signature": "467ha383MzTgqPgtx4zWRENXdRAbGEULgKGrk5MKfj6QjBDmBe9ZcKm6FPdEGrySM3wGNA2kcQhTJRCXbgLj4Agp",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490102281,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:10:16+00:00",
+   "failClass": null,
+   "signature": "4xaGYkHayCLiB8M9qVVLRPKraKFcfcvhn6ECX1JWipQdjrEB7wUK5z7UkKDk6849hSmVHD1cp9xAPFAhogM4vXhD",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490102122,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:09:49+00:00",
+   "failClass": null,
+   "signature": "YzJxBuGDb9YYViAmJ4FEhrFMTGk4MQ1CyB3ryR2XTuWwDG4DQsWougfXyM3KaMoJwoExqij8ANT5pHKyakHtq1n",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490101486,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:08:04+00:00",
+   "failClass": null,
+   "signature": "4qHtMGhKJvmS3LW2eNgYY5qQEtcCvo9M3Ak5jZEueBuoenx159tZ4kf2NhdU9V1AMMmFq8zi2GZaXbvmyjvDRAor",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490101354,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:07:42+00:00",
+   "failClass": null,
+   "signature": "touXgghGKyGqXNCwgzYf1a68kQzg2eoFvvgbSGG89Vb33Zg2H6yNBsE5q6eEMwAH5MhNencCQwRMeAL19jL73s8",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 490100434,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:05:10+00:00",
+   "failClass": null,
+   "signature": "5BpoqysNa8bZXT6ZY4RL7YgxDykDeyiw1eoCjpEEn8CUiP6UUFtYgXfsGemvQsqBe5FF6uRMQAeJ3Zss4TwUSfFn",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 490100329,
+   "inner": false,
+   "kinds": [
+    5
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:04:53+00:00",
+   "failClass": null,
+   "signature": "5Gmq5UzjUsGggCCGigRLuh3AuGJwHQJxhhK8zxX2SyGWs8UDvin41XF43Pgt2EY8ETUpRBsUvzLkUQi52wEv193B",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 490100191,
+   "inner": false,
+   "kinds": [
+    9
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T22:04:30+00:00",
+   "failClass": null,
+   "signature": "qFiBH3RSyF4ZAZ9tasthPqqmav2tqgYvK4DD83mSDJU9jSXkABRc5ofS3CetQjTkoSDTQ2wKwfgjkFYw5wFD2nt",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489967931,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:59:27+00:00",
+   "failClass": null,
+   "signature": "3EkzD9mbQw79cUZ7ZjMBivXecxsGjHwT9r6VfSWZEx1tW79cB8am96e99KbJrANGBNNEwEAD9hDeRy5QBwEc7Qgv",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489960176,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:38:02+00:00",
+   "failClass": null,
+   "signature": "5wGg5uFRwyJzkxQZksPvQji8sJZyHykzBeBPLcmU12mjvxH4g8a1JrqGHj5DiMgEyJmrHoieMAhYgwAzY1gHPALg",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489960075,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:37:45+00:00",
+   "failClass": null,
+   "signature": "46yCd2R5DUpgikMYDFngT8BmZ2eRN5GR4Ew6HaN845G1TWqH9jGomtszwW95XcCYZYojazUTkTujQuiWa4enMYs2",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489959904,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:37:16+00:00",
+   "failClass": null,
+   "signature": "4WB8RQF1jVYvyq15Ai6WcTkgP2QYMGeoNr3UcvgPQCeAFMo4izgbDboqJNfz4H5vRny84e6eDUFvWo4WkViopEfy",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489959795,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:36:59+00:00",
+   "failClass": null,
+   "signature": "4CiibYWqqKEFZLpgsRceUG4WKshLUu1J2qn8GzZW5i6m2pVYimcuqNCK1YtqqCaZ6iDG6Dsa4AyvPXEvsELFNE5C",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489956954,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:29:07+00:00",
+   "failClass": null,
+   "signature": "54VeHoCwRLrBaqufPgWPsB6RACduDM8xaq984qfQENvV8cK55BiYmrUZkMkDZWSGNL7xysgoxpXKtr7VgND7Fdmm",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489956860,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:28:51+00:00",
+   "failClass": null,
+   "signature": "4pL8nmx3ZMFaZjPtUZeuZGbzjeuH5BtBXjS4yoSf6aYLvTFwepj79HJRdAMTYyPKBT6zEPofBYadcsvzJP5tbhnt",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489956122,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:26:50+00:00",
+   "failClass": null,
+   "signature": "2okY46ovb5SjXFw3xjg1kUoGQPwtX6PHjP4jh9FwpE8m15CouXdGrK3hkbrbiSyp9KmJnNpgXscsRomAo1fi1Fk5",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489956025,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:26:34+00:00",
+   "failClass": null,
+   "signature": "2LGGRfmstQTRh2YdoGrbhdaJ8X5rPWqXmvzHCryUkMF3KRyfYFu19pXuY9ait1DWyxP2qH5RsBh47twgYowvkY9U",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489955725,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:25:44+00:00",
+   "failClass": null,
+   "signature": "24oKhH3SATKCSnmJAxT5JdHu9yovYjAWPGXVQDwTZtvPVknZbktzfkLXAuwSX5z5GA5nkhU3cmuTAYTqZkEP8HGA",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489955621,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:25:27+00:00",
+   "failClass": null,
+   "signature": "4viEnn5mbYM17acFeHoMCemWLXntSSdt4aGBAZPC7HiNvhUX6NxZi58FeCUKgD9yemHpUFwbNutaS3hVsDVx5cRY",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 2,
+   "slot": 489955532,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "F8HniT2KZspe6AGDQKvVrmkFt9LwZkctPVVQF8XZz6ub",
+   "wallet": "GK9VrmTYmtFTNyCmxYm6mGVdYgfG5nQZ6jn3BNV1CmVs",
+   "errCode": null,
+   "version": 1,
+   "blockTime": "2026-08-29T15:25:12+00:00",
+   "failClass": null,
+   "signature": "3N9v8ovu3YXDN2TALKFtd22iRVjoiDBYaq4oZWYCWd9GatyuzzsHh995KQJ1hdWCyL9jYhuLSN1fXd1jgQSnZCkC",
+   "txVersion": 0,
+   "programKey": 3,
+   "feeLamports": "2000"
   }
  ],
  "series": [
@@ -2338,21 +3347,21 @@
     "ingested": 974,
     "activeGen": 1,
     "lastError": null,
-    "discoveredAt": "2026-10-01T18:57:19.807+00:00",
+    "discoveredAt": "2026-10-01T21:29:34.316+00:00",
     "historyProof": "deploy_tx",
     "lastRunStatus": "ok",
-    "lastSuccessAt": "2026-10-01T18:57:22.190479+00:00",
+    "lastSuccessAt": "2026-10-01T21:29:36.978269+00:00",
     "parserVersion": 1,
     "lastActivityAt": "2026-09-27T17:14:11+00:00",
-    "completeThrough": "2026-10-01T18:57:19.807+00:00",
+    "completeThrough": "2026-10-01T21:29:34.316+00:00",
     "firstActivityAt": "2026-04-15T19:59:09+00:00",
     "backfillComplete": true,
-    "lastRunFinishedAt": "2026-10-01T18:57:22.19+00:00",
+    "lastRunFinishedAt": "2026-10-01T21:29:36.945+00:00",
     "consecutiveFailures": 0
    },
    "label": "v1 devnet",
    "state": {
-    "slot": 506372005,
+    "slot": 506410971,
     "config": {
      "admin": "hij78MKbJSSs15qvkHWTDCtnmba2c1W4r1V22g5sD8w",
      "address": "DJifiVwF7wGDRVYL677K3BokdCjwRBAASDSbKvtQLCRo",
@@ -2515,7 +3524,7 @@
     "withdrawableNowLamports": "5684880"
    },
    "programId": "4h3XoNReAgEcHVxcZ8sw2aufi9MTr7BbvYYjzjWDyDxS",
-   "stateSlot": 506372005,
+   "stateSlot": 506410971,
    "deployment": {
     "sha256": "2bc794a82f91fb91ecf4a55fbb424ea6e72ef87fb9a752ee809a05d5180029c7",
     "status": "live",
@@ -2724,7 +3733,7 @@
      }
     ]
    },
-   "stateFetchedAt": "2026-10-01T18:57:19.227+00:00"
+   "stateFetchedAt": "2026-10-01T21:29:33.682+00:00"
   },
   {
    "sync": {
@@ -2734,21 +3743,21 @@
     "ingested": 1403,
     "activeGen": 1,
     "lastError": null,
-    "discoveredAt": "2026-10-01T18:57:21.748+00:00",
+    "discoveredAt": "2026-10-01T21:29:36.264+00:00",
     "historyProof": "deploy_tx",
     "lastRunStatus": "ok",
-    "lastSuccessAt": "2026-10-01T18:57:22.196281+00:00",
+    "lastSuccessAt": "2026-10-01T21:29:37.016878+00:00",
     "parserVersion": 1,
     "lastActivityAt": "2026-10-01T14:42:49+00:00",
-    "completeThrough": "2026-10-01T18:57:21.748+00:00",
+    "completeThrough": "2026-10-01T21:29:36.264+00:00",
     "firstActivityAt": "2026-09-29T07:09:56+00:00",
     "backfillComplete": true,
-    "lastRunFinishedAt": "2026-10-01T18:57:22.196+00:00",
+    "lastRunFinishedAt": "2026-10-01T21:29:36.984+00:00",
     "consecutiveFailures": 0
    },
    "label": "v2 devnet",
    "state": {
-    "slot": 506372013,
+    "slot": 506410980,
     "config": null,
     "vaults": {
      "funded": 18,
@@ -2763,9 +3772,9 @@
      "expiredLamports": "0"
     },
     "sessions": {
-     "live": 2,
+     "live": 0,
      "total": 9,
-     "expired": 7,
+     "expired": 9,
      "withPolicy": 1
     },
     "treasury": {
@@ -2859,7 +3868,7 @@
    "version": 2,
    "treasury": null,
    "programId": "57bTNWqtYTJbWuLWASKo6GqUTAK6oFDUR5c6hEc6V8nv",
-   "stateSlot": 506372013,
+   "stateSlot": 506410980,
    "deployment": {
     "sha256": "3584aec70e494e27521bf3e717ccc63bda295bb9d312cdcd4f9a007db249b470",
     "status": "live",
@@ -2923,7 +3932,7 @@
     "shards": [],
     "feeRecords": []
    },
-   "stateFetchedAt": "2026-10-01T18:57:21.164+00:00"
+   "stateFetchedAt": "2026-10-01T21:29:35.62+00:00"
   }
  ],
  "migration": {
@@ -3197,12 +4206,12 @@
    ]
   }
  },
- "generatedAt": "2026-10-01T18:57:37.956613+00:00",
+ "generatedAt": "2026-10-01T21:29:50.160705+00:00",
  "dbSchemaVersion": 1,
  "freshness": {
   "state": "live",
-  "completeThrough": "2026-10-01T18:57:19.807+00:00",
-  "lastWorkerRunAt": "2026-10-01T18:57:22.257411+00:00",
+  "completeThrough": "2026-10-01T21:29:34.316+00:00",
+  "lastWorkerRunAt": "2026-10-01T21:29:37.246246+00:00",
   "workflow": {
    "state": "unknown",
    "checkedAt": null,

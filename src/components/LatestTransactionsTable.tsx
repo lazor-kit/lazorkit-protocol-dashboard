@@ -1,16 +1,39 @@
 import { useState } from 'react';
-import type { Cluster, LatestRow } from '../types/dashboard';
+import type { Cluster, LatestRow, ProgramView } from '../types/dashboard';
 import { FAIL_CLASS_DEFINITIONS, INSTRUCTION_NAMES } from '../types/protocol';
-import { AUTH_BY_CODE, FAIL_LABELS, txVersionLabel } from '../app/selectors';
+import { AUTH_BY_CODE, FAIL_LABELS, isDeployed, txVersionLabel } from '../app/selectors';
 import type { VersionFilter } from '../app/urlState';
 import { exactLamports, formatAge, formatLamports, formatUtc, toBigInt } from '../lib/format';
 import { EmptyState } from './EmptyState';
 import { AddressLink, SectionHeader, VersionTag } from './ui';
 
 export const PAGE_SIZE = 10;
+export const LATEST_LIMIT = 50;
 
+/** The API sends the 50 newest rows per program, newest first: keep the selected version's newest 50. */
 export function filterLatest(rows: LatestRow[], version: VersionFilter): LatestRow[] {
-  return version === 'all' ? rows : rows.filter((row) => String(row.version) === version);
+  return (version === 'all' ? rows : rows.filter((row) => String(row.version) === version)).slice(0, LATEST_LIMIT);
+}
+
+/** What an empty list means: nothing indexed yet, nothing ever, or nothing recent (the list reads the event log,
+ * which keeps recent weeks only; older activity is in the figures above). */
+export function emptyLatestCopy(programs: ProgramView[], now: number): { title: string; body: string } {
+  const live = programs.filter(isDeployed);
+  const last = live
+    .map((program) => program.sync.lastActivityAt)
+    .filter((at): at is string => at !== null)
+    .sort()
+    .at(-1);
+  if (last) {
+    return {
+      title: 'No recent transactions',
+      body: `The newest one was ${formatAge(last, now)} (${formatUtc(last, now, { alwaysDate: true })}). This list covers recent weeks only; older activity is counted in the figures above.`,
+    };
+  }
+  if (live.some((program) => !program.sync.backfillComplete)) {
+    return { title: 'Nothing indexed yet', body: 'Transactions appear here as the indexer works through the history.' };
+  }
+  return { title: 'No transactions yet', body: 'No transaction with a LazorKit instruction has reached this program.' };
 }
 
 export function instructionText(row: LatestRow): string {
@@ -22,8 +45,21 @@ export function instructionText(row: LatestRow): string {
 
 /** Section 9: the 50 newest transactions with real LazorKit instructions, 10 per page (keyed by the parent on
  * cluster and version, so the page resets when either changes). */
-export function LatestTransactionsTable({ rows, cluster, version, now }: { rows: LatestRow[]; cluster: Cluster; version: VersionFilter; now: number }) {
+export function LatestTransactionsTable({
+  rows,
+  programs,
+  cluster,
+  version,
+  now,
+}: {
+  rows: LatestRow[];
+  programs: ProgramView[];
+  cluster: Cluster;
+  version: VersionFilter;
+  now: number;
+}) {
   const filtered = filterLatest(rows, version);
+  const empty = filtered.length === 0 ? emptyLatestCopy(programs, now) : null;
   const [page, setPage] = useState(1);
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, pages);
@@ -37,8 +73,8 @@ export function LatestTransactionsTable({ rows, cluster, version, now }: { rows:
         title="Latest activity"
         aside={<span className="mutedText">Newest {filtered.length} with a LazorKit instruction · not limited by the time range</span>}
       />
-      {filtered.length === 0 ? (
-        <EmptyState title="No transactions yet" body="Transactions appear here after the indexer has ingested them." />
+      {empty ? (
+        <EmptyState title={empty.title} body={empty.body} />
       ) : (
         <>
           <div className="tableWrap">

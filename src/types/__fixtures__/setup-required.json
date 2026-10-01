@@ -3,11 +3,12 @@
  "dbSchemaVersion": null,
  "cluster": "devnet",
  "window": "7d",
- "generatedAt": "2026-10-01T18:57:40.750Z",
+ "generatedAt": "2026-10-01T21:30:37.887Z",
  "range": {
   "start": null,
-  "end": "2026-10-01T18:57:40.750Z",
+  "end": "2026-10-01T21:30:37.887Z",
   "previousStart": null,
+  "previousEnd": null,
   "bucket": "day"
  },
  "freshness": {

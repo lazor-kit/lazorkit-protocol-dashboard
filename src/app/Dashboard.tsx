@@ -50,7 +50,14 @@ function DataSections({ payload, version, now, expandAll }: { payload: Dashboard
       <BinaryPanel payload={payload} now={now} expandAll={expandAll} />
       <MigrationPanel payload={payload} />
       {anyDeployed ? (
-        <LatestTransactionsTable key={`${payload.cluster}-${version}`} rows={payload.latest} cluster={payload.cluster} version={version} now={now} />
+        <LatestTransactionsTable
+          key={`${payload.cluster}-${version}`}
+          rows={payload.latest}
+          programs={inView}
+          cluster={payload.cluster}
+          version={version}
+          now={now}
+        />
       ) : null}
       <DeveloperDetails payload={payload} now={now} open={expandAll} />
     </>
