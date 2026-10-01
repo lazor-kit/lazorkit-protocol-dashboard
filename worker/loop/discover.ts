@@ -65,7 +65,7 @@ export async function discover(
   let limit = frontier === null ? PAGE_LIMIT : FIRST_PAGE_LIMIT;
   let historyEnd = false;
   let pages = 0;
-  let usedArchival = endpoint === deps.archival;
+  let usedArchival = false; // true only when a distinct archival endpoint had to continue the paging
   let oldestSeen: SignatureInfo | null = null;
   let continuityFloor: number | null = null;
 
