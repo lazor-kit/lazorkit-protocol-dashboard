@@ -1,201 +1,138 @@
-import { ExternalLink } from 'lucide-react';
-import type {
-  AnalyticsStatus,
-  LatestTransaction,
-  LatestTransactionsPagination,
-} from '../solana/dashboardTypes';
-import type { ClusterId } from '../solana/constants';
-import {
-  explorerUrl,
-  explorerTxUrl,
-  formatDateTime,
-  formatLamportsShort,
-  shortenAddress,
-} from '../solana/format';
+import { useState } from 'react';
+import type { Cluster, LatestRow } from '../types/dashboard';
+import { FAIL_CLASS_DEFINITIONS, INSTRUCTION_NAMES } from '../types/protocol';
+import { AUTH_BY_CODE, FAIL_LABELS, txVersionLabel } from '../app/selectors';
+import type { VersionFilter } from '../app/urlState';
+import { exactLamports, formatAge, formatLamports, formatUtc, toBigInt } from '../lib/format';
 import { EmptyState } from './EmptyState';
+import { AddressLink, SectionHeader, VersionTag } from './ui';
 
-export function LatestTransactionsTable({
-  cluster,
-  rows,
-  pagination,
-  analyticsStatus,
-  onPageChange,
-}: {
-  cluster: ClusterId;
-  rows: LatestTransaction[];
-  pagination: LatestTransactionsPagination;
-  analyticsStatus: AnalyticsStatus;
-  onPageChange: (page: number) => void;
-}) {
-  const firstRow = pagination.total === 0
-    ? 0
-    : (pagination.page - 1) * pagination.limit + 1;
-  const lastRow = Math.min(pagination.total, pagination.page * pagination.limit);
+export const PAGE_SIZE = 10;
+
+export function filterLatest(rows: LatestRow[], version: VersionFilter): LatestRow[] {
+  return version === 'all' ? rows : rows.filter((row) => String(row.version) === version);
+}
+
+export function instructionText(row: LatestRow): string {
+  const names = row.kinds.map((kind) => INSTRUCTION_NAMES[kind] ?? `kind ${kind}`);
+  const counted = new Map<string, number>();
+  for (const name of names) counted.set(name, (counted.get(name) ?? 0) + 1);
+  return [...counted.entries()].map(([name, count]) => (count > 1 ? `${count} × ${name}` : name)).join(' + ');
+}
+
+/** Section 9: the 50 newest transactions with real LazorKit instructions, 10 per page (keyed by the parent on
+ * cluster and version, so the page resets when either changes). */
+export function LatestTransactionsTable({ rows, cluster, version, now }: { rows: LatestRow[]; cluster: Cluster; version: VersionFilter; now: number }) {
+  const filtered = filterLatest(rows, version);
+  const [page, setPage] = useState(1);
+  const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const current = Math.min(page, pages);
+  const visible = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
   return (
-    <section className="panel" aria-label="Latest activity">
-      <div className="panelHeader">
-        <div>
-          <p className="eyebrow">Activity</p>
-          <h2>Latest activity</h2>
-        </div>
-        <span className="mutedText">Recent fee-eligible LazorKit transactions</span>
-      </div>
-      {rows.length === 0 ? (
-        <EmptyState
-          title={emptyCopy(analyticsStatus).title}
-          body={emptyCopy(analyticsStatus).body}
-        />
+    <section className="panel" aria-labelledby="latest-title">
+      <SectionHeader
+        id="latest-title"
+        eyebrow="Activity"
+        title="Latest activity"
+        aside={<span className="mutedText">Newest {filtered.length} with a LazorKit instruction · not limited by the time range</span>}
+      />
+      {filtered.length === 0 ? (
+        <EmptyState title="No transactions yet" body="Transactions appear here after the indexer has ingested them." />
       ) : (
-        <div className="tableWrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Wallet</th>
-                <th>Fee Payer</th>
-                <th>Method</th>
-                <th>Status</th>
-                <th>Fee</th>
-                <th>Network</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.signature}>
-                  <td>{formatDateTime(row.blockTime)}</td>
-                  <td>
-                    <AddressActions
-                      cluster={cluster}
-                      address={row.walletPda}
-                      label="wallet PDA"
-                    />
-                  </td>
-                  <td>
-                    <AddressActions
-                      cluster={cluster}
-                      address={row.feePayer}
-                      label="fee payer"
-                    />
-                  </td>
-                  <td>{row.method}</td>
-                  <td>
-                    <span
-                      className={`statusBadge ${
-                        row.status === 'success' ? 'success' : 'failed'
-                      }`}
-                    >
-                      {row.status}
-                    </span>
-                  </td>
-                  <td>{formatLamportsShort(row.feeLamports)}</td>
-                  <td>
-                    <a
-                      className="networkLink"
-                      href={explorerTxUrl(row.signature, cluster)}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label="Open transaction in Explorer"
-                      title={row.signature}
-                    >
-                      {cluster}
-                      <ExternalLink size={13} />
-                    </a>
-                  </td>
+        <>
+          <div className="tableWrap">
+            <table className="latestTable">
+              <thead>
+                <tr>
+                  <th scope="col">Time</th>
+                  <th scope="col">Version</th>
+                  <th scope="col">Instruction</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Wallet</th>
+                  <th scope="col">Signer</th>
+                  <th scope="col" className="num">Fee</th>
+                  <th scope="col">App</th>
+                  <th scope="col">Tx</th>
+                  <th scope="col">Signature</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="paginationBar">
+              </thead>
+              <tbody>
+                {visible.map((row) => (
+                  <tr key={`${row.programKey}-${row.signature}`}>
+                    <td>
+                      <span className="cellMain">{formatAge(row.blockTime, now)}</span>
+                      <span className="cellSub">{formatUtc(row.blockTime, now, { alwaysDate: true })}</span>
+                    </td>
+                    <td>
+                      <VersionTag version={row.version} />
+                    </td>
+                    <td>
+                      {instructionText(row)}
+                      {row.inner ? (
+                        <span className="cellSub" title="Called by another program (CPI)">
+                          via another program
+                        </span>
+                      ) : null}
+                    </td>
+                    <td>
+                      {row.ok ? (
+                        <span className="statusBadge success">✓ ok</span>
+                      ) : (
+                        <span
+                          className="statusBadge failed"
+                          title={row.failClass ? FAIL_CLASS_DEFINITIONS[row.failClass] : undefined}
+                        >
+                          ✕ {row.failClass ? FAIL_LABELS[row.failClass] : 'failed'}
+                          {row.errCode !== null ? ` (${row.errCode})` : ''}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <AddressLink address={row.wallet} cluster={cluster} label="wallet" />
+                    </td>
+                    <td>{row.auth !== null ? AUTH_BY_CODE[row.auth] ?? '–' : '–'}</td>
+                    <td className="num" title={exactLamports(row.feeLamports)}>
+                      {toBigInt(row.feeLamports) === 0n ? <span className="mutedText">–</span> : formatLamports(row.feeLamports)}
+                    </td>
+                    <td className="appCell" title={row.app ?? undefined}>
+                      {row.app ?? <span className="mutedText">–</span>}
+                    </td>
+                    <td>{txVersionLabel(row.txVersion)}</td>
+                    <td>
+                      <AddressLink address={row.signature} cluster={cluster} label="transaction" kind="tx" chars={6} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <nav className="paginationBar" aria-label="Latest activity pages">
             <span>
-              Showing {firstRow}-{lastRow} of {pagination.total}
+              {(current - 1) * PAGE_SIZE + 1}–{Math.min(filtered.length, current * PAGE_SIZE)} of {filtered.length}
             </span>
             <div className="paginationControls">
-              <button
-                type="button"
-                onClick={() => onPageChange(pagination.page - 1)}
-                disabled={!pagination.hasPreviousPage}
-              >
+              <button type="button" onClick={() => setPage(current - 1)} disabled={current <= 1}>
                 Previous
               </button>
-              {paginationPages(pagination.totalPages, pagination.page).map((page) => (
+              {Array.from({ length: pages }, (_, index) => index + 1).map((number) => (
                 <button
-                  key={page}
+                  key={number}
                   type="button"
-                  className={page === pagination.page ? 'active' : undefined}
-                  onClick={() => onPageChange(page)}
+                  aria-current={number === current ? 'page' : undefined}
+                  className={number === current ? 'active' : undefined}
+                  onClick={() => setPage(number)}
                 >
-                  {page}
+                  {number}
                 </button>
               ))}
-              <button
-                type="button"
-                onClick={() => onPageChange(pagination.page + 1)}
-                disabled={!pagination.hasNextPage}
-              >
+              <button type="button" onClick={() => setPage(current + 1)} disabled={current >= pages}>
                 Next
               </button>
             </div>
-          </div>
-        </div>
+          </nav>
+        </>
       )}
     </section>
-  );
-}
-
-function emptyCopy(status: AnalyticsStatus): { title: string; body: string } {
-  if (status === 'empty' || status === 'not_configured') {
-    return {
-      title: 'Preparing transaction activity',
-      body: 'Recent transactions will appear here as soon as activity data is ready.',
-    };
-  }
-  if (status === 'partial' || status === 'indexing') {
-    return {
-      title: 'No transactions on this page',
-      body: 'Try a wider time range or refresh again shortly.',
-    };
-  }
-  return {
-    title: 'No activity in selected window',
-    body: 'Try a wider time filter or refresh after the next indexer run.',
-  };
-}
-
-function paginationPages(totalPages: number, currentPage: number): number[] {
-  const start = Math.max(1, currentPage - 2);
-  const end = Math.min(totalPages, start + 4);
-  const adjustedStart = Math.max(1, end - 4);
-  return Array.from(
-    { length: end - adjustedStart + 1 },
-    (_, index) => adjustedStart + index,
-  );
-}
-
-function AddressActions({
-  cluster,
-  address,
-  label,
-  href,
-}: {
-  cluster: ClusterId;
-  address: string;
-  label: string;
-  href?: string;
-}) {
-  return (
-    <div className="addressCell">
-      <span title={address}>{shortenAddress(address)}</span>
-      <a
-        className="inlineExplorerLink"
-        href={href ?? explorerUrl(address, cluster)}
-        target="_blank"
-        rel="noreferrer"
-        aria-label={`Open ${label} in Explorer`}
-        title={`Open ${label} in Explorer`}
-      >
-        <ExternalLink size={13} />
-      </a>
-    </div>
   );
 }

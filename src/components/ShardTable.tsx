@@ -1,87 +1,56 @@
-import { Copy, ExternalLink } from 'lucide-react';
-import type { ShardRow } from '../solana/fetchProtocolStats';
-import { explorerUrl, formatLamportsShort, shortenAddress } from '../solana/format';
-import type { ClusterId } from '../solana/constants';
+import type { Cluster, Lamports } from '../types/dashboard';
+import { exactLamports, formatLamports, toBigInt } from '../lib/format';
+import { AddressLink } from './ui';
 
+/** Treasury shards: balance, and what is withdrawable above the rent-exempt minimum today. */
 export function ShardTable({
   cluster,
   shards,
+  rentMinimum,
 }: {
-  cluster: ClusterId;
-  shards: ShardRow[];
+  cluster: Cluster;
+  shards: Array<{ id: number; address: string; lamports: Lamports }>;
+  rentMinimum: Lamports;
 }) {
+  if (shards.length === 0) return null;
+  const rent = toBigInt(rentMinimum);
   return (
-    <section className="panel" aria-label="Treasury shards">
-      <div className="panelHeader">
-        <div>
-          <p className="eyebrow">Treasury Shards</p>
-          <h2>Collectible fee balances</h2>
-        </div>
-      </div>
+    <details className="subTable">
+      <summary>Treasury shards ({shards.length})</summary>
       <div className="tableWrap">
         <table>
           <thead>
             <tr>
-              <th>Shard</th>
-              <th>PDA</th>
-              <th>Balance Including Rent</th>
-              <th>Collectible</th>
-              <th>Status</th>
+              <th scope="col">Shard</th>
+              <th scope="col">Address</th>
+              <th scope="col" className="num">Balance</th>
+              <th scope="col" className="num">Withdrawable now</th>
             </tr>
           </thead>
           <tbody>
-            {shards.map((shard) => (
-              <tr key={shard.address}>
-                <td>{shard.shardId}</td>
-                <td>
-                  <AddressActions cluster={cluster} address={shard.address} />
-                </td>
-                <td>{formatLamportsShort(shard.balanceLamports)}</td>
-                <td>{formatLamportsShort(shard.collectibleLamports)}</td>
-                <td>
-                  <span className={shard.skippedReason ? 'warningText' : 'mutedText'}>
-                    {shard.skippedReason ?? 'Ready'}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {[...shards]
+              .sort((a, b) => a.id - b.id)
+              .map((shard) => {
+                const balance = toBigInt(shard.lamports);
+                const withdrawable = balance > rent ? balance - rent : 0n;
+                return (
+                  <tr key={shard.address}>
+                    <td className="num">{shard.id}</td>
+                    <td>
+                      <AddressLink address={shard.address} cluster={cluster} label="shard" copy />
+                    </td>
+                    <td className="num" title={exactLamports(balance)}>
+                      {formatLamports(balance)}
+                    </td>
+                    <td className="num" title={exactLamports(withdrawable)}>
+                      {formatLamports(withdrawable)}
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
-    </section>
+    </details>
   );
 }
-
-function AddressActions({
-  cluster,
-  address,
-}: {
-  cluster: ClusterId;
-  address: string;
-}) {
-  return (
-    <div className="addressCell">
-      <span title={address}>{shortenAddress(address)}</span>
-      <button
-        type="button"
-        className="miniIconButton"
-        onClick={() => void navigator.clipboard.writeText(address)}
-        aria-label="Copy address"
-        title="Copy address"
-      >
-        <Copy size={13} />
-      </button>
-      <a
-        className="miniIconButton"
-        href={explorerUrl(address, cluster)}
-        target="_blank"
-        rel="noreferrer"
-        aria-label="Open in Explorer"
-        title="Open in Explorer"
-      >
-        <ExternalLink size={13} />
-      </a>
-    </div>
-  );
-}
-

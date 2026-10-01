@@ -1,54 +1,45 @@
-import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+import type { Delta } from '../app/selectors';
 
+/** One overview number: the value, an optional "v1 · v2" split, a delta against the previous period, a sub-line. */
 export function KpiCard({
   label,
   value,
-  detail,
-  percentChange,
-  icon: Icon,
-  isLoading = false,
-  showTrend = true,
+  title,
+  delta,
+  deltaLabel,
+  split,
+  sub,
+  loading = false,
 }: {
   label: string;
   value: string;
-  detail: string;
-  percentChange: number | null;
-  icon: LucideIcon;
-  isLoading?: boolean;
-  showTrend?: boolean;
+  title?: string;
+  delta?: Delta | null;
+  deltaLabel?: string;
+  split?: ReactNode;
+  sub?: ReactNode;
+  loading?: boolean;
 }) {
-  const trend = formatTrend(percentChange);
   return (
-    <article className="metricCard kpiCard">
-      <div className="metricIcon" aria-hidden="true">
-        <Icon size={17} />
-      </div>
-      <div className="metricContent">
-        <span>{label}</span>
-        <strong className={isLoading ? 'skeletonText' : undefined}>{value}</strong>
-        <small>
-          {showTrend ? <span className={trend.className}>{trend.label}</span> : null}
-          {detail}
-        </small>
-      </div>
+    <article className="kpiCard">
+      <span className="kpiLabel">{label}</span>
+      <strong className={loading ? 'kpiValue skeletonText' : 'kpiValue'} title={title}>
+        {value}
+      </strong>
+      {delta && delta.direction !== 'none' ? (
+        <span className="kpiDelta">
+          <span className={`trendValue trend-${delta.direction}`}>
+            {delta.direction === 'up' ? '▲ ' : delta.direction === 'down' ? '▼ ' : ''}
+            {delta.label}
+          </span>{' '}
+          {deltaLabel}
+        </span>
+      ) : deltaLabel && !delta ? (
+        <span className="kpiDelta">{deltaLabel}</span>
+      ) : null}
+      {split ? <span className="kpiSplit">{split}</span> : null}
+      {sub ? <span className="kpiSub">{sub}</span> : null}
     </article>
   );
-}
-
-function formatTrend(percentChange: number | null): {
-  label: string;
-  className: string;
-} {
-  if (percentChange === null) {
-    return { label: 'New ', className: 'trendValue positiveTrend' };
-  }
-  if (percentChange === 0) {
-    return { label: '0% ', className: 'trendValue' };
-  }
-  const sign = percentChange > 0 ? '+' : '';
-  return {
-    label: `${sign}${percentChange.toFixed(1)}% `,
-    className:
-      percentChange > 0 ? 'trendValue positiveTrend' : 'trendValue negativeTrend',
-  };
 }

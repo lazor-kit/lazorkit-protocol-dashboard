@@ -5,25 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Public LazorKit protocol dashboard for wallet, transaction, and fee metrics."
+      content="Public LazorKit protocol dashboard: wallets, transactions, fees and deployments for protocol v1 and v2 on Solana mainnet and devnet."
     />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="LazorKit Protocol Dashboard" />
     <meta
       property="og:description"
-      content="Live LazorKit protocol activity, wallet, transaction, and fee metrics."
+      content="LazorKit protocol v1 and v2 activity: wallets, transactions, fees and deployments."
     />
     <meta property="og:image" content="/lazorkit-logo.png" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="LazorKit Protocol Dashboard" />
     <meta
       name="twitter:description"
-      content="Live LazorKit protocol activity, wallet, transaction, and fee metrics."
+      content="LazorKit protocol v1 and v2 activity: wallets, transactions, fees and deployments."
     />
     <meta name="twitter:image" content="/lazorkit-logo.png" />
     <link rel="icon" type="image/png" href="/lazorkit-logo.png" />
     <link rel="apple-touch-icon" href="/lazorkit-logo.png" />
+    <meta name="color-scheme" content="dark light" />
     <title>LazorKit Protocol Dashboard</title>
+    <script>
+      try {
+        var theme = localStorage.getItem('lk-theme');
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+      } catch (error) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
