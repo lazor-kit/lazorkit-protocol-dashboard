@@ -7,10 +7,13 @@
 //                       token, then System transfer vault -> destination), at the v1 id running the sunset build
 //   innerCreateWallet   u3 §7.2 (CreateWallet may be CPI'd by an integrator) + §5.1 (fee transfer is the first
 //                       child of a fee-bearing instruction)
+//   firstFeeExecute     lazorkit-protocol program/src/entrypoint.rs try_collect_fee: with fees on, a first-time
+//                       payer's FeeRecord is created inline (utils.rs initialize_pda_account: Transfer payer ->
+//                       record for the rent, Allocate, Assign) BEFORE the fee Transfer payer -> treasury shard
 
 import bs58 from 'bs58';
 import { PROGRAMS } from '../../../src/types/protocol.js';
-import { authorityPda, protocolConfigPda, treasuryShardPda } from '../../chain/pdas.js';
+import { authorityPda, feeRecordPda, protocolConfigPda, treasuryShardPda } from '../../chain/pdas.js';
 import type { RawTransaction } from '../../types.js';
 
 const SYSTEM = '11111111111111111111111111111111';
@@ -180,5 +183,70 @@ export function innerCreateWallet(): { tx: RawTransaction; shard: string } {
       { [shard]: [946_560, 951_560] },
     ),
     shard,
+  };
+}
+
+function systemAllocate(space: number): string {
+  return bs58.encode(new Uint8Array([8, 0, 0, 0, ...u64le(space)]));
+}
+
+function systemAssign(owner: string): string {
+  return bs58.encode(new Uint8Array([1, 0, 0, 0, ...bs58.decode(owner)]));
+}
+
+export interface FirstFeeFixture {
+  tx: RawTransaction;
+  payer: string;
+  feeRecord: string;
+  shard: string;
+  fee: number;
+}
+
+/**
+ * Execute (kind 4) at v2 mainnet with fees on. `firstTime`: the payer has no FeeRecord yet, so the program creates
+ * it (Transfer payer -> record 1,113,600 rent, Allocate, Assign) before the 5,000 lamport fee transfer to shard 5;
+ * then the vault calls SPL Token. Otherwise only the fee transfer precedes the vault's call.
+ */
+export function firstFeeExecute(firstTime: boolean): FirstFeeFixture {
+  const payer = fakeKey(`fee-payer-${firstTime ? 'new' : 'known'}`);
+  const signer = fakeKey('fee-ed25519-signer');
+  const wallet = fakeKey('fee-wallet');
+  const authority = authorityPda(2, V2_MAINNET, wallet, signer) as string;
+  const vault = fakeKey('fee-vault');
+  const source = fakeKey('fee-src-ata');
+  const dest = fakeKey('fee-dst-ata');
+  const config = protocolConfigPda(2, V2_MAINNET);
+  const feeRecord = feeRecordPda(2, V2_MAINNET, payer);
+  const shard = treasuryShardPda(2, V2_MAINNET, 5);
+  const fee = 5000;
+  const lkAccounts = [payer, wallet, authority, vault, IX_SYSVAR, TOKEN, source, dest, config, feeRecord, shard, SYSTEM];
+  const b = builder([payer, signer], [...lkAccounts, V2_MAINNET]);
+  const data = new Uint8Array(16);
+  data[0] = 4; // Execute
+  const creation = firstTime
+    ? [
+        { programIdIndex: b.index(SYSTEM), accounts: [payer, feeRecord].map(b.index), data: systemTransfer(1_113_600), stackHeight: 2 },
+        { programIdIndex: b.index(SYSTEM), accounts: [feeRecord].map(b.index), data: systemAllocate(32), stackHeight: 2 },
+        { programIdIndex: b.index(SYSTEM), accounts: [feeRecord].map(b.index), data: systemAssign(V2_MAINNET), stackHeight: 2 },
+      ]
+    : [];
+  const inner = [
+    ...creation,
+    { programIdIndex: b.index(SYSTEM), accounts: [payer, shard].map(b.index), data: systemTransfer(fee), stackHeight: 2 },
+    { programIdIndex: b.index(TOKEN), accounts: [source, dest, vault].map(b.index), data: bs58.encode(new Uint8Array([3, ...u64le(10)])), stackHeight: 2 },
+  ];
+  return {
+    tx: tx(
+      `SyntheticFirstFeeExecute${firstTime ? 'New' : 'Known'}11111111111111111111111111111111111111111111111111111`,
+      b,
+      2,
+      [{ programIdIndex: b.index(V2_MAINNET), accounts: lkAccounts.map(b.index), data: bs58.encode(data) }],
+      [{ index: 0, instructions: inner }],
+      { [shard]: [946_560, 946_560 + fee], [feeRecord]: [firstTime ? 0 : 1_113_600, 1_113_600] },
+    ),
+    payer,
+    feeRecord,
+    shard,
+    fee,
   };
 }

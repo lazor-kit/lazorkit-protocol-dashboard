@@ -195,6 +195,9 @@ export function parseTransaction(
       // A failed transaction without real LazorKit activity (program-ping bots) is noise, whatever failed.
       for (const row of rows) row.fail_class = 'noise';
     }
+    // Failed inside an instruction: that instruction belongs to at most one LazorKit program, which lets the
+    // cluster total of a transaction shared by v1 and v2 keep the failing program's class (lk.rollup).
+    if (failure.instructionIndex !== null) for (const row of rows) row.flags |= FLAGS.IX_ERROR;
     rows[0].net_fee_lamports = meta.fee ?? null;
     return { rows, warnings };
   } catch (error) {

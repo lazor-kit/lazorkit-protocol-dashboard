@@ -55,7 +55,8 @@ export function loadConfig(env: NodeJS.ProcessEnv, argv: string[]): WorkerConfig
   if (!['mainnet', 'devnet', 'all'].includes(cluster)) throw new ConfigError(`unknown cluster "${cluster}"`);
 
   const retentionDays = Math.floor(positiveNumber(env.INDEXER_EVENT_RETENTION_DAYS, 35, 'INDEXER_EVENT_RETENTION_DAYS'));
-  if (retentionDays < 3) throw new ConfigError('INDEXER_EVENT_RETENTION_DAYS must be at least 3');
+  // lk_compact refuses less: the 30d comparison reads the events of the day 30 days ago
+  if (retentionDays < 31) throw new ConfigError('INDEXER_EVENT_RETENTION_DAYS must be at least 31');
 
   return {
     supabaseUrl,

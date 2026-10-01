@@ -12,6 +12,7 @@ import { validateDashboardPayload } from '../src/types/validate.js';
 import { innerCreateWallet, migrateWallet, withdrawTreasury } from '../worker/__fixtures__/synthetic/index.js';
 import { parseContextFor } from '../worker/chain/pdas.js';
 import { PostgrestLkDb, DbError } from '../worker/db/client.js';
+import { isDataRejection } from '../worker/loop/ingest.js';
 import { parseTransaction } from '../worker/parse/transaction.js';
 import { FIXTURE_SIGNATURES, fixturePath } from '../worker/scripts/fetchFixtures.js';
 import type { EventRow, RawTransaction } from '../worker/types.js';
@@ -173,6 +174,21 @@ describe.skipIf(!enabled)('integration: local PostgREST', () => {
     expect(sql(`select active_gen from lk.programs where program_key = ${P}`)).toBe('2');
     expect(sql(`select count(*) from lk.events where program_key = ${P} and gen = 1`)).toBe('0');
     expect((await db.rpc<RawDashboard>('lk_dashboard', { p_cluster: 'mainnet', p_window: 'all' })).kpis['2']?.current).toEqual(before);
+  });
+
+  it('a Custom error code above 2^31 (u32) is stored over HTTP; a data error is classed as a rejection', async () => {
+    resetProgram();
+    const tx = structuredClone(withdrawTreasury());
+    if (tx.meta) tx.meta.err = { InstructionError: [0, { Custom: 4294967295 }] };
+    const { rows } = parseTransaction(tx, parseContextFor(1));
+    await db.ingest(P, 1, rows, [rows[0].signature]);
+    expect(sql(`select err_code from lk.events where program_key = ${P} and signature = '${rows[0].signature}'`)).toBe('4294967295');
+    // a value outside every column type is still refused, as HTTP 400 / SQLSTATE 22003: the worker isolates it
+    const bad = rows.map((row) => ({ ...row, signature: 'it-bad', tokens: 70000 }));
+    const error = await db.ingest(P, 1, bad, ['it-bad']).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(DbError);
+    expect(isDataRejection(error)).toBe(true);
+    resetProgram();
   });
 
   it('every lk_dashboard payload (2 clusters x 4 windows) passes the contract validator', async () => {

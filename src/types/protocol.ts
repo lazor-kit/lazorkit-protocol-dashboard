@@ -96,6 +96,8 @@ export const FLAGS = {
   FEE_SUFFIX: 16,
   PARSE_ERROR: 32,
   UNPARSED: 64,
+  /** the transaction failed inside an instruction (InstructionError): see lk.rollup shared_by_fail */
+  IX_ERROR: 128,
 } as const;
 
 export const FAIL_CLASS_DEFINITIONS = {

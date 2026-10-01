@@ -129,7 +129,7 @@ create table if not exists lk.events (
   inner_ix          boolean not null default false,
   ok                boolean not null,      -- transaction-level success
   fail_class        text,
-  err_code          integer,
+  err_code          bigint,                -- Solana Custom error code: a u32, so up to 4294967295
   wallet            text,
   payer             text,
   auth              smallint,              -- 1 passkey, 2 session, 3 ed25519, 4 deferred
@@ -148,6 +148,16 @@ create table if not exists lk.events (
   foreign key (program_key, gen) references lk.builds
 );
 create index if not exists events_time_idx on lk.events (program_key, gen, block_time desc);
+-- A database created by an earlier copy of this file has err_code integer, which a Custom code of 2^31 or more
+-- overflows (the whole ingest batch is then rejected). Widen it in place; a no-op once it is bigint.
+do $$
+begin
+  if exists (select 1 from information_schema.columns
+              where table_schema = 'lk' and table_name = 'events' and column_name = 'err_code'
+                and data_type = 'integer') then
+    alter table lk.events alter column err_code type bigint;
+  end if;
+end $$;
 
 create table if not exists lk.gaps (
   program_key     smallint not null,
@@ -394,6 +404,7 @@ tx as (
          max(fail_class)                  as fail_class,
          max(tx_version)                  as tx_version,
          bool_or(shared)                  as shared,
+         bool_or((flags & 128) <> 0)      as ix_err,
          coalesce(max(net_fee_lamports), 0) as net_fee
     from ev
    group by b, signature
@@ -417,12 +428,21 @@ t as (
    group by b
 ),
 f as (
-  select b,
-         coalesce(jsonb_object_agg(fc, n) filter (where n > 0), '{}'::jsonb)   as by_fail,
-         coalesce(jsonb_object_agg(fc, sn) filter (where sn > 0), '{}'::jsonb) as shared_by_fail
-    from (select b, coalesce(fail_class, 'other') as fc, count(*) as n, count(*) filter (where shared) as sn
+  select b, jsonb_object_agg(fc, n) as by_fail
+    from (select b, coalesce(fail_class, 'other') as fc, count(*) as n
             from tx where is_real and not ok
            group by b, coalesce(fail_class, 'other')) x
+   group by b
+),
+-- shared_by_fail: the class of the copy of a shared failed transaction that lk.cluster_metrics drops from the
+-- cluster total. When the transaction failed inside an instruction (flag 128), that instruction belongs to at
+-- most one of the two programs, so at least one copy is 'other_ix': dropping 'other_ix' keeps the specific class
+-- of the program whose instruction failed. Otherwise (limits, other) both copies carry the same class.
+fs as (
+  select b, jsonb_object_agg(fc, n) as shared_by_fail
+    from (select b, case when ix_err then 'other_ix' else coalesce(fail_class, 'other') end as fc, count(*) as n
+            from tx where is_real and not ok and shared
+           group by 1, 2) x
    group by b
 ),
 r as (
@@ -508,12 +528,13 @@ select t.b,
          'migrated_lamports', r.migrated_lamports, 'migrated_tokens', r.migrated_tokens,
          'cleanup_lamports', r.cleanup_lamports, 'parser_version_min', r.parser_version_min,
          'by_kind', coalesce(k.by_kind, '{}'::jsonb), 'by_auth', coalesce(au.by_auth, '{}'::jsonb),
-         'by_fail', coalesce(f.by_fail, '{}'::jsonb), 'shared_by_fail', coalesce(f.shared_by_fail, '{}'::jsonb),
+         'by_fail', coalesce(f.by_fail, '{}'::jsonb), 'shared_by_fail', coalesce(fs.shared_by_fail, '{}'::jsonb),
          'by_app', coalesce(ap.by_app, '{}'::jsonb), 'by_payer', coalesce(py.by_payer, '{}'::jsonb),
          'by_cpi', coalesce(cp.by_cpi, '{}'::jsonb))
   from t
   join r using (b)
   left join f using (b)
+  left join fs using (b)
   left join k using (b)
   left join au using (b)
   left join ap using (b)
@@ -767,61 +788,84 @@ language sql immutable as $$
            group by okey) y
 $$;
 
+-- Distinct actors of one program generation over [t0, t1): role 'w' wallets of wallet operations, 'p' payers,
+-- 'a' integrator apps (successful instructions only, as in lk.actor_days). from_events: from the events alone
+-- (24h windows). Otherwise whole UTC days from lk.actor_days, plus the events of a partial last day when t1 is
+-- not midnight (a previous period ends at the same time of day as now).
+create or replace function lk.window_actors(p integer, g integer, p_role text, t0 timestamptz, t1 timestamptz,
+                                            from_events boolean)
+returns table (actor text) language sql stable as $$
+  select a.actor from lk.actor_days a
+   where not from_events and a.program_key = p and a.gen = g and a.role = p_role
+     and a.day >= lk.utc_day(t0) and a.day < lk.utc_day(t1)
+  union
+  select x.actor
+    from lk.events e
+   cross join lateral (values (case p_role
+                                 when 'w' then case when e.kind in (0, 1, 2, 3, 4, 5, 6, 7, 9, 17) then e.wallet end
+                                 when 'p' then case when e.kind in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 17, 18) then e.payer end
+                                 else e.app end)) as x(actor)
+   where e.program_key = p and e.gen = g and e.ok and x.actor is not null
+     and e.block_time >= case when from_events then t0 else greatest(t0, lk.day_start(lk.utc_day(t1))) end
+     and e.block_time < t1
+$$;
+
 -- Flow metrics of one program generation over [t0, t1) as a jsonb map keyed like lk.daily columns.
--- from_events: the 24h window (hour precision). Otherwise whole UTC days from lk.daily + lk.actor_days.
+-- from_events: the 24h windows (hour precision, from events). Otherwise whole UTC days from lk.daily, plus the
+-- events of a partial last day when t1 is not midnight: the previous period of 7d / 30d ends exactly 7 / 30 days
+-- before now, so it covers the same elapsed span as the current one (its last day is within the event retention,
+-- which lk_compact keeps at 31 days or more). Distinct counts come from lk.window_actors.
 create or replace function lk.window_metrics(p integer, g integer, t0 timestamptz, t1 timestamptz, from_events boolean)
 returns jsonb language sql stable as $$
   select case when from_events then
            coalesce((select r.m from lk.rollup(p, g, t0, t1, 'none') r), '{}'::jsonb)
-         else (
-           with d as (
-             select * from lk.daily x
-              where x.program_key = p and x.gen = g and x.day >= lk.utc_day(t0) and x.day < lk.utc_day(t1)
-           )
-           select jsonb_build_object(
-                    'sigs', coalesce(sum(sigs), 0), 'sigs_failed', coalesce(sum(sigs_failed), 0),
-                    'txs', coalesce(sum(txs), 0), 'txs_ok', coalesce(sum(txs_ok), 0),
-                    'txs_failed', coalesce(sum(txs_failed), 0), 'noise_txs', coalesce(sum(noise_txs), 0),
-                    'unparsed_txs', coalesce(sum(unparsed_txs), 0), 'ixs', coalesce(sum(ixs), 0),
-                    'inner_ixs', coalesce(sum(inner_ixs), 0), 'wallets_created', coalesce(sum(wallets_created), 0),
-                    'wallets_created_passkey', coalesce(sum(wallets_created_passkey), 0),
-                    'executes', coalesce(sum(executes), 0), 'fee_lamports', coalesce(sum(fee_lamports), 0),
-                    'fee_events', coalesce(sum(fee_events), 0), 'fee_eligible_ok', coalesce(sum(fee_eligible_ok), 0),
-                    'fee_suffix_ok', coalesce(sum(fee_suffix_ok), 0),
-                    'shard_funding_lamports', coalesce(sum(shard_funding_lamports), 0))
-               || jsonb_build_object(
-                    'withdrawn_lamports', coalesce(sum(withdrawn_lamports), 0),
-                    'net_fee_lamports', coalesce(sum(net_fee_lamports), 0),
-                    'migrations', coalesce(sum(migrations), 0), 'migrated_lamports', coalesce(sum(migrated_lamports), 0),
-                    'migrated_tokens', coalesce(sum(migrated_tokens), 0),
-                    'cleanup_lamports', coalesce(sum(cleanup_lamports), 0),
-                    'retired_calls', coalesce(sum(retired_calls), 0), 'txv1', coalesce(sum(txv1), 0),
-                    'shared_txs', coalesce(sum(shared_txs), 0), 'shared_txs_failed', coalesce(sum(shared_txs_failed), 0),
-                    'shared_txv1', coalesce(sum(shared_txv1), 0),
-                    'by_kind', lk.map_sum_nested(array_agg(by_kind)),
-                    'by_auth', lk.map_sum_flat(array_agg(by_auth)),
-                    'by_fail', lk.map_sum_flat(array_agg(by_fail)),
-                    'shared_by_fail', lk.map_sum_flat(array_agg(shared_by_fail)),
-                    'by_app', lk.map_sum_nested(array_agg(by_app)),
-                    'by_payer', lk.map_sum_flat(array_agg(by_payer)),
-                    'by_cpi', lk.map_sum_flat(array_agg(by_cpi)))
-               || jsonb_build_object(
-                    'active_wallets', (select count(distinct a.actor) from lk.actor_days a
-                                        where a.program_key = p and a.gen = g and a.role = 'w'
-                                          and a.day >= lk.utc_day(t0) and a.day < lk.utc_day(t1)),
-                    'payers', (select count(distinct a.actor) from lk.actor_days a
-                                where a.program_key = p and a.gen = g and a.role = 'p'
-                                  and a.day >= lk.utc_day(t0) and a.day < lk.utc_day(t1)),
-                    'apps', (select count(distinct a.actor) from lk.actor_days a
-                              where a.program_key = p and a.gen = g and a.role = 'a'
-                                and a.day >= lk.utc_day(t0) and a.day < lk.utc_day(t1)))
-             from d)
+         else lk.jsonb_add(
+           (with d as (
+              select * from lk.daily x
+               where x.program_key = p and x.gen = g and x.day >= lk.utc_day(t0) and x.day < lk.utc_day(t1)
+            )
+            select jsonb_build_object(
+                     'sigs', coalesce(sum(sigs), 0), 'sigs_failed', coalesce(sum(sigs_failed), 0),
+                     'txs', coalesce(sum(txs), 0), 'txs_ok', coalesce(sum(txs_ok), 0),
+                     'txs_failed', coalesce(sum(txs_failed), 0), 'noise_txs', coalesce(sum(noise_txs), 0),
+                     'unparsed_txs', coalesce(sum(unparsed_txs), 0), 'ixs', coalesce(sum(ixs), 0),
+                     'inner_ixs', coalesce(sum(inner_ixs), 0), 'wallets_created', coalesce(sum(wallets_created), 0),
+                     'wallets_created_passkey', coalesce(sum(wallets_created_passkey), 0),
+                     'executes', coalesce(sum(executes), 0), 'fee_lamports', coalesce(sum(fee_lamports), 0),
+                     'fee_events', coalesce(sum(fee_events), 0), 'fee_eligible_ok', coalesce(sum(fee_eligible_ok), 0),
+                     'fee_suffix_ok', coalesce(sum(fee_suffix_ok), 0),
+                     'shard_funding_lamports', coalesce(sum(shard_funding_lamports), 0))
+                || jsonb_build_object(
+                     'withdrawn_lamports', coalesce(sum(withdrawn_lamports), 0),
+                     'net_fee_lamports', coalesce(sum(net_fee_lamports), 0),
+                     'migrations', coalesce(sum(migrations), 0), 'migrated_lamports', coalesce(sum(migrated_lamports), 0),
+                     'migrated_tokens', coalesce(sum(migrated_tokens), 0),
+                     'cleanup_lamports', coalesce(sum(cleanup_lamports), 0),
+                     'retired_calls', coalesce(sum(retired_calls), 0), 'txv1', coalesce(sum(txv1), 0),
+                     'shared_txs', coalesce(sum(shared_txs), 0), 'shared_txs_failed', coalesce(sum(shared_txs_failed), 0),
+                     'shared_txv1', coalesce(sum(shared_txv1), 0),
+                     'by_kind', lk.map_sum_nested(array_agg(by_kind)),
+                     'by_auth', lk.map_sum_flat(array_agg(by_auth)),
+                     'by_fail', lk.map_sum_flat(array_agg(by_fail)),
+                     'shared_by_fail', lk.map_sum_flat(array_agg(shared_by_fail)),
+                     'by_app', lk.map_sum_nested(array_agg(by_app)),
+                     'by_payer', lk.map_sum_flat(array_agg(by_payer)),
+                     'by_cpi', lk.map_sum_flat(array_agg(by_cpi)))
+              from d),
+           (select r.m - array['active_wallets', 'payers', 'apps', 'parser_version_min']
+              from lk.rollup(p, g, greatest(t0, lk.day_start(lk.utc_day(t1))), t1, 'none') r
+             where t1 > lk.day_start(lk.utc_day(t1))))
+         || jsonb_build_object(
+              'active_wallets', (select count(*) from lk.window_actors(p, g, 'w', t0, t1, false)),
+              'payers', (select count(*) from lk.window_actors(p, g, 'p', t0, t1, false)),
+              'apps', (select count(*) from lk.window_actors(p, g, 'a', t0, t1, false)))
          end
 $$;
 
 -- Cluster figures: sum over the cluster's programs, then remove the v2 program's shared transactions (a
--- transaction with a real instruction of both programs is in both feeds) so it counts once. Payers and apps
--- are distinct across programs. Active wallets add up (v1 and v2 wallet PDAs are disjoint).
+-- transaction with a real instruction of both programs is in both feeds) so it counts once; for a shared failed
+-- transaction the dropped copy is the one in shared_by_fail (see lk.rollup). Payers and apps are distinct across
+-- programs. Active wallets add up (v1 and v2 wallet PDAs are disjoint).
 create or replace function lk.cluster_metrics(p_cluster text, t0 timestamptz, t1 timestamptz, from_events boolean)
 returns jsonb language plpgsql stable as $$
 declare
@@ -844,20 +888,15 @@ begin
     'by_fail',     lk.jsonb_nonzero(lk.jsonb_add(coalesce(m -> 'by_fail', '{}'::jsonb),
                                                  lk.jsonb_scale(coalesce(v2 -> 'shared_by_fail', '{}'::jsonb), -1))));
   m := m || jsonb_build_object('txs_ok', (m ->> 'txs')::numeric - (m ->> 'txs_failed')::numeric);
-  if from_events then
-    select count(distinct e.payer) filter (where e.kind in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 17, 18)) as payers,
-           count(distinct e.app) as apps
-      into pa
-      from lk.events e join lk.programs p on p.program_key = e.program_key and p.active_gen = e.gen
-     where p.cluster = p_cluster and e.ok and e.block_time >= t0 and e.block_time < t1;
-  else
-    select count(distinct a.actor) filter (where a.role = 'p') as payers,
-           count(distinct a.actor) filter (where a.role = 'a') as apps
-      into pa
-      from lk.actor_days a join lk.programs p on p.program_key = a.program_key and p.active_gen = a.gen
-     where p.cluster = p_cluster and a.role in ('p', 'a')
-       and a.day >= lk.utc_day(t0) and a.day < lk.utc_day(t1);
-  end if;
+  select count(distinct x.actor) filter (where x.r = 'p') as payers,
+         count(distinct x.actor) filter (where x.r = 'a') as apps
+    into pa
+    from lk.programs p
+   cross join lateral (
+     select 'p' as r, w.actor from lk.window_actors(p.program_key, p.active_gen, 'p', t0, t1, from_events) w
+     union all
+     select 'a' as r, w.actor from lk.window_actors(p.program_key, p.active_gen, 'a', t0, t1, from_events) w) x
+   where p.cluster = p_cluster;
   return m || jsonb_build_object('payers', coalesce(pa.payers, 0), 'apps', coalesce(pa.apps, 0));
 end $$;
 
@@ -902,11 +941,14 @@ language sql immutable as $$
     'byKind', coalesce(m -> 'by_kind', '{}'::jsonb),
     'byAuth', lk.jsonb_nonzero(m -> 'by_auth'),
     'byFail', lk.jsonb_nonzero(m -> 'by_fail'),
+    -- top 10 by created + ops (by name: "order by 2 + 3" would sort by the constant 5, i.e. by app name)
     'byApp', (select coalesce(jsonb_agg(jsonb_build_object('app', k, 'created', c, 'ops', o)
                                         order by c + o desc, k), '[]'::jsonb)
-                from (select k, coalesce((v ->> 'created')::numeric, 0) as c, coalesce((v ->> 'ops')::numeric, 0) as o
-                        from jsonb_each(coalesce(m -> 'by_app', '{}'::jsonb)) as e(k, v)
-                       order by 2 + 3 desc, 1 limit 10) x),
+                from (select k, c, o
+                        from (select e.k, coalesce((e.v ->> 'created')::numeric, 0) as c,
+                                     coalesce((e.v ->> 'ops')::numeric, 0) as o
+                                from jsonb_each(coalesce(m -> 'by_app', '{}'::jsonb)) as e(k, v)) y
+                       order by c + o desc, k limit 10) x),
     'byPayer', lk.top_list(m -> 'by_payer', 'payer', 'txs'),
     'byCpi', lk.top_list(m -> 'by_cpi', 'program', 'executes'))
 $$;
@@ -981,6 +1023,8 @@ language sql stable as $$
     ) x
 $$;
 
+-- The 50 newest transactions with a real instruction PER PROGRAM (up to 100 per cluster), newest first. The page
+-- filters by version in the browser, so a cluster-wide cut would leave a quiet version with an empty list.
 create or replace function lk.dash_latest(p_cluster text) returns jsonb
 language sql stable as $$
   select coalesce(jsonb_agg(jsonb_build_object(
@@ -989,22 +1033,25 @@ language sql stable as $$
            'wallet', l.wallet, 'payer', l.payer, 'auth', l.auth, 'feeLamports', l.fee::text, 'app', l.app,
            'txVersion', l.tx_version, 'inner', l.inner_ix) order by l.block_time desc, l.signature), '[]'::jsonb)
     from (
-      select e.program_key, p.version, e.signature, min(e.block_time) as block_time, min(e.slot) as slot,
-             array_agg(e.kind order by e.ix_seq) filter (where e.kind <= 18) as kinds,
-             bool_and(e.ok) as ok, max(e.fail_class) as fail_class, max(e.err_code) as err_code,
-             (array_agg(e.wallet order by e.ix_seq) filter (where e.kind <= 18 and e.wallet is not null))[1] as wallet,
-             (array_agg(e.payer order by e.ix_seq) filter (where e.kind <= 18 and e.payer is not null))[1] as payer,
-             (array_agg(e.auth order by e.ix_seq) filter (where e.kind <= 18 and e.auth is not null))[1] as auth,
-             (array_agg(e.app order by e.ix_seq) filter (where e.kind <= 18 and e.app is not null))[1] as app,
-             coalesce(sum(e.fee_lamports), 0) as fee, max(e.tx_version) as tx_version,
-             bool_or(e.inner_ix) as inner_ix
-        from lk.events e
-        join lk.programs p on p.program_key = e.program_key and p.active_gen = e.gen
-       where p.cluster = p_cluster
-       group by e.program_key, p.version, e.signature
-      having bool_or(e.kind <= 18)
-       order by min(e.block_time) desc, e.signature
-       limit 50
+      select pr.version, z.*
+        from lk.programs pr
+       cross join lateral (
+         select e.program_key, e.signature, min(e.block_time) as block_time, min(e.slot) as slot,
+                array_agg(e.kind order by e.ix_seq) filter (where e.kind <= 18) as kinds,
+                bool_and(e.ok) as ok, max(e.fail_class) as fail_class, max(e.err_code) as err_code,
+                (array_agg(e.wallet order by e.ix_seq) filter (where e.kind <= 18 and e.wallet is not null))[1] as wallet,
+                (array_agg(e.payer order by e.ix_seq) filter (where e.kind <= 18 and e.payer is not null))[1] as payer,
+                (array_agg(e.auth order by e.ix_seq) filter (where e.kind <= 18 and e.auth is not null))[1] as auth,
+                (array_agg(e.app order by e.ix_seq) filter (where e.kind <= 18 and e.app is not null))[1] as app,
+                coalesce(sum(e.fee_lamports), 0) as fee, max(e.tx_version) as tx_version,
+                bool_or(e.inner_ix) as inner_ix
+           from lk.events e
+          where e.program_key = pr.program_key and e.gen = pr.active_gen
+          group by e.program_key, e.signature
+         having bool_or(e.kind <= 18)
+          order by min(e.block_time) desc, e.signature
+          limit 50) z
+       where pr.cluster = p_cluster
     ) l
 $$;
 
@@ -1083,6 +1130,7 @@ declare
   v_cur      timestamptz;
   v_end      timestamptz;
   v_prev     timestamptz;
+  v_prev_end timestamptz;
   v_first    date;
   v_kpis     jsonb := '{}'::jsonb;
   v_brk      jsonb := '{}'::jsonb;
@@ -1100,17 +1148,22 @@ begin
   end if;
   select program_key into v2key from lk.programs where cluster = p_cluster and version = 2;
 
+  -- The current window runs up to now (its newest hour or day is partial). The previous one starts one period
+  -- earlier and ends exactly one period before now, so both cover the same elapsed span: comparing a partial
+  -- current period with a whole previous one would show a built-in drop after every hour or day boundary.
   if p_window = '24h' then
     v_events := true;
     v_cur  := date_trunc('hour', v_now at time zone 'utc') at time zone 'utc' - interval '23 hours';
     v_end  := date_trunc('hour', v_now at time zone 'utc') at time zone 'utc' + interval '1 hour';
     v_prev := v_cur - interval '24 hours';
+    v_prev_end := v_now - interval '24 hours';
   elsif p_window in ('7d', '30d') then
     v_events := false;
     v_n    := case p_window when '7d' then 7 else 30 end;
     v_cur  := lk.day_start(v_today - (v_n - 1));
     v_end  := lk.day_start(v_today + 1);
     v_prev := lk.day_start(v_today - (2 * v_n - 1));
+    v_prev_end := v_now - interval '24 hours' * v_n;
   else
     v_events := false;
     select min(d.day) into v_first
@@ -1119,6 +1172,7 @@ begin
     v_cur  := case when v_first is null then null else lk.day_start(v_first) end;
     v_end  := lk.day_start(v_today + 1);
     v_prev := null;
+    v_prev_end := null;
   end if;
 
   -- KPIs and breakdowns: cluster + each program
@@ -1126,14 +1180,15 @@ begin
   v_kpis := jsonb_build_object('cluster', jsonb_build_object(
               'current', lk.kpis_json(v_cm),
               'previous', case when v_prev is null then null
-                               else lk.kpis_json(lk.cluster_metrics(p_cluster, v_prev, v_cur, v_events)) end));
+                               else lk.kpis_json(lk.cluster_metrics(p_cluster, v_prev, v_prev_end, v_events)) end));
   v_brk := jsonb_build_object('cluster', lk.breakdowns_json(v_cm));
   for r in select program_key, active_gen from lk.programs where cluster = p_cluster order by version loop
     v_pm := lk.window_metrics(r.program_key, r.active_gen, coalesce(v_cur, '-infinity'::timestamptz), v_end, v_events);
     v_kpis := v_kpis || jsonb_build_object(r.program_key::text, jsonb_build_object(
                 'current', lk.kpis_json(v_pm),
                 'previous', case when v_prev is null then null
-                                 else lk.kpis_json(lk.window_metrics(r.program_key, r.active_gen, v_prev, v_cur, v_events)) end));
+                                 else lk.kpis_json(lk.window_metrics(r.program_key, r.active_gen, v_prev, v_prev_end,
+                                                                     v_events)) end));
     v_brk := v_brk || jsonb_build_object(r.program_key::text, lk.breakdowns_json(v_pm));
   end loop;
 
@@ -1191,7 +1246,7 @@ begin
     'cluster', p_cluster,
     'window', p_window,
     'generatedAt', v_now,
-    'range', jsonb_build_object('start', v_cur, 'end', v_now, 'previousStart', v_prev,
+    'range', jsonb_build_object('start', v_cur, 'end', v_now, 'previousStart', v_prev, 'previousEnd', v_prev_end,
                                 'bucket', case when v_events then 'hour' else 'day' end),
     'programs', lk.dash_programs(p_cluster),
     'kpis', v_kpis,
@@ -1403,7 +1458,7 @@ begin
          coalesce(x.parser_version, v_b.parser_version)::smallint as parser_version
     from jsonb_to_recordset(coalesce(p_events, '[]'::jsonb)) as x(
            signature text, ix_seq integer, slot bigint, block_time timestamptz, kind integer, top_ix integer,
-           inner_ix boolean, ok boolean, fail_class text, err_code integer, wallet text, payer text, auth integer,
+           inner_ix boolean, ok boolean, fail_class text, err_code bigint, wallet text, payer text, auth integer,
            fee_lamports bigint, amount_lamports bigint, tokens integer, ref text, app text, cpi text[],
            tx_version integer, net_fee_lamports bigint, shared boolean, flags integer, parser_version integer);
 
@@ -1648,8 +1703,10 @@ declare
   v_deleted integer := 0;
   v_out     jsonb := '[]'::jsonb;
 begin
-  if p_retention_days is null or p_retention_days < 3 then
-    raise exception 'lk: retention must be at least 3 days (24h window and the 24h before it), got %', p_retention_days;
+  -- the previous period of the 30d window ends 30 days before now: its last, partial day is read from events
+  if p_retention_days is null or p_retention_days < 31 then
+    raise exception 'lk: retention must be at least 31 days (the 30d comparison reads the events of the day 30 days ago), got %',
+      p_retention_days;
   end if;
   for r in select b.program_key, b.gen from lk.builds b where b.status in ('active', 'building') order by 1, 2 loop
     perform lk.lock(r.program_key, r.gen);

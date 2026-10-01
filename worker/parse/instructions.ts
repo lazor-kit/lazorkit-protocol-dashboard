@@ -228,25 +228,34 @@ export function extractFields(
   }
 
   // Fees (§6.6): kinds 0, 4, 7 on successful transactions only. The fee is the first direct-child System
-  // Transfer, counted only when it goes from acc[0] to a canonical treasury shard of this program.
+  // Transfer from acc[0] to a canonical treasury shard of this program; nothing else counts. It is not simply the
+  // first transfer: for a first-time payer v2 first creates the payer's FeeRecord (Transfer payer -> record for
+  // the rent, Allocate, Assign) and only then transfers the fee to the shard.
   let feeTransfer: DecodedIx | null = null;
+  let feeRecord: string | null = null;
   if (kind === IX.CreateWallet || kind === IX.Execute || kind === IX.ExecuteDeferred) {
     const n = acc.length;
-    if (n >= 5 && acc[n - 1] === SYSTEM_PROGRAM && acc[n - 4] === ctx.configPda) fields.flags |= FLAGS.FEE_SUFFIX;
-    const first = children.find((child) => asSystemTransfer(child) !== null) ?? null;
-    const transfer = first ? asSystemTransfer(first) : null;
-    if (transfer && transfer.from === acc[0] && ctx.shardSet.has(transfer.to)) {
-      feeTransfer = first;
-      if (ok) fields.fee_lamports = transfer.lamports;
+    if (n >= 5 && acc[n - 1] === SYSTEM_PROGRAM && acc[n - 4] === ctx.configPda) {
+      fields.flags |= FLAGS.FEE_SUFFIX;
+      feeRecord = acc[n - 3]; // suffix: [config, fee_record, treasury_shard, system_program]
+    }
+    for (const child of children) {
+      const transfer = asSystemTransfer(child);
+      if (transfer && transfer.from === acc[0] && ctx.shardSet.has(transfer.to)) {
+        feeTransfer = child;
+        if (ok) fields.fee_lamports = transfer.lamports;
+        break;
+      }
     }
   }
 
-  // What wallets do (§8.1 F16): distinct programs the vault invoked, excluding the fee transfer, ComputeBudget
-  // and LazorKit itself.
+  // What wallets do (§8.1 F16): distinct programs the vault invoked, excluding the fee transfer, the FeeRecord
+  // creation (System calls on the suffix's fee record), ComputeBudget and LazorKit itself.
   if (kind === IX.Execute || kind === IX.ExecuteDeferred) {
     const programs: string[] = [];
     for (const child of children) {
       if (child === feeTransfer) continue;
+      if (feeRecord !== null && child.programId === SYSTEM_PROGRAM && child.accounts.includes(feeRecord)) continue;
       if (child.programId === COMPUTE_BUDGET_PROGRAM || child.programId === ctx.programId) continue;
       if (!programs.includes(child.programId)) programs.push(child.programId);
     }

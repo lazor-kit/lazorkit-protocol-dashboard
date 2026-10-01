@@ -1,5 +1,5 @@
 -- Core write path: idempotence (P1-P3), the judges' regressions (T1-T3), sealing (S1), the queue (Q1),
--- gaps (Q2) and the recompute check (V). Everything runs in one rolled-back transaction.
+-- gaps (Q2), the recompute check (V) and u32 error codes (E1). Everything runs in one rolled-back transaction.
 begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
@@ -134,7 +134,7 @@ select throws_like($$ select public.lk_ingest(3, 1, jsonb_build_array(
   pg_temp.ev('s1a', 0, 99, '2026-05-01T09:00:00Z', 4, true, 'W3')), array['s1a']) $$,
   '%refusing to rewrite a sealed day%', 'S1: ingest into a sealed day raises');
 select is((select count(*)::int from lk.events where signature = 's1a'), 0, 'S1: and rolls back');
-select throws_like($$ select public.lk_compact(2) $$, '%at least 3 days%', 'S1: lk_compact(2) raises');
+select throws_like($$ select public.lk_compact(30) $$, '%at least 31 days%', 'S1: lk_compact(30) raises (the 30d comparison reads events)');
 select is((public.lk_enqueue(3, 1, '[{"signature":"old","slot":50,"block_time":"2026-04-30T00:00:00Z"}]', null) ->> 'queued')::int,
           0, 'S1: discovery of a signature on a compacted day is skipped');
 
@@ -261,6 +261,19 @@ select public.lk_compact(35);
 select is((select sealed from lk.daily where program_key = 4 and day = '2026-05-03'), true,
           'Q2: after 30 days the gap is abandoned and the day is sealed');
 select is(jsonb_array_length(public.lk_open_gaps(4, 1, 10)), 0, 'Q2: gaps on sealed days are not retried');
+
+-- ------------------------------------------------------------------------------------------------ E1
+-- A Solana Custom error code is a u32: the largest one must not overflow err_code (it used to reject the batch).
+select pg_temp.reset();
+select lives_ok($$ select public.lk_ingest(4, 1, jsonb_build_array(pg_temp.ev('e1', 0, 700, now() - interval '1 hour',
+         4, false, 'WE', '{"fail_class": "other_ix", "err_code": 4294967295}')), array['e1']) $$,
+         'E1: err_code 4294967295 (u32 max) is accepted');
+select is((select err_code from lk.events where signature = 'e1'), 4294967295::bigint, 'E1: and stored exactly');
+select is((public.lk_dashboard('devnet', '24h') #>> '{latest,0,errCode}')::bigint, 4294967295::bigint,
+          'E1: and served in latest activity');
+select is((select data_type from information_schema.columns
+            where table_schema = 'lk' and table_name = 'events' and column_name = 'err_code'), 'bigint',
+          'E1: err_code is bigint');
 
 select * from finish();
 rollback;

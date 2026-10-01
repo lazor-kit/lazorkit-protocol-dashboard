@@ -58,7 +58,9 @@ function summaryMarkdown(result: WorkerResult, config: WorkerConfig): string {
   const errors = result.programs.flatMap((p) => p.errors.map((e) => `- ${p.label}: ${e}`));
   const warnings = result.programs.flatMap((p) => p.warnings.slice(0, 5).map((w) => `- ${p.label}: ${w}`));
   if (errors.length) lines.push('', '**Errors**', '', ...errors);
-  if (warnings.length) lines.push('', '**Parser warnings** (fix with a PARSER_VERSION bump + mode=reparse)', '', ...warnings);
+  if (warnings.length) {
+    lines.push('', '**Warnings** (parse errors, rows the database rejected: fix the parser, bump PARSER_VERSION, run mode=reparse)', '', ...warnings);
+  }
   lines.push('', '**RPC calls**', '', '```', JSON.stringify(result.rpcCalls), '```', '');
   return lines.join('\n');
 }

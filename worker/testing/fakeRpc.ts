@@ -67,11 +67,14 @@ export class MemoryDb implements LkDb {
   states: Array<{ program: number; slot: number }> = [];
   deployments: Array<{ program: number; status: string }> = [];
   ingestCalls: Array<{ program: number; signatures: string[]; replace: boolean }> = [];
+  rejectedCalls: Array<{ program: number; signatures: string[] }> = [];
   markCalls: Array<{ program: number; signature: string; run: string }> = [];
   verifyMismatches = 0;
   schemaVersion = 1;
   missingSchema = false;
   failIngestFor: number | null = null;
+  /** signatures whose rows the database rejects like Postgres does (HTTP 400, SQLSTATE 22003) */
+  rejectSignatures = new Set<string>();
 
   constructor(programs: Array<Pick<DbProgram, 'programKey' | 'cluster' | 'version' | 'programId' | 'label'> & Partial<DbProgram>>) {
     this.programs = programs.map((p) => ({
@@ -163,6 +166,12 @@ export class MemoryDb implements LkDb {
 
   async ingest(program: number, gen: number, events: EventRow[], signatures: string[], replace = false) {
     if (this.failIngestFor === program) throw new Error('simulated ingest failure');
+    const poisoned = signatures.find((signature) => this.rejectSignatures.has(signature));
+    if (poisoned) {
+      this.rejectedCalls.push({ program, signatures });
+      const { DbError } = await import('../db/client.js');
+      throw new DbError('lk_ingest: HTTP 400 22003 value "4294967295" is out of range for type integer', 'lk_ingest', 400, '22003');
+    }
     this.ingestCalls.push({ program, signatures, replace });
     let newSignatures = 0;
     for (const signature of signatures) {

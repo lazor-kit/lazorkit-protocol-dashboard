@@ -1,7 +1,7 @@
 // Ingest (spec §5.5), retries and gaps (§5.6), reparse (§5.8).
 
 import { parseContextFor } from '../chain/pdas.js';
-import type { LkDb } from '../db/client.js';
+import { DbError, type LkDb } from '../db/client.js';
 import { parseTransaction } from '../parse/transaction.js';
 import { isMissingHistoryError, RpcError, type RpcClient } from '../rpc/client.js';
 import type { EventRow, PendingSignature, RawTransaction } from '../types.js';
@@ -47,13 +47,25 @@ export interface IngestStats {
   attempted: number;
   ingested: number;
   failedFetches: number;
+  /** signatures whose rows the database rejected (retried in later runs, a gap after 5) */
+  rejected: number;
   convertedToGaps: number;
   rows: number;
   warnings: string[];
 }
 
 export function emptyStats(): IngestStats {
-  return { attempted: 0, ingested: 0, failedFetches: 0, convertedToGaps: 0, rows: 0, warnings: [] };
+  return { attempted: 0, ingested: 0, failedFetches: 0, rejected: 0, convertedToGaps: 0, rows: 0, warnings: [] };
+}
+
+/**
+ * The database refused the rows themselves: a SQLSTATE of class 22 (data exception, e.g. 22003 a value out of
+ * range) or 23 (integrity constraint), which PostgREST answers with HTTP 400 (409 for 23503 / 23505). Sending the
+ * same rows again can never succeed, unlike a timeout, a 5xx or an auth error, which are not per-signature and
+ * keep failing the program as before.
+ */
+export function isDataRejection(error: unknown): error is DbError {
+  return error instanceof DbError && (error.status === 400 || error.status === 409) && /^2[23]/.test(error.code ?? '');
 }
 
 export interface IngestDeps {
@@ -64,7 +76,46 @@ export interface IngestDeps {
   parserVersion: number;
 }
 
-function parseAll(programKey: number, parserVersion: number, items: Array<{ signature: string; blockTime: string; tx: RawTransaction }>) {
+type Fetched = { signature: string; blockTime: string; tx: RawTransaction };
+
+/**
+ * lk_ingest for one batch. If the database rejects the batch's data, the signatures are ingested one at a time so
+ * one bad transaction cannot hold back the rest of the queue (every newer signature of the program would otherwise
+ * wait behind it forever); `onRejected` handles a signature still rejected on its own. Returns the ingested
+ * signatures and their row count.
+ */
+async function ingestIsolating(
+  deps: IngestDeps,
+  programKey: number,
+  gen: number,
+  rows: EventRow[],
+  signatures: string[],
+  replace: boolean,
+  onRejected: (signature: string, error: DbError) => Promise<void>,
+): Promise<{ ingested: string[]; rows: number }> {
+  try {
+    await deps.db.ingest(programKey, gen, rows, signatures, replace);
+    return { ingested: signatures, rows: rows.length };
+  } catch (error) {
+    if (!isDataRejection(error)) throw error;
+  }
+  const ingested: string[] = [];
+  let count = 0;
+  for (const signature of signatures) {
+    const own = rows.filter((row) => row.signature === signature);
+    try {
+      await deps.db.ingest(programKey, gen, own, [signature], replace);
+      ingested.push(signature);
+      count += own.length;
+    } catch (error) {
+      if (!isDataRejection(error)) throw error;
+      await onRejected(signature, error);
+    }
+  }
+  return { ingested, rows: count };
+}
+
+function parseAll(programKey: number, parserVersion: number, items: Fetched[]) {
   const ctx = parseContextFor(programKey, parserVersion);
   const rows: EventRow[] = [];
   const warnings: string[] = [];
@@ -82,7 +133,7 @@ function parseAll(programKey: number, parserVersion: number, items: Array<{ sign
 export async function ingestBatch(deps: IngestDeps, programKey: number, gen: number, stats: IngestStats): Promise<number> {
   const batch = await deps.db.pending(programKey, gen, BATCH_SIZE, deps.runId);
   if (batch.length === 0) return 0;
-  const fetched: Array<{ signature: string; blockTime: string; tx: RawTransaction }> = [];
+  const fetched: Fetched[] = [];
   for (const item of batch) {
     stats.attempted += 1;
     const outcome = await fetchTransaction(deps.primary, deps.archival, item.signature);
@@ -97,14 +148,23 @@ export async function ingestBatch(deps: IngestDeps, programKey: number, gen: num
   if (fetched.length > 0) {
     const { rows, warnings } = parseAll(programKey, deps.parserVersion, fetched);
     stats.warnings.push(...warnings);
-    await deps.db.ingest(programKey, gen, rows, fetched.map((item) => item.signature), false);
-    stats.ingested += fetched.length;
-    stats.rows += rows.length;
+    // A signature rejected on its own counts as a failed attempt: retried in later runs, a gap after 5 (like a
+    // transaction no endpoint serves).
+    const result = await ingestIsolating(deps, programKey, gen, rows, fetched.map((item) => item.signature), false,
+      async (signature, error) => {
+        stats.rejected += 1;
+        stats.warnings.push(`${signature}: rows rejected by the database (${error.message.slice(0, 200)}); retried next run, a gap after 5 runs`);
+        const mark = await deps.db.markAttempt(programKey, gen, signature, deps.runId, `ingest_rejected:${error.code ?? 'unknown'}`);
+        if (mark.converted) stats.convertedToGaps += 1;
+      });
+    stats.ingested += result.ingested.length;
+    stats.rows += result.rows;
   }
   return batch.length;
 }
 
-/** Retries up to `limit` open gaps; a success replaces the kind=253 row and resolves the gap. */
+/** Retries up to `limit` open gaps; a success replaces the kind=253 row and resolves the gap. A gap whose rows the
+ * database still rejects stays open (its attempt is counted) instead of failing the program. */
 export async function retryGaps(deps: IngestDeps, programKey: number, gen: number, limit: number): Promise<{ tried: number; repaired: number }> {
   const gaps: PendingSignature[] = await deps.db.openGaps(programKey, gen, limit);
   let repaired = 0;
@@ -115,8 +175,13 @@ export async function retryGaps(deps: IngestDeps, programKey: number, gen: numbe
       continue;
     }
     const { rows } = parseAll(programKey, deps.parserVersion, [{ signature: gap.signature, blockTime: gap.block_time, tx: outcome.tx }]);
-    await deps.db.ingest(programKey, gen, rows, [gap.signature], true);
-    repaired += 1;
+    try {
+      await deps.db.ingest(programKey, gen, rows, [gap.signature], true);
+      repaired += 1;
+    } catch (error) {
+      if (!isDataRejection(error)) throw error;
+      await deps.db.markAttempt(programKey, gen, gap.signature, deps.runId, `ingest_rejected:${error.code ?? 'unknown'}`);
+    }
   }
   return { tried: gaps.length, repaired };
 }
@@ -133,7 +198,7 @@ export async function reparse(
   while (now() < deadline) {
     const candidates = await deps.db.reparseCandidates(programKey, gen, deps.parserVersion, BATCH_SIZE);
     if (candidates.length === 0) break;
-    const fetched: Array<{ signature: string; blockTime: string; tx: RawTransaction }> = [];
+    const fetched: Fetched[] = [];
     for (const signature of candidates) {
       const outcome = await fetchTransaction(deps.primary, deps.archival, signature);
       if (outcome.tx && outcome.tx.blockTime !== null) {
@@ -142,9 +207,11 @@ export async function reparse(
     }
     if (fetched.length === 0) break;
     const { rows } = parseAll(programKey, deps.parserVersion, fetched);
-    await deps.db.ingest(programKey, gen, rows, fetched.map((item) => item.signature), true);
-    reparsed += fetched.length;
-    if (fetched.length < candidates.length) break; // unavailable ones stay candidates for a later run
+    const result = await ingestIsolating(deps, programKey, gen, rows, fetched.map((item) => item.signature), true,
+      async () => undefined);
+    reparsed += result.ingested.length;
+    // unavailable or rejected ones keep their old rows and stay candidates for a later run
+    if (result.ingested.length < candidates.length) break;
   }
   return { reparsed };
 }

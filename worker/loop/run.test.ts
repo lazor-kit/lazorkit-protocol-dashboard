@@ -181,6 +181,38 @@ describe('worker run', () => {
     expect(memory.builds[0].backfillComplete).toBe(true);
   });
 
+  it('a transaction whose rows the database rejects does not hold back the queue; it becomes a gap after 5 runs', async () => {
+    const all = sigs('d', 6);
+    const endpoint = chain({ [V2D]: { deployed: true, signatures: all } });
+    const memory = db([4]);
+    const poison = all[1].signature;
+    memory.rejectSignatures.add(poison);
+    const first = await runWorker({ db: memory, lanes: lanes(endpoint), snapshot }, options({ program: 4, runId: 'run-1' }));
+    // the batch was rejected, then retried one signature at a time: the 5 others are in
+    expect(memory.rejectedCalls[0].signatures).toHaveLength(6);
+    expect(memory.ingestCalls.flatMap((c) => c.signatures).sort()).toEqual(all.map((s) => s.signature).filter((s) => s !== poison));
+    expect(memory.pendingFor(4).map((p) => p.signature)).toEqual([poison]);
+    expect(memory.markCalls).toEqual([{ program: 4, signature: poison, run: 'run-1' }]);
+    expect(first.programs[0]).toMatchObject({ ingested: 5, rejected: 1, status: 'lagging' });
+    expect(first.programs[0].warnings.join(' ')).toContain('rejected by the database');
+    expect(first.exitCode).toBe(0);
+    for (let run = 2; run <= 5; run += 1) {
+      await runWorker({ db: memory, lanes: lanes(endpoint), snapshot }, options({ program: 4, runId: `run-${run}` }));
+    }
+    expect(memory.gaps.has(poison)).toBe(true);
+    expect(memory.pendingFor(4)).toHaveLength(0);
+  });
+
+  it('a rejection that is not about the data (auth, timeout) still fails the program without marking attempts', async () => {
+    const endpoint = chain({ [V2D]: { deployed: true, signatures: sigs('d', 3) } });
+    const memory = db([4]);
+    memory.failIngestFor = 4;
+    const result = await runWorker({ db: memory, lanes: lanes(endpoint), snapshot }, options({ program: 4 }));
+    expect(result.programs[0].status).toBe('failed');
+    expect(memory.markCalls).toHaveLength(0);
+    expect(memory.pendingFor(4)).toHaveLength(3);
+  });
+
   it('exit 1 when a program fails; other programs still progress', async () => {
     const endpoint = chain({ [V1D]: { deployed: true, signatures: sigs('a', 5) }, [V2D]: { deployed: true, signatures: sigs('b', 5, 500) } });
     const memory = db([3, 4]);

@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { FLAGS } from '../chain/constants.js';
 import { parseContextFor } from '../chain/pdas.js';
 import { FIXTURE_SIGNATURES, fixturePath } from '../scripts/fetchFixtures.js';
-import { innerCreateWallet, migrateWallet, withdrawTreasury } from '../__fixtures__/synthetic/index.js';
+import { firstFeeExecute, innerCreateWallet, migrateWallet, withdrawTreasury } from '../__fixtures__/synthetic/index.js';
 import type { EventRow, RawTransaction } from '../types.js';
 import { parseTransaction } from './transaction.js';
 
@@ -158,7 +158,9 @@ describe('parser: v1 devnet', () => {
   });
 
   it('Execute failing with Custom 1 from an inner System transfer is a cpi failure', () => {
-    expect(parse('devnet-3', 'executeCustom1').rows[0]).toMatchObject({ kind: 4, ok: false, fail_class: 'cpi', err_code: 1 });
+    const row = parse('devnet-3', 'executeCustom1').rows[0];
+    expect(row).toMatchObject({ kind: 4, ok: false, fail_class: 'cpi', err_code: 1 });
+    expect(row.flags & FLAGS.IX_ERROR).toBeTruthy();
   });
 
   it('a LazorKit InvalidAccountData failure is class lazorkit', () => {
@@ -187,7 +189,9 @@ describe('parser: v2 devnet', () => {
   });
 
   it('MaxLoadedAccountsDataSizeExceeded (no instruction index) is class limits', () => {
-    expect(parse('devnet-4', 'txV1MaxLoadedAccounts').rows[0]).toMatchObject({ ok: false, fail_class: 'limits', tx_version: 1 });
+    const row = parse('devnet-4', 'txV1MaxLoadedAccounts').rows[0];
+    expect(row).toMatchObject({ ok: false, fail_class: 'limits', tx_version: 1 });
+    expect(row.flags & FLAGS.IX_ERROR).toBe(0);
   });
 
   it('ProgramFailedToComplete at the LazorKit instruction is class limits', () => {
@@ -247,6 +251,39 @@ describe('parser: synthetic (never seen on chain)', () => {
     expect(rows[0].flags & FLAGS.FEE_SUFFIX).toBeTruthy();
   });
 
+  it('v2 first-time payer: the FeeRecord is created first, the fee is still the transfer to the shard', () => {
+    const fixture = firstFeeExecute(true);
+    const { rows, warnings } = parseTransaction(fixture.tx, parseContextFor(2));
+    expect(warnings).toEqual([]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ kind: 4, ok: true, payer: fixture.payer, fee_lamports: fixture.fee });
+    expect(rows[0].flags & FLAGS.FEE_SUFFIX).toBeTruthy();
+    // the rent transfer, Allocate and Assign of the FeeRecord are not something the vault called
+    expect(rows[0].cpi).toEqual([TOKEN]);
+  });
+
+  it('v2 returning payer: the fee transfer is the first child', () => {
+    const fixture = firstFeeExecute(false);
+    const { rows } = parseTransaction(fixture.tx, parseContextFor(2));
+    expect(rows[0]).toMatchObject({ kind: 4, ok: true, fee_lamports: fixture.fee });
+    expect(rows[0].cpi).toEqual([TOKEN]);
+  });
+
+  it('a first-time payer whose transaction failed books no fee', () => {
+    const fixture = firstFeeExecute(true);
+    const tx = structuredClone(fixture.tx);
+    if (tx.meta) tx.meta.err = { InstructionError: [0, { Custom: 1 }] };
+    const { rows } = parseTransaction(tx, parseContextFor(2));
+    expect(rows[0]).toMatchObject({ ok: false, fee_lamports: 0, fail_class: 'cpi' });
+  });
+
+  it('a u32 Custom code above 2^31 is kept exactly', () => {
+    const tx = structuredClone(withdrawTreasury());
+    if (tx.meta) tx.meta.err = { InstructionError: [0, { Custom: 4294967295 }] };
+    const { rows } = parseTransaction(tx, parseContextFor(1));
+    expect(rows[0]).toMatchObject({ ok: false, err_code: 4294967295, fail_class: 'lazorkit' });
+  });
+
   it('a transaction with real instructions of both programs of a cluster is shared', () => {
     const fixture = migrateWallet();
     const tx = structuredClone(fixture.tx);
@@ -260,6 +297,22 @@ describe('parser: synthetic (never seen on chain)', () => {
     expect(v1.every((r) => r.shared)).toBe(true);
     expect(v2.every((r) => r.shared)).toBe(true);
     expect(v2[0].kind).toBe(0);
+
+    // the v2 instruction (index 1) fails: v1 sees another instruction failing, v2 its own error; both copies
+    // carry IX_ERROR, so the cluster total drops the other_ix copy (lk.rollup shared_by_fail)
+    if (tx.meta) tx.meta.err = { InstructionError: [1, { Custom: 3001 }] };
+    const v1f = parseTransaction(tx, parseContextFor(1)).rows[0];
+    const v2f = parseTransaction(tx, parseContextFor(2)).rows[0];
+    expect(v1f).toMatchObject({ fail_class: 'other_ix', shared: true });
+    expect(v2f).toMatchObject({ fail_class: 'lazorkit', shared: true });
+    expect(v1f.flags & FLAGS.IX_ERROR).toBeTruthy();
+    expect(v2f.flags & FLAGS.IX_ERROR).toBeTruthy();
+    // a transaction-level failure has no instruction index: no IX_ERROR, the same class on both copies
+    if (tx.meta) tx.meta.err = 'MaxLoadedAccountsDataSizeExceeded';
+    const v1t = parseTransaction(tx, parseContextFor(1)).rows[0];
+    const v2t = parseTransaction(tx, parseContextFor(2)).rows[0];
+    expect([v1t.fail_class, v2t.fail_class]).toEqual(['limits', 'limits']);
+    expect((v1t.flags | v2t.flags) & FLAGS.IX_ERROR).toBe(0);
   });
 
   it('a malformed transaction becomes one PARSE_ERROR noise row instead of throwing', () => {

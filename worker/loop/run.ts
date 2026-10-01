@@ -53,6 +53,7 @@ export interface ProgramOutcome {
   ingested: number;
   attempted: number;
   failedFetches: number;
+  rejected: number;
   convertedToGaps: number;
   gapsRepaired: number;
   reparsed: number;
@@ -99,6 +100,7 @@ function newOutcome(program: DbProgram): ProgramOutcome {
     ingested: 0,
     attempted: 0,
     failedFetches: 0,
+    rejected: 0,
     convertedToGaps: 0,
     gapsRepaired: 0,
     reparsed: 0,
@@ -272,6 +274,7 @@ export async function runWorker(deps: WorkerDeps, options: WorkerOptions): Promi
       outcome.ingested += itemStats.ingested;
       outcome.attempted += itemStats.attempted;
       outcome.failedFetches += itemStats.failedFetches;
+      outcome.rejected += itemStats.rejected;
       outcome.convertedToGaps += itemStats.convertedToGaps;
       outcome.warnings.push(...itemStats.warnings);
     }
@@ -343,6 +346,7 @@ export async function runWorker(deps: WorkerDeps, options: WorkerOptions): Promi
           ingested: outcome.ingested,
           attempted: outcome.attempted,
           failed_fetches: outcome.failedFetches,
+          rejected: outcome.rejected,
           gaps_converted: outcome.convertedToGaps,
           gaps_repaired: outcome.gapsRepaired,
           parse_warnings: outcome.warnings.length,

@@ -1,4 +1,5 @@
--- Read path: cluster de-duplication (C1), window edges (C2), invariants (I), payload shape.
+-- Read path: cluster de-duplication (C1), window edges (C2), same-span comparison (C3), integrators (C4), latest
+-- per program (C5), shared failure classes (C6), invariants (I), payload shape.
 begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
@@ -57,11 +58,12 @@ select is((public.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,fail
 select pg_temp.reset();
 select pg_temp.one(4, pg_temp.ev('d0', 0, 20, lk.day_start(current_date) + interval '1 minute', 4, true, 'A'));
 select pg_temp.one(4, pg_temp.ev('d6', 0, 21, lk.day_start(current_date - 6) + interval '1 minute', 4, true, 'B'));
-select pg_temp.one(4, pg_temp.ev('d7', 0, 22, lk.day_start(current_date - 7) + interval '1 minute', 4, true, 'C'));
+select pg_temp.one(4, pg_temp.ev('d7', 0, 22, lk.day_start(current_date - 7), 4, true, 'C'));
 select pg_temp.one(4, pg_temp.ev('d13', 0, 23, lk.day_start(current_date - 13) + interval '1 minute', 4, true, 'D'));
 select pg_temp.one(4, pg_temp.ev('d14', 0, 24, lk.day_start(current_date - 14) + interval '1 minute', 4, true, 'E'));
 select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,4,current,txs}')::int, 2, 'C2: 7d = 7 calendar days incl. today');
-select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,4,previous,txs}')::int, 2, 'C2: previous 7d = the 7 days before');
+select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,4,previous,txs}')::int, 2,
+          'C2: previous 7d = the 7 days before, up to the same time of day');
 select is((public.lk_dashboard('devnet', '7d') #>> '{range,start}')::timestamptz, lk.day_start(current_date - 6), 'C2: range start');
 select is((select count(*)::int from jsonb_array_elements(public.lk_dashboard('devnet', '7d') -> 'series') s
             where s ->> 'scope' = 'cluster'), 7, 'C2: 7 daily points per scope');
@@ -78,6 +80,92 @@ select is((public.lk_dashboard('devnet', 'all') #>> '{range,start}')::timestampt
           'C2: all starts at the first active day');
 select throws_like($$ select public.lk_dashboard('localnet', '7d') $$, '%unsupported cluster%', 'C2: localnet refused');
 select throws_like($$ select public.lk_dashboard('devnet', '90d') $$, '%unsupported window%', 'C2: unknown window refused');
+
+-- ------------------------------------------------------------------------------------------------ C3
+-- The previous period covers the same elapsed span as the current one: it ends exactly one period before now.
+-- t_in / t_out lie on the day 7 days ago, before / after the current time of day (likewise for the hour 24h ago).
+select pg_temp.reset();
+select pg_temp.one(4, pg_temp.ev('w_in', 0, 30,
+         lk.day_start(current_date - 7) + (now() - lk.day_start(current_date)) / 2, 4, true, 'WIN', '{"app": "a.example"}'));
+select pg_temp.one(4, pg_temp.ev('w_out', 0, 31,
+         now() - interval '7 days' + (lk.day_start(current_date + 1) - now()) / 2, 4, true, 'WOUT', '{"app": "b.example"}'));
+select pg_temp.one(4, pg_temp.ev('h_in', 0, 32, now() - interval '24 hours' - interval '1 second', 4, true, 'HIN'));
+select pg_temp.one(4, pg_temp.ev('h_out', 0, 33, now() - interval '24 hours' + interval '1 second', 4, true, 'HOUT'));
+select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,4,previous,txs}')::int, 1,
+          'C3: previous 7d stops at the same time of day 7 days ago (the later part of that day is excluded)');
+select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,4,previous,activeWallets}')::int, 1,
+          'C3: distinct wallets of the partial day come from its events');
+select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,cluster,previous,apps}')::int, 1,
+          'C3: cluster apps of the partial day too');
+select is((public.lk_dashboard('devnet', '7d') #>> '{range,previousEnd}')::timestamptz, now() - interval '7 days',
+          'C3: range.previousEnd = now - 7 days');
+select is((public.lk_dashboard('devnet', '30d') #>> '{range,previousEnd}')::timestamptz, now() - interval '30 days',
+          'C3: range.previousEnd = now - 30 days');
+select is((public.lk_dashboard('devnet', '24h') #>> '{kpis,4,previous,txs}')::int, 1,
+          'C3: previous 24h ends exactly 24 hours before now');
+select is((public.lk_dashboard('devnet', '24h') #>> '{range,previousEnd}')::timestamptz, now() - interval '24 hours',
+          'C3: range.previousEnd = now - 24 hours');
+select is(public.lk_dashboard('devnet', 'all') #>> '{range,previousEnd}', null, 'C3: all has no previous end');
+
+-- ------------------------------------------------------------------------------------------------ C4
+-- Integrators: the 10 biggest by created + ops, whatever their names. 12 apps over two days (a day keeps its top
+-- 10), the biggest with the name that sorts last.
+select pg_temp.reset();
+select pg_temp.one(4, pg_temp.ev('app' || n, 0, 40 + n, now() - interval '3 days', 4, true, 'WA' || n,
+         jsonb_build_object('app', chr(96 + n) || '.example')))
+  from generate_series(1, 11) as n;
+select pg_temp.one(4, pg_temp.ev('big' || n, 0, 60 + n, now() - interval '2 days', 4, true, 'WZ',
+         '{"app": "zz-biggest.example"}'))
+  from generate_series(1, 3) as n;
+select pg_temp.one(4, pg_temp.ev('small', 0, 70, now() - interval '2 days', 4, true, 'WS', '{"app": "l.example"}'));
+select is((select count(*)::int from jsonb_object_keys(lk.window_metrics(4, 1, '-infinity', lk.day_start(current_date + 1), false)
+            -> 'by_app')), 12, 'C4: 12 apps in the window');
+select is(public.lk_dashboard('devnet', 'all') #>> '{breakdowns,4,byApp,0,app}', 'zz-biggest.example',
+          'C4: the biggest integrator is first even though it sorts last by name');
+select is((public.lk_dashboard('devnet', 'all') #>> '{breakdowns,4,byApp,0,ops}')::int, 3, 'C4: with its 3 operations');
+select is(jsonb_array_length(public.lk_dashboard('devnet', 'all') #> '{breakdowns,cluster,byApp}'), 10,
+          'C4: still 10 entries');
+select is(public.lk_dashboard('devnet', 'all') #>> '{breakdowns,cluster,byApp,0,app}', 'zz-biggest.example',
+          'C4: cluster scope too');
+
+-- ------------------------------------------------------------------------------------------------ C5
+-- Latest activity keeps the 50 newest per program, so a quiet version is not crowded out by a busy one.
+select pg_temp.reset();
+select pg_temp.one(3, pg_temp.ev('old-v1', 0, 80, now() - interval '3 days', 4, true, 'W1'));
+select pg_temp.one(4, pg_temp.ev('v2-' || n, 0, 100 + n, now() - interval '1 hour' + n * interval '1 second', 4, true, 'W2'))
+  from generate_series(1, 60) as n;
+select is((select count(*)::int from jsonb_array_elements(public.lk_dashboard('devnet', '7d') -> 'latest') l
+            where l ->> 'version' = '1'), 1, 'C5: the v1 transaction is listed despite 60 newer v2 ones');
+select is((select count(*)::int from jsonb_array_elements(public.lk_dashboard('devnet', '7d') -> 'latest') l
+            where l ->> 'version' = '2'), 50, 'C5: 50 per program');
+select is(public.lk_dashboard('devnet', '7d') #>> '{latest,0,signature}', 'v2-60', 'C5: newest first');
+
+-- ------------------------------------------------------------------------------------------------ C6
+-- A shared failed transaction keeps the class of the program whose instruction failed in the cluster total.
+select pg_temp.reset();
+-- the v2 instruction failed (InstructionError, flag 128): v1 sees other_ix, v2 a LazorKit error
+select pg_temp.one(3, pg_temp.ev('sf1', 0, 90, now() - interval '2 days', 17, false, 'V1W',
+         '{"shared": true, "fail_class": "other_ix", "err_code": 3001, "flags": 128}'));
+select pg_temp.one(4, pg_temp.ev('sf1', 0, 90, now() - interval '2 days', 0, false, 'V2W',
+         '{"shared": true, "fail_class": "lazorkit", "err_code": 3001, "flags": 128}'));
+-- the v1 instruction failed: v1 a LazorKit error, v2 other_ix
+select pg_temp.one(3, pg_temp.ev('sf2', 0, 91, now() - interval '2 days', 17, false, 'V1W',
+         '{"shared": true, "fail_class": "lazorkit", "err_code": 3002, "flags": 128}'));
+select pg_temp.one(4, pg_temp.ev('sf2', 0, 91, now() - interval '2 days', 0, false, 'V2W',
+         '{"shared": true, "fail_class": "other_ix", "err_code": 3002, "flags": 128}'));
+-- a transaction-level failure (no instruction index): the same class on both copies
+select pg_temp.one(3, pg_temp.ev('sf3', 0, 92, now() - interval '2 days', 17, false, 'V1W',
+         '{"shared": true, "fail_class": "limits"}'));
+select pg_temp.one(4, pg_temp.ev('sf3', 0, 92, now() - interval '2 days', 0, false, 'V2W',
+         '{"shared": true, "fail_class": "limits"}'));
+select is(public.lk_dashboard('devnet', '7d') #> '{kpis,cluster,current,failByClass}', '{"lazorkit": 2, "limits": 1}'::jsonb,
+          'C6: cluster classes: the failing program''s class, other_ix dropped, limits once');
+select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,cluster,current,txsFailed}')::int, 3, 'C6: three failed transactions');
+select is(public.lk_dashboard('devnet', '7d') #> '{kpis,4,current,failByClass}',
+          '{"lazorkit": 1, "other_ix": 1, "limits": 1}'::jsonb, 'C6: per program, each copy keeps its own class');
+select is(public.lk_dashboard('devnet', '24h') #> '{kpis,cluster,current,failByClass}', '{}'::jsonb, 'C6: nothing in 24h');
+select is(public.lk_dashboard('devnet', 'all') #> '{breakdowns,cluster,byFail}', '{"lazorkit": 2, "limits": 1}'::jsonb,
+          'C6: the cluster breakdown matches');
 
 -- ------------------------------------------------------------------------------------------------ I
 select pg_temp.reset();
