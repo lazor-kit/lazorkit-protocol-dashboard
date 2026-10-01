@@ -72,7 +72,7 @@ export async function callRpc<T>(
   }
   const text = await response.text().catch(() => '');
   if (response.ok) return (text ? JSON.parse(text) : null) as T;
-  let code: string | null = null;
+  let code: string | null;
   try {
     code = (JSON.parse(text) as { code?: string }).code ?? null;
   } catch {

@@ -172,11 +172,9 @@ export async function discover(
     err: signature.err ?? null,
   }));
   let queued = 0;
-  let pending = 0;
   for (let i = 0; i < rows.length; i += ENQUEUE_CHUNK) {
     const result = await deps.db.enqueue(programKey, build.gen, rows.slice(i, i + ENQUEUE_CHUNK), null);
     queued += result.queued;
-    pending = result.pending;
   }
   const newest = order[0] ?? null;
   const final: DiscoveryFinal = {
@@ -187,7 +185,7 @@ export async function discover(
     history_end: historyEnd,
   };
   const last = await deps.db.enqueue(programKey, build.gen, [], final);
-  pending = last.pending;
+  const pending = last.pending;
   log(
     `[discover ${programKey}/g${build.gen}] ${order.length} signatures seen (${queued} new) in ${pages} page(s)` +
       `${usedArchival ? ' incl. archival' : ''}; frontier ${frontier ?? 'none'} -> ${newest?.slot ?? frontier ?? 'none'}` +

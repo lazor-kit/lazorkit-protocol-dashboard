@@ -37,5 +37,5 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   }
   const verbose = first(request.query.verbose) === '1';
   response.setHeader('cache-control', 'public, s-maxage=60');
-  return response.status(healthHttpStatus(payload.status)).json(verbose ? payload : { ...payload, programs: payload.programs.map(({ checks, ...rest }) => rest) });
+  return response.status(healthHttpStatus(payload.status)).json(verbose ? payload : { ...payload, programs: payload.programs.map(({ checks: _checks, ...rest }) => rest) });
 }

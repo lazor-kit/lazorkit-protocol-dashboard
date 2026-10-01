@@ -14,6 +14,17 @@ import { redactText, RpcClient } from '../rpc/client.js';
 import { takeSnapshot } from '../state/snapshot.js';
 import type { SignatureInfo } from '../types.js';
 
+/** The account counts compared between a fresh snapshot and the stored one. */
+interface StateCounts {
+  accounts?: number;
+  wallets?: number;
+  authorities?: { total?: number };
+  sessions?: { total?: number };
+  deferred?: { total?: number };
+  feeRecords?: { count?: number };
+  treasury?: { shards?: number };
+}
+
 interface VerifyCounts {
   programKey: number;
   gen: number;
@@ -115,12 +126,12 @@ async function main(): Promise<number> {
     for (const diff of result.diffs) log(`[verify] ${program.label} ${JSON.stringify(diff)}`);
 
     const fresh = await takeSnapshot(rpc, program.programId, program.version);
-    const stored = (counts.state ?? {}) as Record<string, any>;
-    const pick = (t: Record<string, any>) => ({
+    const stored = (counts.state ?? {}) as StateCounts;
+    const pick = (t: StateCounts) => ({
       accounts: t.accounts, wallets: t.wallets, authorities: t.authorities?.total, sessions: t.sessions?.total,
       deferred: t.deferred?.total, feeRecords: t.feeRecords?.count, shards: t.treasury?.shards,
     });
-    const a = pick(fresh.totals as unknown as Record<string, any>);
+    const a = pick(fresh.totals as unknown as StateCounts);
     const b = pick(stored);
     const same = JSON.stringify(a) === JSON.stringify(b);
     log(`[verify] ${program.label} state: fresh @${fresh.slot} ${JSON.stringify(a)} vs stored @${counts.stateSlot} ` +
