@@ -112,23 +112,32 @@ call resets the 60-day timer is unverified. If the maintainers want it anyway, a
           GH_TOKEN: ${{ github.token }}
 ```
 
-## Go-live (maintainer, 3 steps)
+## Go-live (maintainer, 3 steps, in this order)
 
 1. **Apply the migration.** Supabase dashboard → SQL Editor → paste
    `supabase/migrations/20261002000100_lk_event_log.sql` → Run. It is additive (schema `lk` + `public.lk_*`
    functions only; the legacy tables are untouched) and re-running it is harmless. Check:
-   `select public.lk_schema_version();` → `1`.
-2. **Merge the PR.** The site shows "catching up: indexer has not run yet" until step 3 has run; the daily
-   heartbeat cron is registered by this deploy (`vercel.json`, uses the existing `CRON_SECRET`).
-3. **Re-enable the indexer and run the backfill** (after the merge, so the old code never runs on schedule):
+   `select public.lk_schema_version();` → `1`. The PR preview moves from "Backend upgrade pending" to
+   "Catching up"; production is unchanged.
+2. **Re-enable the indexer and run the first backfill from the PR branch:**
 
    ```bash
    gh workflow enable indexer.yml -R lazor-kit/lazorkit-protocol-dashboard
-   gh workflow run    indexer.yml -R lazor-kit/lazorkit-protocol-dashboard -f mode=incremental -f budget_minutes=55
+   gh workflow run    indexer.yml -R lazor-kit/lazorkit-protocol-dashboard --ref rebuild/v1-v2 \
+     -f mode=incremental -f budget_minutes=55
    ```
 
-   On public RPC the first backfill takes 30–60 minutes; if the budget runs out the next scheduled run continues.
-   `curl -s https://lazorkit-protocol-dashboard.vercel.app/api/health` should then say `"status":"live"`.
+   On public RPC the backfill takes 30–60 minutes. If the budget runs out, or the run is cancelled because an old
+   scheduled run holds the shared concurrency group, run the same command again: it resumes from the queue. Until
+   the merge, the schedule on `main` runs the old indexer, which only writes the old tables (harmless). Wait for a
+   green run: every program `ok`, invariants `ok`, and the preview showing live figures.
+3. **Merge the PR.** The push to `main` runs the new indexer once (incremental); from then on the schedule runs it
+   (`7,22,37,52 * * * *`), and the daily heartbeat cron is registered by this deploy (`vercel.json`, uses the
+   existing `CRON_SECRET`). `curl -s https://lazorkit-protocol-dashboard.vercel.app/api/health` should say
+   `"status":"live"`.
+
+Merging before step 2 also works: production then shows "Catching up: the indexer has not run yet" until the first
+run (`gh workflow enable` + `gh workflow run indexer.yml -f budget_minutes=55`, without `--ref`) has finished.
 
 No new secrets or settings: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `MAINNET_RPC_URL`, `DEVNET_RPC_URL` and
 `CRON_SECRET` are reused; the old `INDEXER_*` variables are ignored.
@@ -168,6 +177,33 @@ kind changing to `v1-sunset`, and the migration panel starts counting MigrateWal
 `insert into lk.builds (program_key, gen, status, parser_version) values (<key>, 1, 'active', 1)`, plus an entry in
 `src/types/protocol.ts`.
 
+## Dashboard UI
+
+One page, driven by the URL: `?cluster=mainnet|devnet&window=24h|7d|30d|all&version=all|1|2` (shareable; the
+default cluster comes from `VITE_DEFAULT_CLUSTER`). It makes one request, `GET /api/dashboard`, typed by
+`src/types/dashboard.ts`, and never talks to Solana RPC itself. Top to bottom:
+
+| section | what it shows |
+|---|---|
+| Header | cluster, protocol version (All / v1 / v2) and time range; "data complete through" and "indexer checked … ago" (the request time is never shown as "last updated"); a status pill; theme toggle |
+| Freshness banner | blue *catching up* (backfill %, backlog), amber *delayed* or *setup required*, red *stale* (with `gh workflow enable indexer.yml` when GitHub disabled the schedule) or *unavailable* (over the copy saved in this browser) |
+| Overview | transactions (success and protocol error rate), active wallets, wallets created (passkey share), protocol fees, wallets existing, vault SOL; a v1 · v2 split and the change against the previous period |
+| Programs | one card per program: Live, Building history, Not deployed yet (v2 mainnet, with the expected build), Retired: migration only (v1 sunset), Unrecognised build, Dormant (no transaction in 30 days) |
+| Activity | transactions (stacked by version, failed line), wallets created, active wallets (always per day/hour: distinct counts are never summed), protocol fees; `all` is re-binned to weeks (≤ 180 days of history) or months; each chart has a data table |
+| Program detail | per version: instruction mix, signers, failure classes, integrators, programs wallets call, relayers, SIMD-0385 share; on-chain state; fee config, treasury (unwithdrawn vs withdrawable now), fee records, shards, fee coverage |
+| Binaries and upgrades | deployed ELF sha256 and size, match against `release-hashes.txt` / known dumps, last deploy, upgrade authority, the expected next build (v1 sunset, v2 mainnet release), deploy history |
+| Migration v1 → v2 | before Phase B what is left on v1; once the sunset build is live, migrations per day and cumulative, SOL and token accounts moved, % migrated, leftovers, retired calls |
+| Latest activity | the 50 newest transactions with a LazorKit instruction, 10 per page, with explorer links (`?cluster=devnet` on devnet) |
+| Developer details | collapsed: sync per program, invariant checks, runs, heartbeats, workflow state, metric definitions |
+
+The last good payload per (cluster, window) is kept in `localStorage` (newest four; every access in try/catch), so a
+paused database shows the saved copy under the red banner instead of an empty page. `setup_required` (migration not
+applied) renders a banner and an explanation, never an error page. Light and dark themes follow the OS until the
+viewer picks one. Lamports below 0.001 SOL are shown as lamports, larger amounts as SOL with at most four decimals;
+hovering shows the exact lamports. Opening the page with `#all-details` expands every collapsible section.
+
+Screenshots of every state, taken on the local stack: [`docs/preview/`](docs/preview/).
+
 ## Development
 
 ```bash
@@ -184,8 +220,8 @@ npm run dev:api                        # http://127.0.0.1:8787 (reads .env.api /
 npm run dev:web                        # Vite, proxies /api
 ```
 
-Checks: `npm run typecheck`, `npm test` (unit), `npm run test:it` (local PostgREST), `npm run test:db` (pgTAP),
-`npm run build`. Parser fixtures are real transactions fetched read-only (`npm run fixtures:fetch`); three cases
+Checks: `npm run typecheck`, `npm run lint`, `npm test` (unit, including server-rendering every payload fixture),
+`npm run test:it` (local PostgREST), `npm run test:db` (pgTAP), `npm run build`. Parser fixtures are real transactions fetched read-only (`npm run fixtures:fetch`); three cases
 never seen on chain (WithdrawTreasury, MigrateWallet, a CPI'd CreateWallet) are labelled synthetic fixtures.
 
 Keep RPC URLs and the service-role key out of `VITE_*` variables (they are compiled into the browser bundle) and out

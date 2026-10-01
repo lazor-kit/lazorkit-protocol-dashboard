@@ -137,7 +137,9 @@ export function selectBanner(input: {
         const ingested = progress?.ingested ?? 0;
         const percent = progress?.percent;
         messages.push(
-          `Building history for ${label}: ${percent === null || percent === undefined ? '–' : `${Math.floor(percent)} %`} (${formatInteger(ingested)} of ${formatInteger(ingested + pending)} transactions). Figures below are partial.`,
+          ingested + pending === 0
+            ? `Building history for ${label}: discovering its transactions. Figures below are partial.`
+            : `Building history for ${label}: ${percent === null || percent === undefined ? '–' : `${Math.floor(percent)} %`} (${formatInteger(ingested)} of ${formatInteger(ingested + pending)} transactions). Figures below are partial.`,
         );
       } else if (reason.code === 'backlog') {
         const programThrough = programs.find((program) => program.programKey === reason.programKey)?.sync.completeThrough ?? through;
@@ -158,12 +160,13 @@ export interface Delta {
   direction: 'up' | 'down' | 'flat' | 'none';
 }
 
-/** "+12.5%", "−3%", "0%", "new" (previous 0, current > 0); null previous (window `all`) → no delta. */
+/** "+12.5%", "−3%", "0%", "×700" (10× or more), "new" (previous 0, current > 0); null previous (window `all`) → none. */
 export function kpiDelta(current: number, previous: number | null | undefined): Delta {
   if (previous === null || previous === undefined) return { label: '', direction: 'none' };
   if (previous === 0) return current === 0 ? { label: '0%', direction: 'flat' } : { label: 'new', direction: 'up' };
   const change = (current - previous) / previous;
   if (Math.abs(change) < 0.0005) return { label: '0%', direction: 'flat' };
+  if (change >= 9) return { label: `×${formatInteger(Math.round(current / previous))}`, direction: 'up' };
   const pct = Math.abs(change * 100);
   const text = pct >= 100 ? Math.round(pct).toString() : pct.toFixed(1).replace(/\.0$/, '');
   return { label: `${change > 0 ? '+' : '−'}${text}%`, direction: change > 0 ? 'up' : 'down' };
@@ -234,18 +237,19 @@ export const DORMANT_AFTER_DAYS = 30;
 export interface ProgramBadge {
   label: string;
   tone: Tone;
-  kind: 'live' | 'not_deployed' | 'retired' | 'unrecognised' | 'dormant' | 'closed' | 'unknown';
+  kind: 'live' | 'backfill' | 'not_deployed' | 'retired' | 'unrecognised' | 'dormant' | 'closed' | 'unknown';
 }
 
 export function programBadge(program: ProgramView, now: number): ProgramBadge {
   const { status, binaryKind, releaseMatch } = program.deployment;
   if (status === 'not_deployed') return { label: 'Not deployed yet', tone: 'neutral', kind: 'not_deployed' };
   if (status === 'closed') return { label: 'Closed', tone: 'danger', kind: 'closed' };
-  if (status !== 'live') return { label: 'Status unknown', tone: 'neutral', kind: 'unknown' };
+  if (status !== 'live') return { label: 'Not checked yet', tone: 'neutral', kind: 'unknown' };
   if (binaryKind === 'v1-sunset') return { label: 'Retired: migration only', tone: 'warning', kind: 'retired' };
   if (binaryKind === 'unknown' || binaryKind === null || releaseMatch === null) {
     return { label: 'Unrecognised build', tone: 'danger', kind: 'unrecognised' };
   }
+  if (!program.sync.backfillComplete) return { label: 'Building history', tone: 'info', kind: 'backfill' };
   const last = program.sync.lastActivityAt ? Date.parse(program.sync.lastActivityAt) : Number.NaN;
   if (!Number.isFinite(last) || now - last > DORMANT_AFTER_DAYS * 86_400_000) {
     return { label: 'Dormant', tone: 'neutral', kind: 'dormant' };
@@ -282,7 +286,17 @@ export function releaseMatchLabel(program: ProgramView): { text: string; ok: boo
   if (releaseMatch.feature) {
     return { text: `✓ matches release-hashes.txt · ${releaseMatch.feature}`, ok: true, title: releaseMatch.source };
   }
-  return { text: `✓ matches known build: ${binaryLabel ?? 'program dump'}`, ok: true, title: releaseMatch.source };
+  const kind = releaseMatch.source.startsWith('program dump') ? 'program dump' : 'known build';
+  return { text: `✓ matches ${kind}: ${binaryLabel ?? 'unnamed build'}`, ok: true, title: releaseMatch.source };
+}
+
+/** The sentence shown instead of figures for a program that is not live. */
+export function deploymentNote(program: ProgramView, binaries: KnownBinary[]): string {
+  if (program.deployment.status === 'unknown') {
+    return 'Not checked yet: the indexer has not looked at this program. Its status and history appear after the first run.';
+  }
+  if (program.deployment.status === 'closed') return 'The program account has been closed; its history is kept.';
+  return notDeployedCopy(program, binaries);
 }
 
 export function notDeployedCopy(program: ProgramView, binaries: KnownBinary[]): string {

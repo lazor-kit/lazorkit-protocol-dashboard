@@ -1,5 +1,5 @@
 import type { DashboardPayload, DeployHistoryEntry, ProgramView } from '../types/dashboard';
-import { expectedNextBinary, notDeployedCopy, programBadge, releaseMatchLabel } from '../app/selectors';
+import { deploymentNote, expectedNextBinary, programBadge, releaseMatchLabel } from '../app/selectors';
 import { formatBytes, formatInteger, formatUtc, shortHash } from '../lib/format';
 import { AddressLink, CopyButton, Pill, SectionHeader, StatRow, VersionTag } from './ui';
 
@@ -36,7 +36,7 @@ function BinaryRow({ program, payload, now, open }: { program: ProgramView; payl
       </header>
       {deployment.status !== 'live' ? (
         <>
-          <p className="programCardNote">{notDeployedCopy(program, payload.binaries)}</p>
+          <p className="programCardNote">{deploymentNote(program, payload.binaries)}</p>
           <dl className="statList">
             <StatRow
               label="Expected build"
@@ -89,8 +89,7 @@ function BinaryRow({ program, payload, now, open }: { program: ProgramView; payl
                   <th scope="col">Operation</th>
                   <th scope="col" className="num">Slot</th>
                   <th scope="col">Time</th>
-                  <th scope="col">Transaction</th>
-                  <th scope="col">sha256</th>
+                  <th scope="col">Transaction / hash</th>
                 </tr>
               </thead>
               <tbody>
@@ -100,10 +99,11 @@ function BinaryRow({ program, payload, now, open }: { program: ProgramView; payl
                     <td className="num">{formatInteger(entry.slot)}</td>
                     <td>{entry.at ? formatUtc(entry.at, now, { alwaysDate: true }) : '–'}</td>
                     <td>
-                      <AddressLink address={entry.signature} cluster={program.cluster} label="transaction" kind="tx" chars={6} />
-                    </td>
-                    <td>
-                      <Hash sha256={entry.sha256} />
+                      {entry.signature ? (
+                        <AddressLink address={entry.signature} cluster={program.cluster} label="transaction" kind="tx" chars={6} />
+                      ) : (
+                        <Hash sha256={entry.sha256} />
+                      )}
                     </td>
                   </tr>
                 ))}

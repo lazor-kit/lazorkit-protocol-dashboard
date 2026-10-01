@@ -1401,6 +1401,13 @@ tbody tr:hover td {
   background: var(--surface-elevated);
 }
 
+.heartbeatGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 12px 28px;
+  margin-bottom: 14px;
+}
+
 .reasonList {
   margin: 0;
   padding-left: 18px;
@@ -1549,7 +1556,7 @@ tbody tr:hover td {
   }
 
   .kpiValue {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .panel,
@@ -1610,7 +1617,8 @@ tbody tr:hover td {
     margin-right: 10px;
   }
 
-  .dataNotes {
+  .dataNotes,
+  .heartbeatGrid {
     grid-template-columns: 1fr;
   }
 

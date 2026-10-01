@@ -12,6 +12,11 @@ const WORKFLOW_LABELS: Record<string, string> = {
   unknown: 'unknown (no heartbeat from the daily Vercel cron yet)',
 };
 
+function checkValue(value: string | null): string {
+  if (value === null) return '–';
+  return /^-?\d+$/.test(value) ? formatInteger(value) : value;
+}
+
 export function runTimings(runs: RunRow[]): Array<RunRow & { durationMs: number | null; gapMs: number | null }> {
   const sorted = [...runs].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
   return sorted.map((run, index) => {
@@ -86,8 +91,8 @@ export function DeveloperDetails({ payload, now, open }: { payload: DashboardPay
                         ? `complete (${program.sync.historyProof === 'deploy_tx' ? 'from the deploy tx' : program.sync.historyProof === 'archival_end' ? 'archival end' : 'no proof'})`
                         : 'in progress'}
                   </td>
-                  <td>{formatUtc(program.sync.completeThrough, now, { alwaysDate: true, seconds: true })}</td>
-                  <td>{formatUtc(program.sync.discoveredAt, now, { alwaysDate: true, seconds: true })}</td>
+                  <td>{formatUtc(program.sync.completeThrough, now, { alwaysDate: true })}</td>
+                  <td>{formatUtc(program.sync.discoveredAt, now, { alwaysDate: true })}</td>
                   <td className="num">{formatInteger(program.sync.ingested)}</td>
                   <td className="num">{formatInteger(program.sync.pending)}</td>
                   <td className="num">{formatInteger(program.sync.gapsOpen)}</td>
@@ -136,8 +141,8 @@ export function DeveloperDetails({ payload, now, open }: { payload: DashboardPay
                       <strong>{check.id}</strong> {check.label}
                       {check.note ? <span className="cellSub">{check.note}</span> : null}
                     </td>
-                    <td className="num">{check.expected ?? '–'}</td>
-                    <td className="num">{check.actual ?? '–'}</td>
+                    <td className="num">{checkValue(check.expected)}</td>
+                    <td className="num">{checkValue(check.actual)}</td>
                     <td>
                       {check.mode === 'pending' || check.ok === null ? (
                         <span className="statusBadge neutral">pending</span>
@@ -159,7 +164,7 @@ export function DeveloperDetails({ payload, now, open }: { payload: DashboardPay
 
       <section className="panel" aria-labelledby="runs-title">
         <h3 id="runs-title">Indexer runs and heartbeats</h3>
-        <div className="detailColumns">
+        <div className="heartbeatGrid">
           <dl className="statList compact">
             <StatRow label="Data status" value={FRESHNESS_LABELS[freshness.state]} />
             <StatRow label="Last indexer run" value={formatUtc(freshness.lastWorkerRunAt, now, { alwaysDate: true, seconds: true })} hint={freshness.lastWorkerRunAt ? formatAge(freshness.lastWorkerRunAt, now) : null} />

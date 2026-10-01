@@ -10,7 +10,7 @@ import { MigrationPanel } from '../components/MigrationPanel';
 import { OverviewKpis } from '../components/OverviewKpis';
 import { ProgramCards } from '../components/ProgramCards';
 import { ProgramDetail } from '../components/ProgramDetail';
-import { isDeployed, notDeployedCopy, visiblePrograms, windowLabel } from './selectors';
+import { deploymentNote, isDeployed, visiblePrograms, windowLabel } from './selectors';
 import type { VersionFilter } from './urlState';
 import type { DashboardView } from './view';
 
@@ -29,11 +29,15 @@ function DataSections({ payload, version, now, expandAll }: { payload: Dashboard
       </h2>
       {anyDeployed ? (
         <OverviewKpis payload={payload} version={version} now={now} />
-      ) : (
+      ) : inView.length > 0 && inView.every((program) => program.deployment.status === 'unknown') ? (
         <EmptyState
-          title={`Protocol v${version} is not deployed on ${payload.cluster} yet`}
-          body={inView[0] ? notDeployedCopy(inView[0], payload.binaries) : 'No program of this version is tracked on this cluster.'}
+          title="Waiting for the first indexer run"
+          body="Figures appear after the indexer's first run. The first run checks every program, then pages each one's history back to its deploy transaction; until that backfill completes the banner shows its progress."
         />
+      ) : version === 'all' || inView.length === 0 ? (
+        <EmptyState title={`No LazorKit program is live on ${payload.cluster}`} body="Program status and history appear here once a tracked program is deployed." />
+      ) : (
+        <EmptyState title={`Protocol v${version} is not deployed on ${payload.cluster} yet`} body={deploymentNote(inView[0], payload.binaries)} />
       )}
       <ProgramCards payload={payload} version={version} now={now} />
       {anyDeployed ? (

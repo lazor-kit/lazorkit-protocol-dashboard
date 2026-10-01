@@ -123,6 +123,18 @@ describe('Dashboard states', () => {
     expect(page).toContain('gh workflow enable indexer.yml');
   });
 
+  it('before the first indexer run every program is "not checked yet", never "not deployed"', () => {
+    const payload = FIXTURES['mainnet-30d']();
+    for (const program of payload.programs) {
+      program.deployment = { ...program.deployment, status: 'unknown', binaryKind: null, releaseMatch: null, sha256: null };
+      program.state = null;
+    }
+    const page = text(render(payload));
+    expect(page).toContain('Waiting for the first indexer run');
+    expect(page).toContain('Not checked yet');
+    expect(page).not.toContain('has no account on mainnet');
+  });
+
   it('errors offer a retry', () => {
     const view = viewFromResult({ kind: 'error', message: 'The dashboard API answered HTTP 500.', cached: null }, FIXTURE_NOW);
     const page = text(renderToStaticMarkup(<Dashboard view={view} version="all" now={FIXTURE_NOW} onRetry={() => undefined} />));

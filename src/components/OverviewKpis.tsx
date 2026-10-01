@@ -124,7 +124,7 @@ export function OverviewKpis({ payload, version, now }: { payload: DashboardPayl
       <KpiCard
         label="Wallets existing"
         value={state.programs > 0 ? formatInteger(state.wallets) : '–'}
-        deltaLabel={state.fetchedAt ? `On-chain now · ${formatUtc(state.fetchedAt, now)}` : 'On-chain state'}
+        deltaLabel={state.fetchedAt ? `On-chain snapshot · ${formatUtc(state.fetchedAt, now)}` : 'On-chain snapshot'}
         split={
           showSplit ? (
             <Split
@@ -140,7 +140,7 @@ export function OverviewKpis({ payload, version, now }: { payload: DashboardPayl
         label="Vault SOL"
         value={state.programs > 0 ? formatLamports(state.vaultLamports) : '–'}
         title={exactLamports(state.vaultLamports)}
-        deltaLabel="On-chain now"
+        deltaLabel={state.fetchedAt ? `On-chain snapshot · ${formatUtc(state.fetchedAt, now)}` : 'On-chain snapshot'}
         split={
           showSplit ? (
             <Split

@@ -1,5 +1,5 @@
 import type { DashboardPayload, ProgramView, ScopeKey } from '../types/dashboard';
-import { backfillPercent, expectedNextBinary, programBadge, visiblePrograms, windowLabel } from '../app/selectors';
+import { backfillPercent, deploymentNote, expectedNextBinary, programBadge, visiblePrograms, windowLabel } from '../app/selectors';
 import type { VersionFilter } from '../app/urlState';
 import { formatAge, formatBytes, formatInteger, formatUtc, shortHash } from '../lib/format';
 import { AddressLink, Pill, StatRow, VersionTag } from './ui';
@@ -15,6 +15,7 @@ const RUN_LABELS: Record<ProgramView['sync']['lastRunStatus'], string> = {
 function syncText(program: ProgramView, now: number): string {
   const { sync } = program;
   if (!sync.backfillComplete) {
+    if (sync.ingested + sync.pending === 0) return 'Building history: discovering transactions';
     const percent = backfillPercent(program);
     return `Building history: ${percent === null ? '–' : `${Math.floor(percent)} %`} (${formatInteger(sync.ingested)} of ${formatInteger(sync.ingested + sync.pending)})`;
   }
@@ -26,6 +27,26 @@ export function ProgramCard({ program, payload, now }: { program: ProgramView; p
   const badge = programBadge(program, now);
   const kpis = payload.kpis[String(program.programKey) as ScopeKey]?.current;
   const { deployment, sync } = program;
+
+  if (deployment.status === 'unknown' || deployment.status === 'closed') {
+    return (
+      <article className="programCard programCard-pending" aria-label={`${program.label}: ${badge.label}`}>
+        <header className="programCardHeader">
+          <div>
+            <p className="eyebrow">Protocol v{program.version}</p>
+            <h3>
+              <VersionTag version={program.version} /> {program.label}
+            </h3>
+          </div>
+          <Pill tone={badge.tone}>{badge.label}</Pill>
+        </header>
+        <p className="programCardNote">{deploymentNote(program, payload.binaries)}</p>
+        <dl className="statList">
+          <StatRow label="Program id" value={<AddressLink address={program.programId} cluster={program.cluster} label="program id" copy chars={6} />} />
+        </dl>
+      </article>
+    );
+  }
 
   if (deployment.status === 'not_deployed') {
     const expected = expectedNextBinary(program, payload.binaries);

@@ -5,7 +5,7 @@ import {
   AUTH_LABELS,
   FAIL_LABELS,
   KNOWN_PROGRAMS,
-  notDeployedCopy,
+  deploymentNote,
   visiblePrograms,
   windowLabel,
 } from '../app/selectors';
@@ -311,7 +311,7 @@ export function ProgramDetail({ payload, version, now }: { payload: DashboardPay
       </div>
       <div id="program-detail-panel" role={programs.length > 1 ? 'tabpanel' : undefined} aria-labelledby={programs.length > 1 ? `program-tab-${program.programKey}` : undefined}>
         {program.deployment.status !== 'live' ? (
-          <p className="programCardNote">{notDeployedCopy(program, payload.binaries)}</p>
+          <p className="programCardNote">{deploymentNote(program, payload.binaries)}</p>
         ) : (
           <>
             <h3 className="detailHeading">Activity mix</h3>

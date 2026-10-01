@@ -62,6 +62,19 @@ describe('selectBanner (spec §10.3 / §11.2 copy)', () => {
     expect(banner?.messages).toEqual(['Catching up: 120 new transactions pending for v1 mainnet. Figures are complete through 14:05 UTC.']);
   });
 
+  it('catching up: a program whose history is still being discovered', () => {
+    const banner = selectBanner({
+      now: FIXTURE_NOW,
+      programs: devnetPrograms,
+      freshness: baseFreshness({
+        state: 'catching_up',
+        reasons: [{ code: 'backfill', programKey: 4, detail: '' }],
+        catchUp: [{ programKey: 4, pending: 0, ingested: 0, percent: null }],
+      }),
+    });
+    expect(banner?.messages).toEqual(['Building history for v2 devnet: discovering its transactions. Figures below are partial.']);
+  });
+
   it('catching up: the indexer never ran', () => {
     const banner = selectBanner({
       now: FIXTURE_NOW,
@@ -135,6 +148,8 @@ describe('KPI helpers', () => {
     expect(kpiDelta(467, 195)).toEqual({ label: '+139%', direction: 'up' });
     expect(kpiDelta(59, 38)).toEqual({ label: '+55.3%', direction: 'up' });
     expect(kpiDelta(10, 20)).toEqual({ label: '−50%', direction: 'down' });
+    expect(kpiDelta(1399, 2)).toEqual({ label: '×700', direction: 'up' });
+    expect(kpiDelta(90, 10)).toEqual({ label: '+800%', direction: 'up' });
     expect(kpiDelta(0, 0)).toEqual({ label: '0%', direction: 'flat' });
     expect(kpiDelta(3, 0)).toEqual({ label: 'new', direction: 'up' });
     expect(kpiDelta(3, null)).toEqual({ label: '', direction: 'none' });
@@ -177,6 +192,8 @@ describe('programs and binaries', () => {
 
   it('badges', () => {
     expect(programBadge(v1, FIXTURE_NOW).label).toBe('Live');
+    expect(programBadge(withDeployment(v1, {}, { backfillComplete: false }), FIXTURE_NOW).label).toBe('Building history');
+    expect(programBadge(withDeployment(v2, { status: 'unknown' }), FIXTURE_NOW).label).toBe('Not checked yet');
     expect(programBadge(v2, FIXTURE_NOW).label).toBe('Not deployed yet');
     expect(programBadge(withDeployment(v1, { binaryKind: 'v1-sunset' }), FIXTURE_NOW).label).toBe('Retired: migration only');
     expect(programBadge(withDeployment(v1, { binaryKind: 'unknown', releaseMatch: null }), FIXTURE_NOW).label).toBe('Unrecognised build');
@@ -193,7 +210,7 @@ describe('programs and binaries', () => {
 
   it('release match labels', () => {
     expect(releaseMatchLabel(devV2)).toMatchObject({ text: '✓ matches release-hashes.txt · devnet', ok: true });
-    expect(releaseMatchLabel(v1).text).toBe('✓ matches known build: v1 (mainnet build 2026-04-29)');
+    expect(releaseMatchLabel(v1).text).toBe('✓ matches program dump: v1 (mainnet build 2026-04-29)');
     expect(releaseMatchLabel(withDeployment(v1, { releaseMatch: null })).ok).toBe(false);
     expect(releaseMatchLabel(v2).ok).toBeNull();
   });
