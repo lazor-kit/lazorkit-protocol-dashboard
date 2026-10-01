@@ -10,7 +10,13 @@ const render = (payload: DashboardPayload, version: VersionFilter = 'all', expan
   renderToStaticMarkup(
     <Dashboard view={viewFromResult({ kind: 'ok', payload, problems: [] }, FIXTURE_NOW)} version={version} now={FIXTURE_NOW} expandAll={expandAll} />,
   );
-const text = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
+const ENTITIES: Record<string, string> = { amp: '&', quot: '"', lt: '<', gt: '>', '#x27': "'" };
+// Tags to spaces, then entities decoded in one pass (so "&amp;lt;" stays "&lt;"), then whitespace collapsed.
+const text = (html: string) =>
+  html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&(amp|quot|lt|gt|#x27);/g, (_, entity: string) => ENTITIES[entity])
+    .replace(/\s+/g, ' ');
 
 describe('Dashboard renders every fixture', () => {
   for (const [name, load] of Object.entries(FIXTURES)) {
