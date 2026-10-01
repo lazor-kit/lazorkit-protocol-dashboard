@@ -46,12 +46,15 @@ it/           integration tests through a local PostgREST
   signatures newer than the frontier and fetches only those transactions. A quiet program costs one small call.
 - **Durable queue** (`lk.pending`). Discovery stores what it finds, then ingestion drains it oldest first, 20 at a
   time, until the run budget is spent; the next run continues. Nothing is skipped: a transaction that no endpoint
-  serves is retried in 5 separate runs and then becomes an explicit, counted **gap** (`lk.gaps`, kind 253).
+  serves is retried in 5 separate runs and then becomes an explicit, counted **gap** (`lk.gaps`, kind 253). The same
+  goes for a transaction whose rows the database rejects (a SQL data error): the batch is retried one signature at
+  a time, so one bad transaction never holds back the rest of the queue, and the run summary lists it.
 - **Ledger + rollups.** `lk.events` holds one thin row per LazorKit instruction (or one row for a transaction
   without one) and doubles as the de-duplication ledger. Daily rollups (`lk.daily`) and distinct actors per day
   (`lk.actor_days`) are **recomputed** from the events of the touched days, never incremented, so replays,
   overlapping or out-of-order batches and reparses all give identical results.
-- **Bounded retention.** Events older than `INDEXER_EVENT_RETENTION_DAYS` (35) are deleted once their days are
+- **Bounded retention.** Events older than `INDEXER_EVENT_RETENTION_DAYS` (35; at least 31, because the 30-day
+  comparison reads the events of the day 30 days ago) are deleted once their days are
   final ("sealed"); daily rollups are kept forever. Expected size: about 15 MB in year one, then about +7 MB a year,
   of the 500 MB free plan.
 - **One-time backfill.** A new program (or a rebuild) pages to the program's deploy transaction (proof that the
@@ -62,8 +65,11 @@ it/           integration tests through a local PostgREST
 ## Metrics (exact definitions)
 
 "Real" transaction = at least one LazorKit instruction with a known tag (0–18). Counts of transactions are
-distinct signatures. Windows are UTC: `24h` = the last 24 whole hours (from events), `7d`/`30d` = whole days incl.
-today, `all` = since the first activity (complete history).
+distinct signatures. Windows are UTC: `24h` = the last 24 hours by hour, the newest one partial (from events),
+`7d`/`30d` = whole days incl. today so far, `all` = since the first activity (complete history). The change shown
+against the previous period compares the **same elapsed span one period earlier**: the previous period ends exactly
+24 h / 7 d / 30 d before now (its last, partial day comes from the events), so a partly elapsed hour or day is never
+compared with a whole one.
 
 | metric | rule |
 |---|---|
@@ -73,13 +79,13 @@ today, `all` = since the first activity (complete history).
 | Wallets created | successful CreateWallet; passkey share from the owner type |
 | Active wallets | distinct wallets of successful wallet operations (kinds 0–7, 9, 17); exact for any window |
 | Executions by signer | Execute/ExecuteDeferred by passkey (precompile at i−1), session or Ed25519 (PDA match), deferred |
-| Protocol fees | the first direct-child System transfer of CreateWallet/Execute/ExecuteDeferred from the payer **to a canonical treasury shard** (a vault → payer transfer is not a fee). Fee events, eligible operations, suffix adoption (v1) |
+| Protocol fees | the first direct-child System transfer of CreateWallet/Execute/ExecuteDeferred from the payer **to a canonical treasury shard** (a vault → payer transfer is not a fee; for a first-time payer v2 first creates the payer's FeeRecord with its own transfer, which is neither a fee nor something the wallet called). Fee events, eligible operations, suffix adoption (v1) |
 | Treasury | shard funding (InitializeTreasuryShard), withdrawals (WithdrawTreasury); "unwithdrawn fees" from history vs "withdrawable now" from state (they differ by the excess rent left by the 2026 rent decrease) |
-| Integrators | passkey clientDataJSON `topOrigin ?? origin`, CreateWallet rpId (normalised host; Android apps as `android:<hash prefix>`) |
+| Integrators | passkey clientDataJSON `topOrigin ?? origin`, CreateWallet rpId (normalised host; Android apps as `android:<hash prefix>`); the top 10 by wallets created + operations |
 | Relayers | distinct instruction payers |
 | Migrations v1 → v2 | successful MigrateWallet at the v1 id (sunset build): count, SOL, token accounts; v2 wallets created by migration vs new |
 | Tx v1 (SIMD-0385) | real transactions with transaction version 1 |
-| Cluster totals | sum of the cluster's programs minus the v2 program's "shared" transactions (a transaction with real instructions of both programs is in both feeds); payers and apps distinct across programs |
+| Cluster totals | sum of the cluster's programs minus the v2 program's "shared" transactions (a transaction with real instructions of both programs is in both feeds); a shared failed transaction keeps the class of the program whose instruction failed; payers and apps distinct across programs |
 | State | wallets, authorities by role/type, owner key types, lifetime passkey operations, sessions live/expired, deferred pending/expired and stranded rent, fee config (v1 `enabled=0` means "fees off; wallets unaffected"), FeeRecords (v1: registered payers only, a lower bound; v2: exact), treasury, vault SOL |
 
 ## Freshness and keep-alive
@@ -91,10 +97,16 @@ backlog) → `live`.
 
 | failure | what happens |
 |---|---|
-| GitHub disables the schedule after 60 days without commits | the daily Vercel cron records the workflow state; the site turns red with the fix; `/api/health` returns 503. Re-enable with `gh workflow enable indexer.yml`: nothing is lost, the queue just has a longer backlog |
+| GitHub disables the schedule after 60 days without commits | the daily Vercel cron records the workflow state; the site turns red with the fix; `/api/health` returns 503, which the **uptime monitor** (go-live step 4) turns into an email. Re-enable with `gh workflow enable indexer.yml`: nothing is lost, the queue just has a longer backlog |
 | Supabase free project pauses after 7 days idle | every worker run writes, and the daily `/api/cron/heartbeat` writes too (independent of GitHub) |
 | a program fails while others work | the run exits 1 (red job, GitHub email); per-program status and last error are on the page |
 | silent loss or double counting | queue + ledger + pure recompute; invariants I1–I6 and `lk_verify` (R1) every run; `npm run verify:chain` (R2) |
+
+**When to expect it.** GitHub counts 60 days from the repository's last commit; after the merge that is the merge
+date + 60 days, and any later commit restarts the count. Check the state with
+`gh api repos/lazor-kit/lazorkit-protocol-dashboard/actions/workflows/indexer.yml --jq .state` (`active` is fine).
+Nothing on GitHub or Vercel e-mails anyone when it happens, which is why the uptime monitor is part of go-live, not
+a follow-up.
 
 **Optional self-enable step (not shipped).** A job could re-enable the workflow itself, but the popular
 keepalive action's repository was disabled by GitHub Staff (a Terms-of-Service signal), and whether the enable API
@@ -112,14 +124,23 @@ call resets the 60-day timer is unverified. If the maintainers want it anyway, a
           GH_TOKEN: ${{ github.token }}
 ```
 
-## Go-live (maintainer, 3 steps, in this order)
+## Go-live (maintainer, in this order)
+
+0. **Today, before anything else: keep Supabase awake.** It was resumed on 2026-10-01 and nothing writes to it until
+   the indexer runs again, so it can pause again about a week later (around 2026-10-08) if go-live slips. Enabling
+   the workflow is enough: until the merge, the schedule on `main` runs the old indexer, which writes the old tables
+   (harmless) and so keeps the project active.
+
+   ```bash
+   gh workflow enable indexer.yml -R lazor-kit/lazorkit-protocol-dashboard
+   ```
 
 1. **Apply the migration.** Supabase dashboard → SQL Editor → paste
    `supabase/migrations/20261002000100_lk_event_log.sql` → Run. It is additive (schema `lk` + `public.lk_*`
    functions only; the legacy tables are untouched) and re-running it is harmless. Check:
    `select public.lk_schema_version();` → `1`. The PR preview moves from "Backend upgrade pending" to
    "Catching up"; production is unchanged.
-2. **Re-enable the indexer and run the first backfill from the PR branch:**
+2. **Run the first backfill from the PR branch** (the `enable` is a no-op if step 0 was done):
 
    ```bash
    gh workflow enable indexer.yml -R lazor-kit/lazorkit-protocol-dashboard
@@ -135,11 +156,16 @@ call resets the 60-day timer is unverified. If the maintainers want it anyway, a
    (`7,22,37,52 * * * *`), and the daily heartbeat cron is registered by this deploy (`vercel.json`, uses the
    existing `CRON_SECRET`). `curl -s https://lazorkit-protocol-dashboard.vercel.app/api/health` should say
    `"status":"live"`.
+4. **Add an uptime monitor (required: it is the only thing that e-mails someone).** Any free HTTP monitor (for
+   example UptimeRobot or Better Stack) on `https://lazorkit-protocol-dashboard.vercel.app/api/health`, every 5–15
+   minutes, alerting the maintainers' e-mail on any non-2xx answer. `/api/health` answers 503 when the data is stale
+   (worker silent for 24 h, or the daily cron saw GitHub disable the workflow) or the database is unreachable or
+   paused, and 200 otherwise. Set it up after step 3; before the migration it would answer 503 by design.
 
 Merging before step 2 also works: production then shows "Catching up: the indexer has not run yet" until the first
 run (`gh workflow enable` + `gh workflow run indexer.yml -f budget_minutes=55`, without `--ref`) has finished.
 
-No new secrets or settings: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `MAINNET_RPC_URL`, `DEVNET_RPC_URL` and
+No new secrets, repository or Vercel settings (step 4 is an outside service): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `MAINNET_RPC_URL`, `DEVNET_RPC_URL` and
 `CRON_SECRET` are reused; the old `INDEXER_*` variables are ignored.
 
 **Rollback.** Revert the merge commit (the old code and the legacy tables are untouched), optionally
@@ -193,7 +219,7 @@ default cluster comes from `VITE_DEFAULT_CLUSTER`). It makes one request, `GET /
 | Program detail | per version: instruction mix, signers, failure classes, integrators, programs wallets call, relayers, SIMD-0385 share; on-chain state; fee config, treasury (unwithdrawn vs withdrawable now), fee records, shards, fee coverage |
 | Binaries and upgrades | deployed ELF sha256 and size, match against `release-hashes.txt` / known dumps, last deploy, upgrade authority, the expected next build (v1 sunset, v2 mainnet release), deploy history |
 | Migration v1 → v2 | before Phase B what is left on v1; once the sunset build is live, migrations per day and cumulative, SOL and token accounts moved, % migrated, leftovers, retired calls |
-| Latest activity | the 50 newest transactions with a LazorKit instruction, 10 per page, with explorer links (`?cluster=devnet` on devnet) |
+| Latest activity | the 50 newest transactions with a LazorKit instruction of the selected version (the API sends 50 per program, so a quiet version is not crowded out), 10 per page, with explorer links (`?cluster=devnet` on devnet); it reads the event log, so it covers recent weeks, and an empty list says when the last transaction was |
 | Developer details | collapsed: sync per program, invariant checks, runs, heartbeats, workflow state, metric definitions |
 
 The last good payload per (cluster, window) is kept in `localStorage` (newest four; every access in try/catch), so a

@@ -6,7 +6,8 @@ name: LazorKit Dashboard Indexer
 #
 # GitHub disables scheduled workflows after 60 days without repository activity. Nothing is lost when that
 # happens (there is no time cutoff, the queue simply grows), and the site says so: the daily Vercel cron
-# (/api/cron/heartbeat) records this workflow's state. Re-enable with:
+# (/api/cron/heartbeat) records this workflow's state, /api/health turns 503 and the uptime monitor on it (README
+# go-live step 4) e-mails the maintainers. Expect it 60 days after the last commit. Re-enable with:
 #   gh workflow enable indexer.yml -R lazor-kit/lazorkit-protocol-dashboard
 
 on:
