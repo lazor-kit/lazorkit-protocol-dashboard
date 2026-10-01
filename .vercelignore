@@ -1,0 +1,5 @@
+# Every file under api/ becomes a Vercel function unless it is ignored. These are local-only:
+# the dev server (npm run dev:api) and the API tests.
+api/dev-server.ts
+api/*.test.ts
+api/**/*.test.ts
