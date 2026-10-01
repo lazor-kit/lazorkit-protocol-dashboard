@@ -132,6 +132,7 @@ select is(public.lk_health() ->> 'schemaVersion', '1', 'payload: lk_health repor
 select ok(public.lk_health() -> 'heartbeats' ? 'worker', 'payload: lk_health carries heartbeats');
 
 -- deployment bookkeeping
+update lk.programs set deploy_status = 'unknown' where program_key = 2;
 select public.lk_set_deployment(2, '{"status": "not_deployed"}');
 select is((select deploy_status from lk.programs where program_key = 2), 'not_deployed', 'deploy: not deployed');
 select public.lk_set_deployment(2, '{"status": "live", "programdata": "PD", "deploy_slot": 7, "upgrade_authority": "AUTH",
