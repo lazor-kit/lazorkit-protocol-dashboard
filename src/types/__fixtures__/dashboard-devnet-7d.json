@@ -1,0 +1,2383 @@
+{
+ "apiVersion": 2,
+ "kpis": {
+  "3": {
+   "current": {
+    "ixs": 1,
+    "txs": 1,
+    "apps": 1,
+    "txv1": 0,
+    "txsOk": 1,
+    "payers": 1,
+    "executes": 0,
+    "noiseTxs": 0,
+    "feeEvents": 1,
+    "txsFailed": 0,
+    "migrations": 0,
+    "signatures": 1,
+    "failByClass": {},
+    "feeLamports": "5000",
+    "feeSuffixOk": 1,
+    "unparsedTxs": 0,
+    "retiredCalls": 0,
+    "activeWallets": 1,
+    "feeEligibleOk": 1,
+    "netFeeLamports": "5000",
+    "walletsCreated": 1,
+    "cleanupLamports": "0",
+    "migratedLamports": "0",
+    "withdrawnLamports": "0",
+    "shardFundingLamports": "0",
+    "migratedTokenAccounts": 0,
+    "walletsCreatedPasskey": 1
+   },
+   "previous": {
+    "ixs": 16,
+    "txs": 2,
+    "apps": 0,
+    "txv1": 0,
+    "txsOk": 2,
+    "payers": 1,
+    "executes": 0,
+    "noiseTxs": 0,
+    "feeEvents": 0,
+    "txsFailed": 0,
+    "migrations": 0,
+    "signatures": 2,
+    "failByClass": {},
+    "feeLamports": "0",
+    "feeSuffixOk": 0,
+    "unparsedTxs": 0,
+    "retiredCalls": 0,
+    "activeWallets": 0,
+    "feeEligibleOk": 0,
+    "netFeeLamports": "10000",
+    "walletsCreated": 0,
+    "cleanupLamports": "33853440",
+    "migratedLamports": "0",
+    "withdrawnLamports": "0",
+    "shardFundingLamports": "0",
+    "migratedTokenAccounts": 0,
+    "walletsCreatedPasskey": 0
+   }
+  },
+  "4": {
+   "current": {
+    "ixs": 1398,
+    "txs": 1398,
+    "apps": 5,
+    "txv1": 123,
+    "txsOk": 1392,
+    "payers": 3,
+    "executes": 778,
+    "noiseTxs": 5,
+    "feeEvents": 0,
+    "txsFailed": 6,
+    "migrations": 0,
+    "signatures": 1403,
+    "failByClass": {
+     "limits": 4,
+     "duplicate": 2
+    },
+    "feeLamports": "0",
+    "feeSuffixOk": 1113,
+    "unparsedTxs": 0,
+    "retiredCalls": 0,
+    "activeWallets": 127,
+    "feeEligibleOk": 1113,
+    "netFeeLamports": "12217000",
+    "walletsCreated": 127,
+    "cleanupLamports": "33975040",
+    "migratedLamports": "0",
+    "withdrawnLamports": "0",
+    "shardFundingLamports": "0",
+    "migratedTokenAccounts": 0,
+    "walletsCreatedPasskey": 125
+   },
+   "previous": {
+    "ixs": 0,
+    "txs": 0,
+    "apps": 0,
+    "txv1": 0,
+    "txsOk": 0,
+    "payers": 0,
+    "executes": 0,
+    "noiseTxs": 0,
+    "feeEvents": 0,
+    "txsFailed": 0,
+    "migrations": 0,
+    "signatures": 0,
+    "failByClass": {},
+    "feeLamports": "0",
+    "feeSuffixOk": 0,
+    "unparsedTxs": 0,
+    "retiredCalls": 0,
+    "activeWallets": 0,
+    "feeEligibleOk": 0,
+    "netFeeLamports": "0",
+    "walletsCreated": 0,
+    "cleanupLamports": "0",
+    "migratedLamports": "0",
+    "withdrawnLamports": "0",
+    "shardFundingLamports": "0",
+    "migratedTokenAccounts": 0,
+    "walletsCreatedPasskey": 0
+   }
+  },
+  "cluster": {
+   "current": {
+    "ixs": 1399,
+    "txs": 1399,
+    "apps": 5,
+    "txv1": 123,
+    "txsOk": 1393,
+    "payers": 4,
+    "executes": 778,
+    "noiseTxs": 5,
+    "feeEvents": 1,
+    "txsFailed": 6,
+    "migrations": 0,
+    "signatures": 1404,
+    "failByClass": {
+     "limits": 4,
+     "duplicate": 2
+    },
+    "feeLamports": "5000",
+    "feeSuffixOk": 1114,
+    "unparsedTxs": 0,
+    "retiredCalls": 0,
+    "activeWallets": 128,
+    "feeEligibleOk": 1114,
+    "netFeeLamports": "12222000",
+    "walletsCreated": 128,
+    "cleanupLamports": "33975040",
+    "migratedLamports": "0",
+    "withdrawnLamports": "0",
+    "shardFundingLamports": "0",
+    "migratedTokenAccounts": 0,
+    "walletsCreatedPasskey": 126
+   },
+   "previous": {
+    "ixs": 16,
+    "txs": 2,
+    "apps": 0,
+    "txv1": 0,
+    "txsOk": 2,
+    "payers": 1,
+    "executes": 0,
+    "noiseTxs": 0,
+    "feeEvents": 0,
+    "txsFailed": 0,
+    "migrations": 0,
+    "signatures": 2,
+    "failByClass": {},
+    "feeLamports": "0",
+    "feeSuffixOk": 0,
+    "unparsedTxs": 0,
+    "retiredCalls": 0,
+    "activeWallets": 0,
+    "feeEligibleOk": 0,
+    "netFeeLamports": "10000",
+    "walletsCreated": 0,
+    "cleanupLamports": "33853440",
+    "migratedLamports": "0",
+    "withdrawnLamports": "0",
+    "shardFundingLamports": "0",
+    "migratedTokenAccounts": 0,
+    "walletsCreatedPasskey": 0
+   }
+  }
+ },
+ "runs": [
+  {
+   "runId": "local-2026-10-01T18:57:18.687Z",
+   "status": "ok",
+   "startedAt": "2026-10-01T18:57:18.687+00:00",
+   "finishedAt": "2026-10-01T18:57:22.196+00:00"
+  },
+  {
+   "runId": "local-2026-10-01T18:56:40.171Z",
+   "status": "ok",
+   "startedAt": "2026-10-01T18:56:40.172+00:00",
+   "finishedAt": "2026-10-01T18:56:43.669+00:00"
+  },
+  {
+   "runId": "local-2026-10-01T18:15:12.864Z",
+   "status": "ok",
+   "startedAt": "2026-10-01T18:15:12.865+00:00",
+   "finishedAt": "2026-10-01T18:54:20.535+00:00"
+  }
+ ],
+ "range": {
+  "end": "2026-10-01T18:57:37.917969+00:00",
+  "start": "2026-09-25T00:00:00+00:00",
+  "bucket": "day",
+  "previousStart": "2026-09-18T00:00:00+00:00"
+ },
+ "latest": [
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506306807,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:42:49+00:00",
+   "failClass": null,
+   "signature": "3XWjQwbuHBZaZPxZhfYMAaFWiibuA7VAzd9XvcjwAcfyvT34JYRfAbKXgapW5wm29e4MW2Da49WFKFxTNghiQhNw",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506306800,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:42:47+00:00",
+   "failClass": null,
+   "signature": "3qdqo81BDn64MrLBhg7Jhe5oyToMPXNrfwRtWhAmkN19U7HLzULULWEC8SAPYSaC89pC2HfJXiPGYArS5StSp8EC",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506306366,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:41:05+00:00",
+   "failClass": null,
+   "signature": "3rG1raYAuEVT6PNWMdQZBcYGY5JVBiejomTjx5rXQkwfwi5ui8zv1eB5K82m2rd5Hh6jFZw71RxQkNYHscWbV5r3",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506306360,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:41:04+00:00",
+   "failClass": null,
+   "signature": "3dVbTgLiPVxr851eLmaawysqTXiutyfrDKG47vQCuciJB8AD58V81h7CpUkYTt7GCMkWYrzktXndXoqNrp8UcYz1",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506306314,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:40:53+00:00",
+   "failClass": null,
+   "signature": "2fWcWTCnhTvrmEuZU2HdJwJYncpJJB3aSBeba6hZMgm4wZrikQXi5mSa5ZwnBwZsxZy5vjLU6yZ7j7Dmvtqq1BFq",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506306306,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:40:51+00:00",
+   "failClass": null,
+   "signature": "51VqVgFY43rajeCYgUkHaynoGBjMkuQuh5fUVsCJditAF4MUjHnTY21U64YbW6F7ZrB6oqAaTWqFjLdXDw4hKGFH",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506305909,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:39:18+00:00",
+   "failClass": null,
+   "signature": "5j4v9nSEgyCBUvtJcv7JFZxuc5izJGNV3xXEvuM7vTHjdexf7yTFSTdzoUwJC8V4KFKEmpi1GneqRrLAs2H4mxEG",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506305872,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:39:09+00:00",
+   "failClass": null,
+   "signature": "DNAChiwuH9yVWUnqjJmMe7bMzhT7dK3KvnPR6hQ7zMz8Rx5DqXYLam7Zrt2LthX7AiWap6ZFUR7RS2zBC3Y3UzS",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506305773,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:38:46+00:00",
+   "failClass": null,
+   "signature": "3kZRip2oZqsFvAMYJkUC5nn2gCH4mwUwNe2j9ujaYe5tXQ6nBkaYoVx1gztK176PfCDzyDtYYgAYQgx7rJM1XkY3",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506305766,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:38:44+00:00",
+   "failClass": null,
+   "signature": "2D4hePAy4LCV4PuXzSZ8fcpWKCFGp6uiX5qAstuQcCq7H5cvPn3hayd2A5xMtfucqMwbVTgfPZsMhuGmzeShZzrG",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506305748,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:38:40+00:00",
+   "failClass": null,
+   "signature": "HdGJbsz49AybSxUfgyuYwU6k4G32roZRh54yJQ7JN1vfo6YxbFXdtKyz8WBkGH8sMGPF3NkpLxT1A5cjsqhNXj5",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506305739,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:38:38+00:00",
+   "failClass": null,
+   "signature": "2tf8tqEV7MGtyHTZcug3Ve1xYzjHCCV8XJGLxQ8ERGYbofXXyBZtSQLXmDFsC1Nkkyq2QKbAdQk561rnXiBa5ZFe",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506305465,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:37:34+00:00",
+   "failClass": null,
+   "signature": "5MTXpiAeAjmp1rUEqMy9RPcAMHFUB7NwqsJuWJKipkJFZdDPgxBEVKqgZbZcif6JijzekCRo3K17oB7A2FR2MQom",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506305459,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:37:32+00:00",
+   "failClass": null,
+   "signature": "Ms431H3eoVBhjCRW38hUwHfGkQjmxNs2jVdmJwTYTgmL3A8aAgvo6maABXWRZiwLfWAc1GSFdbEyDqrfgnqBgPX",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506305036,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:35:53+00:00",
+   "failClass": null,
+   "signature": "4oqLfph78kAZpQugXYaoAiMVZe9DGcVE1bwPLAxgimxz5WXGLdG4o5x9bA55t8gLvQkSdMxGjL168wPSaj9vijie",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506305000,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:35:44+00:00",
+   "failClass": null,
+   "signature": "3CDqY9GvVwZkLe9dYX4a27f7FsgsuyqEeDDSVj89TB65oR5AXhJ96SwtTq8YUYUi79bToeE4zxd5jbQAYD7d7Sgw",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506304576,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:34:05+00:00",
+   "failClass": null,
+   "signature": "21XuhC8dLAcsxSnR26aXTF3uEm6ByfFwhi1Nd7Tdti1ehKgcFFx4NVBrhwMtcQ8nuAPjPCrebfLYxpq6Q5UdKjpG",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506304532,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:33:55+00:00",
+   "failClass": null,
+   "signature": "3LCkmzaoermCk7QtGepDENwfZKu3ffHmcoZkTqakYhsbodyLS3qguGPi78jqXDhMzQBGEbeE15Y8GepBzxgDmBsC",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506304518,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:33:51+00:00",
+   "failClass": null,
+   "signature": "2g6LCwK5n5XpFQCDCaUePtZZvgbTE3tQfrispZn6t4wUmnCnaDwk9KystH3tWDTAn1wuA28frKayKUsqyRwRmSZW",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506304510,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:33:49+00:00",
+   "failClass": null,
+   "signature": "b9ag8gFQbCokwtRTRHcgs1cJhC9ax5GEK5VQQL7xzQk2osMAZxavaNkUoVp1TPQg2wvNLWVSDpN2wjXY1mTEtUS",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506304484,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "B9LdCgUpmLKnnqwJb5KuimS4a4MVkPdQbbkT8Z2LsKcR",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:33:43+00:00",
+   "failClass": null,
+   "signature": "4dF1UEhDfzyYUJHgJhVEMicqTAffFhW3o7dqrUUr4tTsBoUb3JMVeQ8JV2K9RKdhj4BGyrR8pT9WNrfwDsV9X7Xy",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506304320,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:33:05+00:00",
+   "failClass": null,
+   "signature": "4k2zq1gjm1ggNGBmPWNyWnsuYkG8X4MREJRctRF387c3Zrhxj3myeodv2j4fGrJQVtf7MnFqhmEknHWZ5Mx6vsET",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506303892,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:31:25+00:00",
+   "failClass": null,
+   "signature": "3tb3mMYbH96vrrTR1xqpNCBJzXGTWRjt1MybUFkTbEPrEZgXRyPxjWCr3n8bJfMkMPvxyzYwMGRJM81qm78LuLPh",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506303878,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:31:22+00:00",
+   "failClass": null,
+   "signature": "5nZPJx3TA1e16CgHEMHB3B2igzQBKEjHMaR3aNNfSPiEbQjJgXCWyTLdC85u2xpfSNd9mCpwWsWBrNgXD4jz7hq8",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506303872,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:31:21+00:00",
+   "failClass": null,
+   "signature": "4Nt3puAAvvkDFyGZ8Cnqb4NPN36puqRAdwFqnat2VGSnVoXd8ULBsJforfuk4jyeQsUb23vz92gAQEsvtzWYQ5Ec",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506303474,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:29:47+00:00",
+   "failClass": null,
+   "signature": "56ZDR15kXiJiGkdYxgv7qtrhPiY9ZYSk1cX93za3GDfTJYYHBje78virbhpH4bo4WJLpcr8Tz22L1BM2FgSdEysi",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506303433,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:29:38+00:00",
+   "failClass": null,
+   "signature": "5LPGWQv2sCAV17rNNVAj2HAoEcvQjvGbCqUQ8xJzyPrdURWAM43JW2CyXApbAAPe3YKHYss2sd6nZhwfvSmDFd8p",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506303384,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:29:27+00:00",
+   "failClass": null,
+   "signature": "4wyxEJSn7EYnbmSejQChs3H12QtdkjReqMPouT8N8HYPajTG1gPXqFHfpow2xZN9BpXgZEGuwFY4GPHrVaTYoFGB",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506302975,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:27:51+00:00",
+   "failClass": null,
+   "signature": "4YHp2gaU8yhQYYB5Uicuxw2v8RmQDRhhXhwvzSZ7VQhG7cLDepd5T1GcDZVUoFxct9zYLva4tdkaKJktuvqe8SDg",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506302960,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:27:47+00:00",
+   "failClass": null,
+   "signature": "3ieJUneBgfDRNxfX6xsaySKHSzbyQZehVaHJGgJ5pj1QNm5L1b4WjCwZTB2FwripEinnDKWygiJmJAQyyesXGhtT",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506302955,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:27:46+00:00",
+   "failClass": null,
+   "signature": "586umNYYJG8mHzz6nWtWFkyym6EBEjepyeRdsee178jJECow2GUR2bwPTy8rUt88Jv5ZSvafTvqujV7uQnbn8CW7",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506302943,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:27:43+00:00",
+   "failClass": null,
+   "signature": "3b3BdDEt6BVguorX1Tsxwe43QR7HNoBgztFWD9Yeob4e9GNpWyKVsYh1thZyKrWvTZj9pYKPfqVneUJnNcQP7BWZ",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506302519,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:26:04+00:00",
+   "failClass": null,
+   "signature": "3MjnpFh3pvNCD6ukSafE8XjdnMaEcFSopQUKgkQ1wsWV6fHixHG6HMSzhosP8EajMLqdHpKotHSwezB5G6wG7h16",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506302505,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:26:01+00:00",
+   "failClass": null,
+   "signature": "4jSra3Yi2sEPjN4vof78iNHJTRQpSrDUMtivpCXH9U26Pa7sh82LphLehsUSeSTCF6RdorC9GbuWWFh8qUHEn8ii",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506302499,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:25:59+00:00",
+   "failClass": null,
+   "signature": "3j9BVizxZYXhvfgmYPBMmmQyFE4he1GsSbS8ntrupbKdbvpWMBjpr6hDqK417sb2mXuNkMkiK28Y6RvuFwiX28kd",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506302064,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:24:17+00:00",
+   "failClass": null,
+   "signature": "3Yu6uxmURaXMWqH67V8Ntfy7ezuzL2WgtvXMx1DaK17WGVqC5hANQtF6cPPELQzf7FCnFrzgotiUtkx8oEdko2FR",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506302059,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:24:16+00:00",
+   "failClass": null,
+   "signature": "4euJVfbSqYZLJxXxqcGtkfvvti9s2JrKk5YnCchS86GFVQF4Npsdfj5UfuHSgjaRKpv774wRbYUaawY5nemNiuMr",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506302044,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:24:13+00:00",
+   "failClass": null,
+   "signature": "4xX5hDSf68ndjeznRTaMAKVH2Z19UUgTHFPFypSKKCKDkFsEky2XGjgLLgcbDLLKG6iUstz3cy8UUAEZhAaKKEBf",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506302000,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:24:03+00:00",
+   "failClass": null,
+   "signature": "4Vj3xwo9GU9SuR649Yt2Ur4JuhGixAGbZGmCffuhRNRKfZAZTrAB7tjXN2BwVBVrJEwgMBEk6pCYQ8d4ZoL1oQKa",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": null,
+   "auth": 4,
+   "slot": 506301987,
+   "inner": false,
+   "kinds": [
+    7
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:23:59+00:00",
+   "failClass": null,
+   "signature": "Z35j3xBfN2oQXfb1RthC961sPTqmgy1gq3GgVPAGmV6AGYapdPLqaCHMandBLaYmtAUaopyS5adxj6YPHE8LkeF",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506301980,
+   "inner": false,
+   "kinds": [
+    6
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:23:58+00:00",
+   "failClass": null,
+   "signature": "4LMW8WgwZfk8NCrmSMKXajRL3utmhpXqhKusuNmK83pGVU4hhMGNNYjRy8kXTy9eb7s8NnHCrn31kh392eTYURaC",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506301955,
+   "inner": false,
+   "kinds": [
+    0
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6D3reaG9j8PnBqRR1vTzatG5pE4iZTBQZ1799BqRU9Tg",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:23:52+00:00",
+   "failClass": null,
+   "signature": "5cRmiVihGhFoRTVzWFo8vjfm3Eidohx5Kirog7HDCZ6HSqZq1GryzQSuQNDJzPZaZctRQAKtR59J7tFzx7YT4b8o",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506301939,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6kkzjoYHd72Tm36bBUpFfPaEo9zexuegwRPdtjyAHtoM",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:23:48+00:00",
+   "failClass": null,
+   "signature": "41RCExTq1sep2d54vofBSFMMJvZeEgWjRtmnEqzKNPjcRurFkTKpQesvwW2mQie1E5s55BxvZcEVy6JWvzaa5Hjz",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506301916,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6kkzjoYHd72Tm36bBUpFfPaEo9zexuegwRPdtjyAHtoM",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:23:43+00:00",
+   "failClass": null,
+   "signature": "4VyfnEN3TLmP1J6YVnqd9LJUvFQny5jKWiAHkRmc1GipAnVZ2756MHLwC3mGpuB3TAFh8CgQ9Cc3qKdayXe9q4qV",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506301830,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6kkzjoYHd72Tm36bBUpFfPaEo9zexuegwRPdtjyAHtoM",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:23:23+00:00",
+   "failClass": null,
+   "signature": "3KnCPJVoiMyTFt1xkLLM6gxZFXtSsVVRKhq9BmX6s5tD1Ta8T496SUYWM78rkBegR6RP3aQ4ULdQSrrKbN2tQjZt",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506301819,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6kkzjoYHd72Tm36bBUpFfPaEo9zexuegwRPdtjyAHtoM",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:23:20+00:00",
+   "failClass": null,
+   "signature": "DWfdbtKGfy4vCbXNTnQkd3rzi1UQLFSgd4rsjs4xtBYpRHGYi4yVKm3Keh3jJMGLNgdwvRpTSWW9kkEx3ZTVbrb",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506301806,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6kkzjoYHd72Tm36bBUpFfPaEo9zexuegwRPdtjyAHtoM",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:23:17+00:00",
+   "failClass": null,
+   "signature": "5yDpMGDTyhGKj7cDMoXZC1JVdPFK1AFMz3n516vgXHzSieJjJ2YVeCQcxKSoTBxCkB8chSN4R3fvg6pNxYwtnf31",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506301793,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6kkzjoYHd72Tm36bBUpFfPaEo9zexuegwRPdtjyAHtoM",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:23:14+00:00",
+   "failClass": null,
+   "signature": "hWVVqh8NE1cBpBB1Uq4Re8c4ufpvc6hukv77ezeAVmcpf4yQqdRwp2yRQtzkyuKdkyT2kQ5xcAGhndaT2pTNauL",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506301742,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6kkzjoYHd72Tm36bBUpFfPaEo9zexuegwRPdtjyAHtoM",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:23:02+00:00",
+   "failClass": null,
+   "signature": "2ecfEu5QMg63Cs6FjK8R6LFR5pFARBtMf36gjQvdSs4XYY56SwKfMd49o8bNyE4XewMQ4PUxt9VdEvB5fiKzEiF2",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  },
+  {
+   "ok": true,
+   "app": "portal.lazor.sh",
+   "auth": 1,
+   "slot": 506301728,
+   "inner": false,
+   "kinds": [
+    4
+   ],
+   "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq",
+   "wallet": "6kkzjoYHd72Tm36bBUpFfPaEo9zexuegwRPdtjyAHtoM",
+   "errCode": null,
+   "version": 2,
+   "blockTime": "2026-10-01T14:22:59+00:00",
+   "failClass": null,
+   "signature": "4ZHrtFyh1mrsxotiWYpbMx8PSATZWAgpfDbzK3RnBa2Xd3wAbu1jw6jxtwas45C1P6718QHtGQ1DFpbUjKx3ucXp",
+   "txVersion": 0,
+   "programKey": 4,
+   "feeLamports": "0"
+  }
+ ],
+ "series": [
+  {
+   "txs": 0,
+   "scope": "cluster",
+   "bucket": "2026-09-25",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 0,
+   "scope": "cluster",
+   "bucket": "2026-09-26",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 1,
+   "scope": "cluster",
+   "bucket": "2026-09-27",
+   "executes": 0,
+   "feeEvents": 1,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "5000",
+   "activeWallets": 1,
+   "walletsCreated": 1
+  },
+  {
+   "txs": 0,
+   "scope": "cluster",
+   "bucket": "2026-09-28",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 103,
+   "scope": "cluster",
+   "bucket": "2026-09-29",
+   "executes": 68,
+   "feeEvents": 0,
+   "txsFailed": 1,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 15,
+   "walletsCreated": 15
+  },
+  {
+   "txs": 825,
+   "scope": "cluster",
+   "bucket": "2026-09-30",
+   "executes": 519,
+   "feeEvents": 0,
+   "txsFailed": 5,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 76,
+   "walletsCreated": 76
+  },
+  {
+   "txs": 470,
+   "scope": "cluster",
+   "bucket": "2026-10-01",
+   "executes": 191,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 36,
+   "walletsCreated": 36
+  },
+  {
+   "txs": 0,
+   "scope": "3",
+   "bucket": "2026-09-25",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 0,
+   "scope": "3",
+   "bucket": "2026-09-26",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 1,
+   "scope": "3",
+   "bucket": "2026-09-27",
+   "executes": 0,
+   "feeEvents": 1,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "5000",
+   "activeWallets": 1,
+   "walletsCreated": 1
+  },
+  {
+   "txs": 0,
+   "scope": "3",
+   "bucket": "2026-09-28",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 0,
+   "scope": "3",
+   "bucket": "2026-09-29",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 0,
+   "scope": "3",
+   "bucket": "2026-09-30",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 0,
+   "scope": "3",
+   "bucket": "2026-10-01",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 0,
+   "scope": "4",
+   "bucket": "2026-09-25",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 0,
+   "scope": "4",
+   "bucket": "2026-09-26",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 0,
+   "scope": "4",
+   "bucket": "2026-09-27",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 0,
+   "scope": "4",
+   "bucket": "2026-09-28",
+   "executes": 0,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 0,
+   "walletsCreated": 0
+  },
+  {
+   "txs": 103,
+   "scope": "4",
+   "bucket": "2026-09-29",
+   "executes": 68,
+   "feeEvents": 0,
+   "txsFailed": 1,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 15,
+   "walletsCreated": 15
+  },
+  {
+   "txs": 825,
+   "scope": "4",
+   "bucket": "2026-09-30",
+   "executes": 519,
+   "feeEvents": 0,
+   "txsFailed": 5,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 76,
+   "walletsCreated": 76
+  },
+  {
+   "txs": 470,
+   "scope": "4",
+   "bucket": "2026-10-01",
+   "executes": 191,
+   "feeEvents": 0,
+   "txsFailed": 0,
+   "migrations": 0,
+   "feeLamports": "0",
+   "activeWallets": 36,
+   "walletsCreated": 36
+  }
+ ],
+ "window": "7d",
+ "cluster": "devnet",
+ "binaries": [
+  {
+   "kind": "v1-full",
+   "label": "v1 (devnet build 2026-04-28)",
+   "sha256": "2bc794a82f91fb91ecf4a55fbb424ea6e72ef87fb9a752ee809a05d5180029c7",
+   "source": "program dump (2026-10-01 probe)",
+   "cluster": "devnet",
+   "elfSize": 161568,
+   "releaseFeature": null
+  },
+  {
+   "kind": "v1-sunset",
+   "label": "v1 sunset (devnet)",
+   "sha256": "2cf15c89ad3ad194e5aebcab608dc4bc75270cb7d094d342a31ecdd3306f1240",
+   "source": "scripts/release-hashes.txt @ lazorkit-protocol develop 5fb8d46",
+   "cluster": "devnet",
+   "elfSize": 45856,
+   "releaseFeature": "devnet-v1"
+  },
+  {
+   "kind": "v2-full",
+   "label": "v2 release (devnet)",
+   "sha256": "3584aec70e494e27521bf3e717ccc63bda295bb9d312cdcd4f9a007db249b470",
+   "source": "scripts/release-hashes.txt @ lazorkit-protocol develop 5fb8d46",
+   "cluster": "devnet",
+   "elfSize": 150776,
+   "releaseFeature": "devnet"
+  }
+ ],
+ "programs": [
+  {
+   "sync": {
+    "pending": 0,
+    "building": null,
+    "gapsOpen": 0,
+    "ingested": 974,
+    "activeGen": 1,
+    "lastError": null,
+    "discoveredAt": "2026-10-01T18:57:19.807+00:00",
+    "historyProof": "deploy_tx",
+    "lastRunStatus": "ok",
+    "lastSuccessAt": "2026-10-01T18:57:22.190479+00:00",
+    "parserVersion": 1,
+    "lastActivityAt": "2026-09-27T17:14:11+00:00",
+    "completeThrough": "2026-10-01T18:57:19.807+00:00",
+    "firstActivityAt": "2026-04-15T19:59:09+00:00",
+    "backfillComplete": true,
+    "lastRunFinishedAt": "2026-10-01T18:57:22.19+00:00",
+    "consecutiveFailures": 0
+   },
+   "label": "v1 devnet",
+   "state": {
+    "slot": 506372005,
+    "config": {
+     "admin": "hij78MKbJSSs15qvkHWTDCtnmba2c1W4r1V22g5sD8w",
+     "address": "DJifiVwF7wGDRVYL677K3BokdCjwRBAASDSbKvtQLCRo",
+     "enabled": true,
+     "treasury": "hij78MKbJSSs15qvkHWTDCtnmba2c1W4r1V22g5sD8w",
+     "numShards": 16,
+     "creationFee": "5000",
+     "executionFee": "2000",
+     "pendingAdmin": null
+    },
+    "vaults": {
+     "funded": 58,
+     "lamports": "72280712197"
+    },
+    "wallets": 110,
+    "accounts": 302,
+    "deferred": {
+     "total": 1,
+     "expired": 1,
+     "pending": 0,
+     "expiredLamports": "2115840"
+    },
+    "sessions": {
+     "live": 0,
+     "total": 36,
+     "expired": 36,
+     "withPolicy": 14
+    },
+    "treasury": {
+     "shards": 16,
+     "lamports": "16738960",
+     "withdrawableNow": "5684880"
+    },
+    "feeRecords": {
+     "top": [
+      {
+       "address": "9RCgfx4uUxP9gc5ir5bKtsYmSAbeGDA8FoKfpSbCvo3L",
+       "txCount": 40,
+       "walletCount": 16,
+       "totalFeesPaid": "160000",
+       "registeredSlot": 455768162
+      },
+      {
+       "address": "EEtD3Pk7ERteDqWJcVhbQ25ZMaBJuYwqvrshZR45gWKM",
+       "txCount": 3,
+       "walletCount": 3,
+       "totalFeesPaid": "21000",
+       "registeredSlot": 475604630
+      },
+      {
+       "address": "D46bFseDuUFrhJbDfpnoqeqnbiq4QcamjgNVpYFS7HcE",
+       "txCount": 2,
+       "walletCount": 2,
+       "totalFeesPaid": "14000",
+       "registeredSlot": 462388873
+      },
+      {
+       "address": "HAYSdQVyiWxFMyN6kNVHFGPv313BkZPKfVFbcvev7q6H",
+       "txCount": 2,
+       "walletCount": 1,
+       "totalFeesPaid": "9000",
+       "registeredSlot": 459506541
+      },
+      {
+       "address": "FsXhtLoW7opBwBQa7MD8pTD9pU8w8KqA2zYxV4hJyez9",
+       "txCount": 1,
+       "walletCount": 1,
+       "totalFeesPaid": "7000",
+       "registeredSlot": 459341387
+      }
+     ],
+     "count": 5,
+     "txCount": 48,
+     "walletCount": 23,
+     "totalFeesPaid": "211000"
+    },
+    "ownerTypes": {
+     "mixedWallets": 0,
+     "ed25519Wallets": 15,
+     "passkeyWallets": 95
+    },
+    "authorities": {
+     "admin": 19,
+     "owner": 110,
+     "total": 133,
+     "ed25519": 37,
+     "passkey": 96,
+     "delegate": 4,
+     "legacyLayout": 19
+    },
+    "rentMinimum8": "690880",
+    "unknownAccounts": 0,
+    "multiOwnerWallets": null,
+    "passkeyOpsLifetime": 201
+   },
+   "checks": [
+    {
+     "id": "I1",
+     "ok": true,
+     "mode": "informational",
+     "note": null,
+     "label": "wallets created \u2212 migrated = wallet accounts",
+     "actual": "110",
+     "expected": "110"
+    },
+    {
+     "id": "I3",
+     "ok": true,
+     "mode": "informational",
+     "note": null,
+     "label": "shard lamports = funding + fees \u2212 withdrawn",
+     "actual": "16738960",
+     "expected": "16738960"
+    },
+    {
+     "id": "I4",
+     "ok": true,
+     "mode": "informational",
+     "note": null,
+     "label": "sessions created \u2212 revoked \u2212 closed = session accounts",
+     "actual": "36",
+     "expected": "36"
+    },
+    {
+     "id": "I5",
+     "ok": true,
+     "mode": "informational",
+     "note": null,
+     "label": "authorized \u2212 executed \u2212 reclaimed = deferred accounts",
+     "actual": "1",
+     "expected": "1"
+    },
+    {
+     "id": "I6",
+     "ok": true,
+     "mode": "informational",
+     "note": null,
+     "label": "created + added \u2212 removed \u2212 migrated = authority accounts",
+     "actual": "133",
+     "expected": "133"
+    },
+    {
+     "id": "R1",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "stored rollups = fresh recompute from events (unsealed days)",
+     "actual": "0 mismatches in 8 days",
+     "expected": "0 mismatches"
+    }
+   ],
+   "cluster": "devnet",
+   "version": 1,
+   "treasury": {
+    "feesLamports": "1594000",
+    "fundingLamports": "15144960",
+    "withdrawnLamports": "0",
+    "excessRentLamports": "4090880",
+    "unwithdrawnFeesLamports": "1594000",
+    "withdrawableNowLamports": "5684880"
+   },
+   "programId": "4h3XoNReAgEcHVxcZ8sw2aufi9MTr7BbvYYjzjWDyDxS",
+   "stateSlot": 506372005,
+   "deployment": {
+    "sha256": "2bc794a82f91fb91ecf4a55fbb424ea6e72ef87fb9a752ee809a05d5180029c7",
+    "status": "live",
+    "elfSize": 161568,
+    "history": [
+     {
+      "at": "2026-04-28T07:58:40+00:00",
+      "op": "observed",
+      "slot": 458619631,
+      "sha256": "2bc794a82f91fb91ecf4a55fbb424ea6e72ef87fb9a752ee809a05d5180029c7",
+      "signature": null
+     },
+     {
+      "at": "2026-04-28T07:58:40+00:00",
+      "op": "upgrade",
+      "slot": 458619631,
+      "sha256": null,
+      "signature": "3AX2hg9Xpw5hQxRnfehCdDjFwfpgSnihL4mT3gQeXNe6dTcFDhne4aRVUTvXEmhu5UKZNwo4BNupHK1hCAXNirJK"
+     },
+     {
+      "at": "2026-04-28T07:58:31+00:00",
+      "op": "extend",
+      "slot": 458619608,
+      "sha256": null,
+      "signature": "2XkPT2jqxLFF84RYWrPkqomit4PLqUkiZr3ubZtQBgMe9cxubctaBvGPRoZUJHtC4SEwfTpxKm29auXG2K42yqxc"
+     },
+     {
+      "at": "2026-04-19T20:45:58+00:00",
+      "op": "upgrade",
+      "slot": 456688621,
+      "sha256": null,
+      "signature": "54veXw2SzMTG4igVsDgobXX6M1gAc6jD3qcNfjvZ4xxyTcnXVpxmFtGXhPUU3Y8rfvCJ6xFWsKq96f741QZCBxi5"
+     },
+     {
+      "at": "2026-04-19T20:40:19+00:00",
+      "op": "upgrade",
+      "slot": 456687727,
+      "sha256": null,
+      "signature": "4WhBj5Afx2FafxFtjKcwJDDyW1KC9gfk3EVpmeU8imEVSk32DWEZZPg4rik74Tovdo4hdentS6C7zRZ9xL7mbup8"
+     },
+     {
+      "at": "2026-04-19T20:40:14+00:00",
+      "op": "extend",
+      "slot": 456687714,
+      "sha256": null,
+      "signature": "25BZ4aQzBx48C8bxi6JBvFJnemAWGKsWHo6R98DaGJASgtLgvVEUMHcXM3osDSAGeuqDdPszQcrYuKdMSnP5mCps"
+     },
+     {
+      "at": "2026-04-17T05:53:03+00:00",
+      "op": "upgrade",
+      "slot": 456090758,
+      "sha256": null,
+      "signature": "5hTUFMx3U63AQ4CqmhSXxxdmCuzahGjxW4HsZcjuXhJWcaFAaSc7szmM5uD2cxKijpQR7Y3dxnXCNbjWh9gNMWr5"
+     },
+     {
+      "at": "2026-04-17T05:44:34+00:00",
+      "op": "upgrade",
+      "slot": 456089415,
+      "sha256": null,
+      "signature": "3gLv2K94WHVBcxK4Y32nS8ZVeSpa7Njw87rnxUa9bVAdp8iktUTaRiQgff3AoWidmcpBr4QtDKcL64dypFnL2KTW"
+     },
+     {
+      "at": "2026-04-17T05:44:30+00:00",
+      "op": "extend",
+      "slot": 456089404,
+      "sha256": null,
+      "signature": "JEUR61jXeGe5epNzXFDdsMhEo4Q4ua1vXVMVAfRmdyaaLSfqpF1pYJEyBMkPHcPkrr1QHtWCpFLAYdXwUUSngFp"
+     },
+     {
+      "at": "2026-04-15T19:14:26+00:00",
+      "op": "deploy",
+      "slot": 455761031,
+      "sha256": null,
+      "signature": "4JB1KSbApA3sGiAGyUMDxCL6fKNaTm4sY7tnsXGbzq55Q4q4ssRYXJVMYFgN4yNnnp85BA4rAw6kjsYGZ3iT2v8S"
+     }
+    ],
+    "binaryKind": "v1-full",
+    "deployedAt": "2026-04-28T07:58:40+00:00",
+    "binaryLabel": "v1 (devnet build 2026-04-28)",
+    "releaseMatch": {
+     "source": "program dump (2026-10-01 probe)",
+     "feature": null
+    },
+    "lastDeploySlot": 458619631,
+    "upgradeAuthority": "hij78MKbJSSs15qvkHWTDCtnmba2c1W4r1V22g5sD8w"
+   },
+   "programKey": 3,
+   "stateDetail": {
+    "shards": [
+     {
+      "id": 0,
+      "address": "FF8g6qFDDHumfr4DgSdEDY6LcoJBwBsJgeDmUkh1wWVH",
+      "lamports": "1051560"
+     },
+     {
+      "id": 1,
+      "address": "EbaqAoJtcrB67kUnqYnWP846FR2x3oLcBveDKrvBaVyY",
+      "lamports": "1063560"
+     },
+     {
+      "id": 2,
+      "address": "7CqbmEsW45E9rWtmKmLs8pgDWgNoM9xdL2CjdvtK22mK",
+      "lamports": "1047560"
+     },
+     {
+      "id": 3,
+      "address": "8cCEfAA6QiLJyZVpcEa5Z1zZgepmrzWHGMfhdgiRTJaN",
+      "lamports": "1050560"
+     },
+     {
+      "id": 4,
+      "address": "8uAbxgecwCBQGv6CDg3quLhfujkgmdxj5iWN3LMLcaeB",
+      "lamports": "1051560"
+     },
+     {
+      "id": 5,
+      "address": "35Ede7ZW3CSMmvwx5oUZigwo6XUjWhnj5YwDqXoMw5Ub",
+      "lamports": "1032560"
+     },
+     {
+      "id": 6,
+      "address": "8YHpkcb5vk42Ydynotry5US7BUA4KUYdMqY2RTs4XxDd",
+      "lamports": "1048560"
+     },
+     {
+      "id": 7,
+      "address": "6pZvCE5L9wgAci7vw7BDdawkDnxsh3LXj2kBBDxnX1Kz",
+      "lamports": "1033560"
+     },
+     {
+      "id": 8,
+      "address": "8Ld5t1GsvBRoSRynpepELjnEjuL8E1qeGSv5Fn5B483k",
+      "lamports": "1047560"
+     },
+     {
+      "id": 9,
+      "address": "BJh9VjQgqzAQRQRzQKbG6DH2tCcvD5Jhs2RLPhZJM5zF",
+      "lamports": "1028560"
+     },
+     {
+      "id": 10,
+      "address": "DegZ8D4WngbnLgRf9HKmmyaqw12ZGdK9KJPK6AqnprRD",
+      "lamports": "1052560"
+     },
+     {
+      "id": 11,
+      "address": "CA1FHuG7E4oTJGiqyTgob8d9RwB744GfuRFzXRyW1GZy",
+      "lamports": "1065560"
+     },
+     {
+      "id": 12,
+      "address": "4urJQC9H6QiHezXJjvsCGhcAbP8GXx93Q6NUmQvC1LLY",
+      "lamports": "1030560"
+     },
+     {
+      "id": 13,
+      "address": "AiUadNJoqfBZKpqTESb3EXrasZuTeV2yHd1m6fPdBSUm",
+      "lamports": "1034560"
+     },
+     {
+      "id": 14,
+      "address": "BDSayDDKPFkeUqKmbmVRs9xBfWnntq1fidah51dj2pj6",
+      "lamports": "1035560"
+     },
+     {
+      "id": 15,
+      "address": "Fb1q9PQrdKkz2ZnU4DCbXzUxTHaxxTo8HLRmA9BYuDKe",
+      "lamports": "1064560"
+     }
+    ],
+    "feeRecords": [
+     {
+      "address": "9RCgfx4uUxP9gc5ir5bKtsYmSAbeGDA8FoKfpSbCvo3L",
+      "txCount": 40,
+      "walletCount": 16,
+      "totalFeesPaid": "160000",
+      "registeredSlot": 455768162
+     },
+     {
+      "address": "EEtD3Pk7ERteDqWJcVhbQ25ZMaBJuYwqvrshZR45gWKM",
+      "txCount": 3,
+      "walletCount": 3,
+      "totalFeesPaid": "21000",
+      "registeredSlot": 475604630
+     },
+     {
+      "address": "D46bFseDuUFrhJbDfpnoqeqnbiq4QcamjgNVpYFS7HcE",
+      "txCount": 2,
+      "walletCount": 2,
+      "totalFeesPaid": "14000",
+      "registeredSlot": 462388873
+     },
+     {
+      "address": "HAYSdQVyiWxFMyN6kNVHFGPv313BkZPKfVFbcvev7q6H",
+      "txCount": 2,
+      "walletCount": 1,
+      "totalFeesPaid": "9000",
+      "registeredSlot": 459506541
+     },
+     {
+      "address": "FsXhtLoW7opBwBQa7MD8pTD9pU8w8KqA2zYxV4hJyez9",
+      "txCount": 1,
+      "walletCount": 1,
+      "totalFeesPaid": "7000",
+      "registeredSlot": 459341387
+     }
+    ]
+   },
+   "stateFetchedAt": "2026-10-01T18:57:19.227+00:00"
+  },
+  {
+   "sync": {
+    "pending": 0,
+    "building": null,
+    "gapsOpen": 0,
+    "ingested": 1403,
+    "activeGen": 1,
+    "lastError": null,
+    "discoveredAt": "2026-10-01T18:57:21.748+00:00",
+    "historyProof": "deploy_tx",
+    "lastRunStatus": "ok",
+    "lastSuccessAt": "2026-10-01T18:57:22.196281+00:00",
+    "parserVersion": 1,
+    "lastActivityAt": "2026-10-01T14:42:49+00:00",
+    "completeThrough": "2026-10-01T18:57:21.748+00:00",
+    "firstActivityAt": "2026-09-29T07:09:56+00:00",
+    "backfillComplete": true,
+    "lastRunFinishedAt": "2026-10-01T18:57:22.196+00:00",
+    "consecutiveFailures": 0
+   },
+   "label": "v2 devnet",
+   "state": {
+    "slot": 506372013,
+    "config": null,
+    "vaults": {
+     "funded": 18,
+     "lamports": "5087811919"
+    },
+    "wallets": 127,
+    "accounts": 269,
+    "deferred": {
+     "total": 0,
+     "expired": 0,
+     "pending": 0,
+     "expiredLamports": "0"
+    },
+    "sessions": {
+     "live": 2,
+     "total": 9,
+     "expired": 7,
+     "withPolicy": 1
+    },
+    "treasury": {
+     "shards": 0,
+     "lamports": "0",
+     "withdrawableNow": "0"
+    },
+    "feeRecords": {
+     "top": [],
+     "count": 0,
+     "txCount": 0,
+     "walletCount": 0,
+     "totalFeesPaid": "0"
+    },
+    "ownerTypes": {
+     "mixedWallets": 0,
+     "ed25519Wallets": 2,
+     "passkeyWallets": 125
+    },
+    "authorities": {
+     "admin": 6,
+     "owner": 127,
+     "total": 133,
+     "ed25519": 8,
+     "passkey": 125,
+     "delegate": 0,
+     "legacyLayout": 0
+    },
+    "rentMinimum8": "690880",
+    "unknownAccounts": 0,
+    "multiOwnerWallets": 0,
+    "passkeyOpsLifetime": 989
+   },
+   "checks": [
+    {
+     "id": "I1",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "wallets created \u2212 migrated = wallet accounts",
+     "actual": "127",
+     "expected": "127"
+    },
+    {
+     "id": "I2",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "protocol fees = \u03a3 FeeRecord.total_fees_paid",
+     "actual": "0",
+     "expected": "0"
+    },
+    {
+     "id": "I4",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "sessions created \u2212 revoked \u2212 closed = session accounts",
+     "actual": "9",
+     "expected": "9"
+    },
+    {
+     "id": "I5",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "authorized \u2212 executed \u2212 reclaimed = deferred accounts",
+     "actual": "0",
+     "expected": "0"
+    },
+    {
+     "id": "I6",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "created + added \u2212 removed \u2212 migrated = authority accounts",
+     "actual": "133",
+     "expected": "133"
+    },
+    {
+     "id": "R1",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "stored rollups = fresh recompute from events (unsealed days)",
+     "actual": "0 mismatches in 5 days",
+     "expected": "0 mismatches"
+    }
+   ],
+   "cluster": "devnet",
+   "version": 2,
+   "treasury": null,
+   "programId": "57bTNWqtYTJbWuLWASKo6GqUTAK6oFDUR5c6hEc6V8nv",
+   "stateSlot": 506372013,
+   "deployment": {
+    "sha256": "3584aec70e494e27521bf3e717ccc63bda295bb9d312cdcd4f9a007db249b470",
+    "status": "live",
+    "elfSize": 150776,
+    "history": [
+     {
+      "at": "2026-09-29T07:07:08+00:00",
+      "op": "observed",
+      "slot": 505446090,
+      "sha256": "3584aec70e494e27521bf3e717ccc63bda295bb9d312cdcd4f9a007db249b470",
+      "signature": null
+     },
+     {
+      "at": "2026-09-29T07:07:08+00:00",
+      "op": "upgrade",
+      "slot": 505446090,
+      "sha256": null,
+      "signature": "2Lj7ASNhvmPTmU4NEYXW9wxwKCQZzxU2CQmJyzx96jvtQFBnLP9r9yGBsBWP7mLuUVRCqorFV3VJtnk5BB2CbdX7"
+     },
+     {
+      "at": "2026-09-28T03:43:22+00:00",
+      "op": "upgrade",
+      "slot": 505018984,
+      "sha256": null,
+      "signature": "4bcbajrixNf7ihYoMjVCgGJSe2zxvA4yZ9wCK12so62hGes7R5qD2uGK3ZLNtyh5z1iqapFCnA1zRHB2d5quhB7"
+     },
+     {
+      "at": "2026-09-27T15:44:58+00:00",
+      "op": "upgrade",
+      "slot": 504832702,
+      "sha256": null,
+      "signature": "24qPWFCYpz3DduCULxBhF3t1XtmLHVNoRdDcUrXK3KAq2mVJniVCJMXNcuLBo84otxUg9gXxLzKPED3TSKeRQuGY"
+     },
+     {
+      "at": "2026-09-27T15:44:37+00:00",
+      "op": "extend",
+      "slot": 504832609,
+      "sha256": null,
+      "signature": "247S6ZKQWwyPJ3fL565cCucbxD8dbJGXqGDYMvie4cayWMfr4HkGKotyYFHCVxCJP8pBYDz4RtSVWy8Kx5puY3fs"
+     },
+     {
+      "at": "2026-09-27T14:29:18+00:00",
+      "op": "deploy",
+      "slot": 504813069,
+      "sha256": null,
+      "signature": "5Z5ckfDey64X4gMc2cxJA5aXrKrusLGURpAbkyeekuGg7jDDDezFEuyTzZy5wiHGuPXNUoW1bzuhvgkmKE8yzm95"
+     }
+    ],
+    "binaryKind": "v2-full",
+    "deployedAt": "2026-09-29T07:07:08+00:00",
+    "binaryLabel": "v2 release (devnet)",
+    "releaseMatch": {
+     "source": "scripts/release-hashes.txt @ lazorkit-protocol develop 5fb8d46",
+     "feature": "devnet"
+    },
+    "lastDeploySlot": 505446090,
+    "upgradeAuthority": "hij78MKbJSSs15qvkHWTDCtnmba2c1W4r1V22g5sD8w"
+   },
+   "programKey": 4,
+   "stateDetail": {
+    "shards": [],
+    "feeRecords": []
+   },
+   "stateFetchedAt": "2026-10-01T18:57:21.164+00:00"
+  }
+ ],
+ "migration": {
+  "series": [],
+  "status": "not_started",
+  "totals": {
+   "migrations": 0,
+   "tokenAccounts": 0,
+   "migratedLamports": "0"
+  },
+  "cleanup": {
+   "lamports": "69944320",
+   "reclaimDeferred": 39,
+   "closeExpiredSession": 0
+  },
+  "leftovers": {
+   "v1Deferred": 1,
+   "v1Sessions": 36
+  },
+  "retiredCalls": 0,
+  "v1BinaryKind": "v1-full",
+  "v1ProgramKey": 3,
+  "v2ProgramKey": 4,
+  "v2WalletsNew": 127,
+  "percentMigrated": 0,
+  "v1WalletsRemaining": 110,
+  "v2WalletsFromMigration": 0,
+  "v1RemainingVaultLamports": "72280712197"
+ },
+ "breakdowns": {
+  "3": {
+   "byApp": [
+    {
+     "app": "portal.lazor.sh",
+     "ops": 0,
+     "created": 1
+    }
+   ],
+   "byCpi": [],
+   "byAuth": {},
+   "byFail": {},
+   "byKind": {
+    "0": {
+     "ok": 1,
+     "fail": 0
+    }
+   },
+   "byPayer": [
+    {
+     "txs": 1,
+     "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed"
+    }
+   ]
+  },
+  "4": {
+   "byApp": [
+    {
+     "app": "localhost:3000",
+     "ops": 679,
+     "created": 0
+    },
+    {
+     "app": "portal.lazor.sh",
+     "ops": 283,
+     "created": 124
+    },
+    {
+     "app": "migrate.lazor.sh",
+     "ops": 15,
+     "created": 0
+    },
+    {
+     "app": "localhost:5173",
+     "ops": 12,
+     "created": 0
+    },
+    {
+     "app": "lazorkit.app",
+     "ops": 10,
+     "created": 1
+    }
+   ],
+   "byCpi": [
+    {
+     "program": "11111111111111111111111111111111",
+     "executes": 957
+    },
+    {
+     "program": "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV",
+     "executes": 29
+    }
+   ],
+   "byAuth": {
+    "ed25519": 7,
+    "passkey": 750,
+    "session": 21,
+    "deferred": 208
+   },
+   "byFail": {
+    "limits": 4,
+    "duplicate": 2
+   },
+   "byKind": {
+    "0": {
+     "ok": 127,
+     "fail": 0
+    },
+    "1": {
+     "ok": 8,
+     "fail": 0
+    },
+    "2": {
+     "ok": 2,
+     "fail": 0
+    },
+    "3": {
+     "ok": 2,
+     "fail": 0
+    },
+    "4": {
+     "ok": 778,
+     "fail": 6
+    },
+    "5": {
+     "ok": 12,
+     "fail": 0
+    },
+    "6": {
+     "ok": 230,
+     "fail": 0
+    },
+    "7": {
+     "ok": 208,
+     "fail": 0
+    },
+    "8": {
+     "ok": 22,
+     "fail": 0
+    },
+    "9": {
+     "ok": 3,
+     "fail": 0
+    }
+   },
+   "byPayer": [
+    {
+     "txs": 1359,
+     "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq"
+    },
+    {
+     "txs": 27,
+     "payer": "hij78MKbJSSs15qvkHWTDCtnmba2c1W4r1V22g5sD8w"
+    },
+    {
+     "txs": 6,
+     "payer": "3XPXq5vZQQGtzNGJb6i84zv5TB82VjP5bJyUjyej3dkh"
+    }
+   ]
+  },
+  "cluster": {
+   "byApp": [
+    {
+     "app": "localhost:3000",
+     "ops": 679,
+     "created": 0
+    },
+    {
+     "app": "portal.lazor.sh",
+     "ops": 283,
+     "created": 125
+    },
+    {
+     "app": "migrate.lazor.sh",
+     "ops": 15,
+     "created": 0
+    },
+    {
+     "app": "localhost:5173",
+     "ops": 12,
+     "created": 0
+    },
+    {
+     "app": "lazorkit.app",
+     "ops": 10,
+     "created": 1
+    }
+   ],
+   "byCpi": [
+    {
+     "program": "11111111111111111111111111111111",
+     "executes": 957
+    },
+    {
+     "program": "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV",
+     "executes": 29
+    }
+   ],
+   "byAuth": {
+    "ed25519": 7,
+    "passkey": 750,
+    "session": 21,
+    "deferred": 208
+   },
+   "byFail": {
+    "limits": 4,
+    "duplicate": 2
+   },
+   "byKind": {
+    "0": {
+     "ok": 128,
+     "fail": 0
+    },
+    "1": {
+     "ok": 8,
+     "fail": 0
+    },
+    "2": {
+     "ok": 2,
+     "fail": 0
+    },
+    "3": {
+     "ok": 2,
+     "fail": 0
+    },
+    "4": {
+     "ok": 778,
+     "fail": 6
+    },
+    "5": {
+     "ok": 12,
+     "fail": 0
+    },
+    "6": {
+     "ok": 230,
+     "fail": 0
+    },
+    "7": {
+     "ok": 208,
+     "fail": 0
+    },
+    "8": {
+     "ok": 22,
+     "fail": 0
+    },
+    "9": {
+     "ok": 3,
+     "fail": 0
+    }
+   },
+   "byPayer": [
+    {
+     "txs": 1359,
+     "payer": "BJRfvkLaLEgnB8dWg6QJAekgdXM4MyRbdgrdwwqap3Wq"
+    },
+    {
+     "txs": 27,
+     "payer": "hij78MKbJSSs15qvkHWTDCtnmba2c1W4r1V22g5sD8w"
+    },
+    {
+     "txs": 6,
+     "payer": "3XPXq5vZQQGtzNGJb6i84zv5TB82VjP5bJyUjyej3dkh"
+    },
+    {
+     "txs": 1,
+     "payer": "7Pkkhm8YeoBXFGKHTJXJ8ckdYiqtPdVWMefEVqK5vXed"
+    }
+   ]
+  }
+ },
+ "generatedAt": "2026-10-01T18:57:37.917969+00:00",
+ "dbSchemaVersion": 1,
+ "freshness": {
+  "state": "live",
+  "completeThrough": "2026-10-01T18:57:19.807+00:00",
+  "lastWorkerRunAt": "2026-10-01T18:57:22.257411+00:00",
+  "workflow": {
+   "state": "unknown",
+   "checkedAt": null,
+   "lastScheduledRunAt": null,
+   "lastConclusion": null
+  },
+  "reasons": [],
+  "catchUp": []
+ }
+}

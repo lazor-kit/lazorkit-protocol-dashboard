@@ -1,0 +1,39 @@
+{
+ "apiVersion": 2,
+ "dbSchemaVersion": null,
+ "cluster": "devnet",
+ "window": "7d",
+ "generatedAt": "2026-10-01T18:57:40.750Z",
+ "range": {
+  "start": null,
+  "end": "2026-10-01T18:57:40.750Z",
+  "previousStart": null,
+  "bucket": "day"
+ },
+ "freshness": {
+  "state": "setup_required",
+  "completeThrough": null,
+  "lastWorkerRunAt": null,
+  "workflow": {
+   "state": "unknown",
+   "checkedAt": null,
+   "lastScheduledRunAt": null,
+   "lastConclusion": null
+  },
+  "reasons": [
+   {
+    "code": "schema_missing",
+    "detail": "Backend upgrade pending: the database migration for this version has not been applied yet (lk_dashboard is missing)."
+   }
+  ],
+  "catchUp": []
+ },
+ "programs": [],
+ "kpis": {},
+ "series": [],
+ "breakdowns": {},
+ "migration": null,
+ "binaries": [],
+ "latest": [],
+ "runs": []
+}
