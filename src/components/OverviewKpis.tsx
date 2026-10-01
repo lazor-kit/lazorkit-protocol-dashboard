@@ -1,4 +1,4 @@
-import type { DashboardPayload, Kpis } from '../types/dashboard';
+import type { DashboardPayload, Kpis, ScopeKey } from '../types/dashboard';
 import {
   clusterKeys,
   kpiDelta,
@@ -60,8 +60,8 @@ export function OverviewKpis({ payload, version, now }: { payload: DashboardPayl
   };
   const lamportSplit = (pick: (kpis: Kpis) => string) => {
     if (!showSplit) return undefined;
-    const v1 = payload.kpis[String(keys.v1) as '1']?.current;
-    const v2 = payload.kpis[String(keys.v2) as '2']?.current;
+    const v1 = payload.kpis[String(keys.v1) as ScopeKey]?.current;
+    const v2 = payload.kpis[String(keys.v2) as ScopeKey]?.current;
     return (
       <Split
         v1={v1 ? formatLamports(pick(v1)) : null}

@@ -39,7 +39,10 @@ describe('fetchDashboard', () => {
     const fetchImpl = respond(200, payload);
     const result = await fetchDashboard('mainnet', '30d', { fetchImpl, storage });
     expect(result.kind).toBe('ok');
-    expect(fetchImpl).toHaveBeenCalledWith('/api/dashboard?cluster=mainnet&window=30d', expect.anything());
+    expect(fetchImpl).toHaveBeenCalledWith(
+      '/api/dashboard?cluster=mainnet&window=30d',
+      expect.objectContaining({ cache: 'no-cache' }),
+    );
     expect(readCached(storage, 'mainnet', '30d')?.payload.generatedAt).toBe(payload.generatedAt);
   });
 

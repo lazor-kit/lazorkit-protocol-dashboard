@@ -104,8 +104,11 @@ export async function fetchDashboard(
   const params = new URLSearchParams({ cluster, window });
   let response: Response;
   try {
+    // cache: 'no-cache' makes the browser revalidate every time. The API's `stale-while-revalidate` is meant for the
+    // CDN; without this a browser may reuse an old response for up to 15 minutes, even after "Refresh".
     response = await (options.fetchImpl ?? fetch)(`/api/dashboard?${params.toString()}`, {
       headers: { accept: 'application/json' },
+      cache: 'no-cache',
       signal: options.signal,
     });
   } catch (error) {
