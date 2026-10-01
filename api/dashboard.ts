@@ -1,70 +1,61 @@
-import {
-  getDashboardStats,
-  parseDashboardPagination,
-  parseDashboardWindow,
-} from './_lib/analytics.js';
-import { isDashboardWindow } from '../src/solana/dashboardTypes.js';
+// GET /api/dashboard?cluster=mainnet|devnet&window=24h|7d|30d|all
+// One RPC (lk_dashboard) + freshness computed here. A missing migration (PGRST202) answers 200 with a
+// "setup required" payload, so a preview against a database without the migration renders cleanly; a paused or
+// unreachable database answers 503 "unavailable" (the SPA then shows its cached copy).
 
-interface ApiRequest {
-  method?: string;
-  query: Record<string, string | string[] | undefined>;
+import { isCluster, isDashboardWindow, type Cluster, type DashboardPayload, type DashboardWindow } from '../src/types/dashboard.js';
+import { first, methodNotAllowed, type ApiRequest, type ApiResponse } from './_lib/http.js';
+import { dashboardFromRaw, setupRequiredDashboard, unavailableBody, type RawDashboard } from './_lib/payload.js';
+import { callRpc, readTarget, SupabaseError } from './_lib/supabase.js';
+
+const MEMO_MS = 60_000;
+const memo = new Map<string, { at: number; payload: DashboardPayload }>();
+
+export function clearDashboardMemo(): void {
+  memo.clear();
 }
 
-interface ApiResponse {
-  setHeader(name: string, value: string): void;
-  status(code: number): {
-    json(body: unknown): void;
-  };
-}
+export default async function handler(request: ApiRequest, response: ApiResponse) {
+  if (methodNotAllowed(request, response)) return;
+  const cluster = first(request.query.cluster) ?? 'mainnet';
+  const window = first(request.query.window) ?? '30d';
+  if (!isCluster(cluster)) return response.status(400).json({ error: 'Unsupported cluster (mainnet or devnet)' });
+  if (!isDashboardWindow(window)) return response.status(400).json({ error: 'Unsupported window (24h, 7d, 30d or all)' });
 
-export default async function handler(
-  request: ApiRequest,
-  response: ApiResponse,
-) {
-  if (request.method !== 'GET') {
-    response.setHeader('allow', 'GET');
-    return response.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const cluster = firstQueryValue(request.query.cluster) ?? 'mainnet';
-  const window = firstQueryValue(request.query.window) ?? 'all';
-  const pagination = parseDashboardPagination({
-    txPage: firstQueryValue(request.query.txPage),
-    txLimit: firstQueryValue(request.query.txLimit),
-  });
-
-  if (!isClusterId(cluster)) {
-    return response.status(400).json({ error: 'Unsupported cluster' });
-  }
-  if (!isDashboardWindow(window)) {
-    return response.status(400).json({ error: 'Unsupported window' });
-  }
-  if (!pagination) {
-    return response.status(400).json({ error: 'Unsupported pagination' });
+  const now = new Date();
+  const key = `${cluster}:${window}`;
+  const cached = memo.get(key);
+  if (cached && now.getTime() - cached.at < MEMO_MS) {
+    response.setHeader('cache-control', 'public, s-maxage=300, stale-while-revalidate=900');
+    return response.status(200).json(cached.payload);
   }
 
   try {
-    const stats = await getDashboardStats(
-      cluster,
-      parseDashboardWindow(window),
-      pagination,
-    );
-    response.setHeader(
-      'cache-control',
-      `s-maxage=${stats.health.cacheTtlSeconds}, stale-while-revalidate=120`,
-    );
-    return response.status(200).json(stats);
+    const raw = await callRpc<RawDashboard>(readTarget(), 'lk_dashboard', { p_cluster: cluster, p_window: window });
+    const payload = dashboardFromRaw(raw, now);
+    if (payload.freshness.state === 'setup_required') {
+      response.setHeader('cache-control', 'public, s-maxage=60');
+      return response.status(200).json(payload);
+    }
+    memo.set(key, { at: now.getTime(), payload });
+    response.setHeader('cache-control', 'public, s-maxage=300, stale-while-revalidate=900');
+    return response.status(200).json(payload);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Unable to build dashboard';
-    return response.status(502).json({ error: message });
+    return respondError(error, cluster, window, now, response);
   }
 }
 
-function firstQueryValue(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-function isClusterId(value: unknown): value is 'mainnet' | 'devnet' | 'localnet' {
-  return value === 'mainnet' || value === 'devnet' || value === 'localnet';
+function respondError(error: unknown, cluster: Cluster, window: DashboardWindow, now: Date, response: ApiResponse) {
+  if (error instanceof SupabaseError && (error.kind === 'schema_missing' || error.kind === 'not_configured')) {
+    response.setHeader('cache-control', 'public, s-maxage=60');
+    return response
+      .status(200)
+      .json(setupRequiredDashboard(cluster, window, now, error.kind === 'schema_missing' ? 'lk_dashboard is missing' : 'database not configured'));
+  }
+  const detail =
+    error instanceof SupabaseError
+      ? `Data service unavailable (${error.message}); the database may be paused.`
+      : 'Data service error.';
+  response.setHeader('cache-control', 'no-store');
+  return response.status(503).json(unavailableBody(cluster, window, now, detail));
 }
