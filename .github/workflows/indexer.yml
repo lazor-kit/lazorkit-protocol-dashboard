@@ -4,6 +4,14 @@ name: LazorKit Dashboard Indexer
 # program's frontier, plus whatever is still queued. A run that fails exits non-zero, so the job turns red and
 # GitHub emails.
 #
+# Two periodic triggers, because GitHub's schedule is best effort: from May to July 2026 it ran this workflow's
+# every-10-minutes cron only about 10 times a day, with gaps of up to 6 h, and only once in the 12 h after the
+# 2026-10-02 merge. An external cron (README "Freshness and keep-alive") therefore also POSTs a repository_dispatch
+# event of type indexer-tick every 15 minutes. Both run the same incremental job. The concurrency group below keeps
+# runs from overlapping: one runs, at most one waits, and a newer waiting run replaces (cancels) an older one, so a
+# doubled tick costs nothing.
+# The worker records which event started it (GITHUB_EVENT_NAME); /api/health shows it as lastWorkerTrigger.
+#
 # GitHub disables scheduled workflows after 60 days without repository activity. Nothing is lost when that
 # happens (there is no time cutoff, the queue simply grows), and the site says so: the daily Vercel cron
 # (/api/cron/heartbeat) records this workflow's state, /api/health turns 503 and the uptime monitor on it (README
@@ -24,6 +32,10 @@ on:
       - 'package-lock.json'
   schedule:
     - cron: '7,22,37,52 * * * *'
+  # POST https://api.github.com/repos/lazor-kit/lazorkit-protocol-dashboard/dispatches {"event_type":"indexer-tick"}
+  # (only runs the workflow file on the default branch; always mode=incremental, budget 10 min)
+  repository_dispatch:
+    types: [indexer-tick]
   workflow_dispatch:
     inputs:
       mode:

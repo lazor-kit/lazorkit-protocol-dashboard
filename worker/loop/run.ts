@@ -29,6 +29,8 @@ export interface WorkerOptions {
   reserveMs: number;
   retentionDays: number;
   runId: string;
+  /** What started the run (GITHUB_EVENT_NAME: schedule, repository_dispatch, workflow_dispatch, push; or 'local'). */
+  trigger: string;
   parserVersion: number;
   log: (line: string) => void;
   now: () => number;
@@ -391,6 +393,7 @@ export async function runWorker(deps: WorkerDeps, options: WorkerOptions): Promi
   }
   const summary = {
     run_id: options.runId,
+    trigger: options.trigger,
     mode: options.mode,
     exit_code: exitCode,
     programs: Object.fromEntries(outcomes.map((o) => [o.programKey, { status: o.status, ingested: o.ingested, pending: o.pending }])),

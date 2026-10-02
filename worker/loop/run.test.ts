@@ -103,6 +103,7 @@ function options(overrides: Partial<WorkerOptions> = {}): WorkerOptions {
     reserveMs: 0,
     retentionDays: 35,
     runId: 'run-1',
+    trigger: 'schedule',
     parserVersion: 1,
     log: () => undefined,
     now: () => (t += 1),
@@ -139,9 +140,12 @@ describe('worker run', () => {
     expect(memory.builds[0]).toMatchObject({ backfillComplete: true, ingested: 45 });
     expect(result.programs[0]).toMatchObject({ status: 'ok', discovered: 45, ingested: 45 });
     expect(memory.heartbeats.at(-1)?.source).toBe('worker');
+    expect(memory.heartbeats.at(-1)?.detail).toMatchObject({ run_id: 'run-1', trigger: 'schedule', exit_code: 0 });
     // a second run fetches nothing old: one signatures call per program, no getTransaction
     const before = endpoint.calls.length;
-    const second = await runWorker({ db: memory, lanes: lanes(endpoint), snapshot }, options({ program: 4, runId: 'run-2' }));
+    const second = await runWorker({ db: memory, lanes: lanes(endpoint), snapshot },
+      options({ program: 4, runId: 'run-2', trigger: 'repository_dispatch' }));
+    expect(memory.heartbeats.at(-1)?.detail).toMatchObject({ run_id: 'run-2', trigger: 'repository_dispatch' });
     const calls = endpoint.calls.slice(before).map((c) => c.method);
     expect(calls.filter((m) => m === 'getTransaction')).toHaveLength(0);
     expect(calls.filter((m) => m === 'getSignaturesForAddress')).toHaveLength(1);

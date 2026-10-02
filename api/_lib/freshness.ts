@@ -1,17 +1,22 @@
 // Freshness state machine (spec §10.3). The first matching row wins:
 //   setup_required  PGRST202 on lk_dashboard, or lk_schema_version() below the expected version   (caller)
 //   unavailable     network error, timeout or 5xx from Supabase (a paused project, ...)              (caller)
-//   stale           worker heartbeat older than 24 h, or the vercel-cron heartbeat (<= 48 h old) says the
+//   stale           worker heartbeat older than 12 h, or the vercel-cron heartbeat (<= 48 h old) says the
 //                   GitHub workflow is disabled
-//   delayed         worker heartbeat 8-24 h old, or a live program with >= 2 consecutive failures
+//   delayed         worker heartbeat 2-12 h old, or a live program with >= 2 consecutive failures
 //   catching_up     no worker heartbeat yet, or a live program with an unfinished backfill or pending signatures
 //   live            otherwise
-// 8 h is above the largest observed gap between scheduled GitHub runs (6.05 h); 24 h is about 4x that.
+// The indexer is meant to run every 15 minutes (GitHub schedule plus an external repository_dispatch cron, README
+// "Freshness and keep-alive"), so a 2 h old heartbeat is about 8 missed runs: "live" must not hide that. GitHub's
+// schedule on its own has run with gaps of up to 6.05 h (May-July 2026; median 1.8 h), so with only that trigger
+// the site honestly says "delayed" between late runs. 12 h (stale, /api/health 503, the uptime monitor e-mails) is
+// about 2x that worst gap, so the schedule alone does not raise a false alarm, while a real outage is reported
+// within half a day instead of a full one.
 
 import type { Freshness, FreshnessReason, FreshnessState, Heartbeats, WorkflowState } from '../../src/types/dashboard.js';
 
-export const DELAYED_AFTER_MS = 8 * 3600_000;
-export const STALE_AFTER_MS = 24 * 3600_000;
+export const DELAYED_AFTER_MS = 2 * 3600_000;
+export const STALE_AFTER_MS = 12 * 3600_000;
 export const CRON_HEARTBEAT_MAX_AGE_MS = 48 * 3600_000;
 
 export interface FreshnessProgram {
@@ -35,6 +40,12 @@ function workflowState(value: unknown): WorkflowState {
   if (value === 'active' || value === 'disabled_inactivity' || value === 'disabled_manually') return value;
   if (typeof value === 'string' && value.startsWith('disabled')) return 'disabled_manually';
   return 'unknown';
+}
+
+/** GITHUB_EVENT_NAME of the run that wrote the worker heartbeat (schedule, repository_dispatch, ...), if recorded. */
+function workerTrigger(detail: Record<string, unknown> | undefined): string | null {
+  const trigger = detail?.trigger;
+  return typeof trigger === 'string' && trigger !== '' ? trigger : null;
 }
 
 function hours(ms: number): string {
@@ -118,6 +129,7 @@ export function computeFreshness(input: {
     state,
     completeThrough,
     lastWorkerRunAt: worker?.at ?? null,
+    lastWorkerTrigger: workerTrigger(worker?.detail),
     workflow,
     reasons,
     catchUp: live
@@ -136,6 +148,7 @@ export function fixedFreshness(state: 'setup_required' | 'unavailable', detail: 
     state,
     completeThrough: null,
     lastWorkerRunAt: null,
+    lastWorkerTrigger: null,
     workflow: { state: 'unknown', checkedAt: null, lastScheduledRunAt: null, lastConclusion: null },
     reasons: [{ code: state === 'setup_required' ? 'schema_missing' : 'db_unavailable', detail }],
     catchUp: [],

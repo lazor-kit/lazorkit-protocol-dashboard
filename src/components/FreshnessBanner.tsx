@@ -4,7 +4,10 @@ import { CopyButton } from './ui';
 
 const ICONS = { info: Info, warning: AlertTriangle, danger: CloudOff, good: Info, neutral: Info } as const;
 
-/** Freshness banner (spec §10.3): blue catching up, amber delayed / setup required, red stale / unavailable. */
+/**
+ * Freshness banner (spec §10.3): blue catching up, amber delayed (no indexer run for 2 h) / setup required, red stale
+ * (no run for 12 h, or the workflow disabled) / unavailable. Thresholds: api/_lib/freshness.ts.
+ */
 export function FreshnessBanner({ banner }: { banner: BannerModel }) {
   const Icon = banner.state === 'setup_required' ? Wrench : ICONS[banner.tone];
   return (

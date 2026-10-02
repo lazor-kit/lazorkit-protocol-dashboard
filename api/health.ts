@@ -1,5 +1,5 @@
 // GET /api/health: for uptime monitors. 200 when live / catching_up / delayed; 503 when stale / unavailable /
-// setup_required.
+// setup_required. `lastWorkerTrigger` says what started the last indexer run (schedule, repository_dispatch, ...).
 
 import { first, methodNotAllowed, type ApiRequest, type ApiResponse } from './_lib/http.js';
 import { fixedFreshness } from './_lib/freshness.js';
@@ -30,6 +30,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       generatedAt: now.toISOString(),
       completeThrough: null,
       lastWorkerRunAt: null,
+      lastWorkerTrigger: null,
       workflowState: 'unknown',
       freshness,
       programs: [],

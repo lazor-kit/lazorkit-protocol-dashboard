@@ -97,6 +97,7 @@ async function main(): Promise<number> {
         reserveMs: Math.min(45_000, config.budgetMinutes * 60_000 * 0.2),
         retentionDays: config.retentionDays,
         runId,
+        trigger: process.env.GITHUB_EVENT_NAME?.trim() || 'local',
         parserVersion: PARSER_VERSION,
         log,
         now: () => Date.now(),

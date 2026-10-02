@@ -66,6 +66,9 @@ export interface Freshness {
   state: FreshnessState;
   completeThrough: string | null; // min over live programs of lk.complete_through
   lastWorkerRunAt: string | null; // heartbeats.worker.at
+  // what started that run: GITHUB_EVENT_NAME (schedule | repository_dispatch | workflow_dispatch | push) or 'local';
+  // null when not recorded (older worker, or a run that stopped before its final heartbeat). Absent in old payloads.
+  lastWorkerTrigger: string | null; // heartbeats.worker.detail.trigger
   workflow: {
     state: WorkflowState;
     checkedAt: string | null;
@@ -346,6 +349,7 @@ export interface HealthPayload {
   generatedAt: string;
   completeThrough: string | null;
   lastWorkerRunAt: string | null;
+  lastWorkerTrigger: string | null;
   workflowState: WorkflowState;
   freshness: Freshness;
   programs: HealthProgram[];

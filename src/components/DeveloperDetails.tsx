@@ -12,6 +12,20 @@ const WORKFLOW_LABELS: Record<string, string> = {
   unknown: 'unknown (no heartbeat from the daily Vercel cron yet)',
 };
 
+// GITHUB_EVENT_NAME recorded by the worker in its heartbeat (README "Freshness and keep-alive")
+const TRIGGER_LABELS: Record<string, string> = {
+  schedule: 'GitHub schedule',
+  repository_dispatch: 'external cron (repository_dispatch)',
+  workflow_dispatch: 'manual run (workflow_dispatch)',
+  push: 'push to main',
+  local: 'local run',
+};
+
+export function triggerLabel(trigger: string | null | undefined): string {
+  if (!trigger) return '–';
+  return TRIGGER_LABELS[trigger] ?? trigger;
+}
+
 function checkValue(value: string | null): string {
   if (value === null) return '–';
   return /^-?\d+$/.test(value) ? formatInteger(value) : value;
@@ -168,6 +182,7 @@ export function DeveloperDetails({ payload, now, open }: { payload: DashboardPay
           <dl className="statList compact">
             <StatRow label="Data status" value={FRESHNESS_LABELS[freshness.state]} />
             <StatRow label="Last indexer run" value={formatUtc(freshness.lastWorkerRunAt, now, { alwaysDate: true, seconds: true })} hint={freshness.lastWorkerRunAt ? formatAge(freshness.lastWorkerRunAt, now) : null} />
+            <StatRow label="Last run started by" value={triggerLabel(freshness.lastWorkerTrigger)} />
             <StatRow label="GitHub workflow" value={WORKFLOW_LABELS[freshness.workflow.state] ?? freshness.workflow.state} />
             <StatRow label="Workflow checked" value={formatUtc(freshness.workflow.checkedAt, now, { alwaysDate: true })} />
             <StatRow
