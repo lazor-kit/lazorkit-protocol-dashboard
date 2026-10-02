@@ -1,0 +1,277 @@
+{
+ "apiVersion": 2,
+ "status": "live",
+ "dbSchemaVersion": 1,
+ "generatedAt": "2026-10-01T21:30:36.178Z",
+ "completeThrough": "2026-10-01T21:29:34.316+00:00",
+ "lastWorkerRunAt": "2026-10-01T21:29:37.246246+00:00",
+ "workflowState": "unknown",
+ "freshness": {
+  "state": "live",
+  "completeThrough": "2026-10-01T21:29:34.316+00:00",
+  "lastWorkerRunAt": "2026-10-01T21:29:37.246246+00:00",
+  "workflow": {
+   "state": "unknown",
+   "checkedAt": null,
+   "lastScheduledRunAt": null,
+   "lastConclusion": null
+  },
+  "reasons": [],
+  "catchUp": []
+ },
+ "programs": [
+  {
+   "label": "v1 mainnet",
+   "checks": [
+    {
+     "id": "I1",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "wallets created \u2212 migrated = wallet accounts",
+     "actual": "184",
+     "expected": "184"
+    },
+    {
+     "id": "I3",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "shard lamports = funding + fees \u2212 withdrawn",
+     "actual": "17359960",
+     "expected": "17359960"
+    },
+    {
+     "id": "I4",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "sessions created \u2212 revoked \u2212 closed = session accounts",
+     "actual": "173",
+     "expected": "173"
+    },
+    {
+     "id": "I5",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "authorized \u2212 executed \u2212 reclaimed = deferred accounts",
+     "actual": "96",
+     "expected": "96"
+    },
+    {
+     "id": "I6",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "created + added \u2212 removed \u2212 migrated = authority accounts",
+     "actual": "213",
+     "expected": "213"
+    },
+    {
+     "id": "R1",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "stored rollups = fresh recompute from events (unsealed days)",
+     "actual": "0 mismatches in 29 days",
+     "expected": "0 mismatches"
+    }
+   ],
+   "cluster": "mainnet",
+   "pending": 0,
+   "version": 1,
+   "gapsOpen": 0,
+   "ingested": 1449,
+   "activeGen": 1,
+   "lastError": null,
+   "programId": "LazorjRFNavitUaBu5m3WaNPjU1maipvSW2rZfAFAKi",
+   "binaryKind": "v1-full",
+   "programKey": 1,
+   "deployStatus": "live",
+   "discoveredAt": "2026-10-01T21:29:34.649+00:00",
+   "lastRunStatus": "ok",
+   "lastSuccessAt": "2026-10-01T21:29:36.901829+00:00",
+   "completeThrough": "2026-10-01T21:29:34.649+00:00",
+   "backfillComplete": true,
+   "lastRunFinishedAt": "2026-10-01T21:29:36.867+00:00",
+   "consecutiveFailures": 0
+  },
+  {
+   "label": "v2 mainnet",
+   "checks": [],
+   "cluster": "mainnet",
+   "pending": 0,
+   "version": 2,
+   "gapsOpen": 0,
+   "ingested": 0,
+   "activeGen": 1,
+   "lastError": null,
+   "programId": "LazorFroiVuAjcwwQ2me83vTr5nc5NRxSaTg3pmEXC8",
+   "binaryKind": null,
+   "programKey": 2,
+   "deployStatus": "not_deployed",
+   "discoveredAt": null,
+   "lastRunStatus": "not_deployed",
+   "lastSuccessAt": "2026-10-01T21:29:36.94233+00:00",
+   "completeThrough": null,
+   "backfillComplete": false,
+   "lastRunFinishedAt": "2026-10-01T21:29:36.909+00:00",
+   "consecutiveFailures": 0
+  },
+  {
+   "label": "v1 devnet",
+   "checks": [
+    {
+     "id": "I1",
+     "ok": true,
+     "mode": "informational",
+     "note": null,
+     "label": "wallets created \u2212 migrated = wallet accounts",
+     "actual": "110",
+     "expected": "110"
+    },
+    {
+     "id": "I3",
+     "ok": true,
+     "mode": "informational",
+     "note": null,
+     "label": "shard lamports = funding + fees \u2212 withdrawn",
+     "actual": "16738960",
+     "expected": "16738960"
+    },
+    {
+     "id": "I4",
+     "ok": true,
+     "mode": "informational",
+     "note": null,
+     "label": "sessions created \u2212 revoked \u2212 closed = session accounts",
+     "actual": "36",
+     "expected": "36"
+    },
+    {
+     "id": "I5",
+     "ok": true,
+     "mode": "informational",
+     "note": null,
+     "label": "authorized \u2212 executed \u2212 reclaimed = deferred accounts",
+     "actual": "1",
+     "expected": "1"
+    },
+    {
+     "id": "I6",
+     "ok": true,
+     "mode": "informational",
+     "note": null,
+     "label": "created + added \u2212 removed \u2212 migrated = authority accounts",
+     "actual": "133",
+     "expected": "133"
+    },
+    {
+     "id": "R1",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "stored rollups = fresh recompute from events (unsealed days)",
+     "actual": "0 mismatches in 8 days",
+     "expected": "0 mismatches"
+    }
+   ],
+   "cluster": "devnet",
+   "pending": 0,
+   "version": 1,
+   "gapsOpen": 0,
+   "ingested": 974,
+   "activeGen": 1,
+   "lastError": null,
+   "programId": "4h3XoNReAgEcHVxcZ8sw2aufi9MTr7BbvYYjzjWDyDxS",
+   "binaryKind": "v1-full",
+   "programKey": 3,
+   "deployStatus": "live",
+   "discoveredAt": "2026-10-01T21:29:34.316+00:00",
+   "lastRunStatus": "ok",
+   "lastSuccessAt": "2026-10-01T21:29:36.978269+00:00",
+   "completeThrough": "2026-10-01T21:29:34.316+00:00",
+   "backfillComplete": true,
+   "lastRunFinishedAt": "2026-10-01T21:29:36.945+00:00",
+   "consecutiveFailures": 0
+  },
+  {
+   "label": "v2 devnet",
+   "checks": [
+    {
+     "id": "I1",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "wallets created \u2212 migrated = wallet accounts",
+     "actual": "127",
+     "expected": "127"
+    },
+    {
+     "id": "I2",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "protocol fees = \u03a3 FeeRecord.total_fees_paid",
+     "actual": "0",
+     "expected": "0"
+    },
+    {
+     "id": "I4",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "sessions created \u2212 revoked \u2212 closed = session accounts",
+     "actual": "9",
+     "expected": "9"
+    },
+    {
+     "id": "I5",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "authorized \u2212 executed \u2212 reclaimed = deferred accounts",
+     "actual": "0",
+     "expected": "0"
+    },
+    {
+     "id": "I6",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "created + added \u2212 removed \u2212 migrated = authority accounts",
+     "actual": "133",
+     "expected": "133"
+    },
+    {
+     "id": "R1",
+     "ok": true,
+     "mode": "enforce",
+     "note": null,
+     "label": "stored rollups = fresh recompute from events (unsealed days)",
+     "actual": "0 mismatches in 5 days",
+     "expected": "0 mismatches"
+    }
+   ],
+   "cluster": "devnet",
+   "pending": 0,
+   "version": 2,
+   "gapsOpen": 0,
+   "ingested": 1403,
+   "activeGen": 1,
+   "lastError": null,
+   "programId": "57bTNWqtYTJbWuLWASKo6GqUTAK6oFDUR5c6hEc6V8nv",
+   "binaryKind": "v2-full",
+   "programKey": 4,
+   "deployStatus": "live",
+   "discoveredAt": "2026-10-01T21:29:36.264+00:00",
+   "lastRunStatus": "ok",
+   "lastSuccessAt": "2026-10-01T21:29:37.016878+00:00",
+   "completeThrough": "2026-10-01T21:29:36.264+00:00",
+   "backfillComplete": true,
+   "lastRunFinishedAt": "2026-10-01T21:29:36.984+00:00",
+   "consecutiveFailures": 0
+  }
+ ]
+}

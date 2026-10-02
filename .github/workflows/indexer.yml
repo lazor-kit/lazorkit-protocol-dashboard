@@ -1,19 +1,44 @@
 name: LazorKit Dashboard Indexer
 
+# The only regular writer of the dashboard database. Incremental: each run fetches only signatures newer than each
+# program's frontier, plus whatever is still queued. A run that fails exits non-zero, so the job turns red and
+# GitHub emails.
+#
+# GitHub disables scheduled workflows after 60 days without repository activity. Nothing is lost when that
+# happens (there is no time cutoff, the queue simply grows), and the site says so: the daily Vercel cron
+# (/api/cron/heartbeat) records this workflow's state, /api/health turns 503 and the uptime monitor on it (README
+# go-live step 4) e-mails the maintainers. Expect it 60 days after the last commit. Re-enable with:
+#   gh workflow enable indexer.yml -R lazor-kit/lazorkit-protocol-dashboard
+
 on:
   push:
     branches:
       - main
     paths:
       - '.github/workflows/indexer.yml'
-      - 'api/**'
+      - 'worker/**'
+      - 'src/types/**'
       - 'scripts/**'
       - 'supabase/**'
       - 'package.json'
       - 'package-lock.json'
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'incremental (default) | reparse (unsealed days, after a PARSER_VERSION bump) | rebuild (new generation of one program) | verify (lk_verify + chain recomputation, no ingestion)'
+        type: choice
+        options: [incremental, reparse, rebuild, verify]
+        default: incremental
+      program:
+        description: 'Program for rebuild: 1 v1 mainnet, 2 v2 mainnet, 3 v1 devnet, 4 v2 devnet (or all)'
+        type: string
+        default: all
+      budget_minutes:
+        description: 'Run budget in minutes (a first backfill on public RPC needs about 50)'
+        type: string
+        default: '50'
 
 permissions:
   contents: read
@@ -24,19 +49,17 @@ concurrency:
 
 jobs:
   indexer:
-    name: Refresh analytics data
+    name: Index LazorKit v1 + v2
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 70
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
       DEVNET_RPC_URL: ${{ secrets.DEVNET_RPC_URL }}
-      INDEXER_BACKFILL_DAYS: ${{ vars.INDEXER_BACKFILL_DAYS || '60' }}
-      INDEXER_MAX_SIGNATURES_PER_RUN: ${{ vars.INDEXER_MAX_SIGNATURES_PER_RUN || '50' }}
-      INDEXER_BACKFILL_MAX_PAGES_PER_RUN: ${{ vars.INDEXER_BACKFILL_MAX_PAGES_PER_RUN || '1' }}
-      INDEXER_PARSE_DELAY_MS: ${{ vars.INDEXER_PARSE_DELAY_MS || '200' }}
-      INDEXER_MAX_RUNTIME_MS: ${{ vars.INDEXER_MAX_RUNTIME_MS || '45000' }}
+      INDEXER_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'incremental' }}
+      INDEXER_PROGRAM: ${{ github.event_name == 'workflow_dispatch' && inputs.program || 'all' }}
+      INDEXER_BUDGET_MINUTES: ${{ github.event_name == 'workflow_dispatch' && inputs.budget_minutes || '10' }}
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
@@ -54,10 +77,15 @@ jobs:
 
       - name: Validate worker environment
         run: |
-          test -n "$SUPABASE_URL"
-          test -n "$SUPABASE_SERVICE_ROLE_KEY"
-          test -n "$MAINNET_RPC_URL"
-          test -n "$DEVNET_RPC_URL"
+          test -n "$SUPABASE_URL" || { echo "::error::secret SUPABASE_URL is missing"; exit 2; }
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "::error::secret SUPABASE_SERVICE_ROLE_KEY is missing"; exit 2; }
 
       - name: Run indexer
-        run: npm run indexer:all
+        if: env.INDEXER_MODE != 'verify'
+        run: npm run indexer
+
+      - name: Verify (lk_verify + chain recomputation)
+        if: env.INDEXER_MODE == 'verify'
+        run: |
+          npm run indexer -- --mode verify
+          npm run verify:chain

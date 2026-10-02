@@ -2,8 +2,9 @@ import { createServer, type IncomingHttpHeaders } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import dashboardHandler from './dashboard.js';
+import healthHandler from './health.js';
 import protocolStatsHandler from './protocol-stats.js';
-import cronIndexerHandler from './cron/indexer.js';
+import cronHeartbeatHandler from './cron/heartbeat.js';
 
 type QueryValue = string | string[] | undefined;
 
@@ -27,8 +28,9 @@ type ApiHandler = (
 
 const routes: Record<string, ApiHandler> = {
   '/api/dashboard': dashboardHandler,
+  '/api/health': healthHandler,
   '/api/protocol-stats': protocolStatsHandler,
-  '/api/cron/indexer': cronIndexerHandler,
+  '/api/cron/heartbeat': cronHeartbeatHandler,
 };
 
 loadLocalEnv();
@@ -117,7 +119,7 @@ server.on('error', (error: NodeJS.ErrnoException) => {
 server.listen(port, host, () => {
   console.log(`[api] listening on http://${host}:${port}`);
   console.log('[api] env: .env.api, .env.api.local');
-  console.log('[api] routes: /api/dashboard, /api/protocol-stats, /api/cron/indexer');
+  console.log('[api] routes: ' + Object.keys(routes).join(', '));
 });
 
 function queryFromSearchParams(params: URLSearchParams): Record<string, QueryValue> {
