@@ -15,6 +15,7 @@ const UNAVAILABLE_FRESHNESS: Freshness = {
   state: 'unavailable',
   completeThrough: null,
   lastWorkerRunAt: null,
+  lastWorkerTrigger: null,
   workflow: { state: 'unknown', checkedAt: null, lastScheduledRunAt: null, lastConclusion: null },
   reasons: [],
   catchUp: [],

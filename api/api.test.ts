@@ -5,7 +5,7 @@ import dashboardHandler, { clearDashboardMemo } from './dashboard.js';
 import healthHandler, { healthHttpStatus } from './health.js';
 import protocolStatsHandler from './protocol-stats.js';
 import { createHeartbeatHandler } from './cron/heartbeat.js';
-import { computeFreshness, type FreshnessProgram } from './_lib/freshness.js';
+import { computeFreshness, DELAYED_AFTER_MS, STALE_AFTER_MS, type FreshnessProgram } from './_lib/freshness.js';
 import type { Heartbeats } from '../src/types/dashboard.js';
 
 function response() {
@@ -83,9 +83,12 @@ describe('freshness state machine (§10.3)', () => {
     ['no worker heartbeat yet', { programs: [program()], heartbeats: {} }, 'catching_up'],
     ['backfill running', { programs: [program({ backfillComplete: false, pending: 900 })], heartbeats: { worker: { at: hoursAgo(0.1), detail: {} } } }, 'catching_up'],
     ['backlog', { programs: [program({ pending: 12 })], heartbeats: { worker: { at: hoursAgo(0.1), detail: {} } } }, 'catching_up'],
-    ['worker 9 h old', { programs: [program()], heartbeats: { worker: { at: hoursAgo(9), detail: {} } } }, 'delayed'],
+    ['worker 1.9 h old (a late GitHub schedule)', { programs: [program()], heartbeats: { worker: { at: hoursAgo(1.9), detail: {} } } }, 'live'],
+    ['worker 2.1 h old', { programs: [program()], heartbeats: { worker: { at: hoursAgo(2.1), detail: {} } } }, 'delayed'],
+    ['worker 6.05 h old (the largest gap GitHub\'s schedule alone has shown)', { programs: [program()], heartbeats: { worker: { at: hoursAgo(6.05), detail: {} } } }, 'delayed'],
+    ['worker 11.9 h old', { programs: [program()], heartbeats: { worker: { at: hoursAgo(11.9), detail: {} } } }, 'delayed'],
     ['2 consecutive failures', { programs: [program({ consecutiveFailures: 2 })], heartbeats: { worker: { at: hoursAgo(1), detail: {} } } }, 'delayed'],
-    ['worker 25 h old', { programs: [program()], heartbeats: { worker: { at: hoursAgo(25), detail: {} } } }, 'stale'],
+    ['worker 12.1 h old', { programs: [program()], heartbeats: { worker: { at: hoursAgo(12.1), detail: {} } } }, 'stale'],
     ['workflow disabled (fresh cron heartbeat)', { programs: [program()], heartbeats: {
       worker: { at: hoursAgo(1), detail: {} }, 'vercel-cron': { at: hoursAgo(20), detail: { workflow_state: 'disabled_inactivity' } } } }, 'stale'],
     ['workflow disabled but cron heartbeat older than 48 h', { programs: [program()], heartbeats: {
@@ -99,6 +102,23 @@ describe('freshness state machine (§10.3)', () => {
       expect(computeFreshness({ now, ...input }).state).toBe(expected);
     });
   }
+
+  it('delayed after 2 h, stale after 12 h', () => {
+    expect([DELAYED_AFTER_MS, STALE_AFTER_MS]).toEqual([2 * 3600_000, 12 * 3600_000]);
+    const freshness = computeFreshness({ now, programs: [program()], heartbeats: { worker: { at: hoursAgo(3), detail: {} } } });
+    expect(freshness.reasons).toEqual([{ code: 'worker_old', detail: 'The last indexer run finished 3.0 h ago' }]);
+  });
+
+  it('reports what started the last run (the worker heartbeat\'s trigger), null when it is not recorded', () => {
+    const at = hoursAgo(0.2);
+    const trigger = (detail: Record<string, unknown>) =>
+      computeFreshness({ now, programs: [program()], heartbeats: { worker: { at, detail } } }).lastWorkerTrigger;
+    expect(trigger({ run_id: 'r', trigger: 'repository_dispatch' })).toBe('repository_dispatch');
+    expect(trigger({ run_id: 'r', trigger: 'schedule' })).toBe('schedule');
+    expect(trigger({ run_id: 'r', program: 1, status: 'ok' })).toBeNull(); // per-program heartbeat of lk_report_run
+    expect(trigger({ trigger: 42 })).toBeNull();
+    expect(computeFreshness({ now, programs: [program()], heartbeats: {} }).lastWorkerTrigger).toBeNull();
+  });
 
   it('reports reasons, complete-through and catch-up progress', () => {
     const freshness = computeFreshness({
@@ -203,14 +223,20 @@ describe('GET /api/health', () => {
       schemaVersion: 1, generatedAt: now.toISOString(),
       programs: [{ programKey: 1, label: 'v1 mainnet', deployStatus: 'live', backfillComplete: true, pending: 0, ingested: 9,
         consecutiveFailures: 0, completeThrough: new Date().toISOString(), checks: [] }],
-      heartbeats: { worker: { at: workerAt, detail: {} } },
+      heartbeats: { worker: { at: workerAt, detail: { run_id: 'r', trigger: 'repository_dispatch' } } },
     });
     vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(health(new Date().toISOString()))));
     const live = response();
     await healthHandler({ method: 'GET', query: {} }, live.res);
     expect(live.state.code).toBe(200);
-    expect(live.state.body).toMatchObject({ status: 'live', workflowState: 'unknown' });
-    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(health(new Date(Date.now() - 30 * 3600_000).toISOString()))));
+    expect(live.state.body).toMatchObject({ status: 'live', workflowState: 'unknown', lastWorkerTrigger: 'repository_dispatch',
+      freshness: { lastWorkerTrigger: 'repository_dispatch' } });
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(health(new Date(Date.now() - 3 * 3600_000).toISOString()))));
+    const delayed = response();
+    await healthHandler({ method: 'GET', query: {} }, delayed.res);
+    expect(delayed.state.code).toBe(200);
+    expect(delayed.state.body).toMatchObject({ status: 'delayed' });
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(health(new Date(Date.now() - 13 * 3600_000).toISOString()))));
     const stale = response();
     await healthHandler({ method: 'GET', query: {} }, stale.res);
     expect(stale.state.code).toBe(503);
@@ -222,7 +248,7 @@ describe('GET /api/health', () => {
     const result = response();
     await healthHandler({ method: 'GET', query: {} }, result.res);
     expect(result.state.code).toBe(503);
-    expect(result.state.body).toMatchObject({ status: 'setup_required' });
+    expect(result.state.body).toMatchObject({ status: 'setup_required', lastWorkerTrigger: null });
   });
 });
 

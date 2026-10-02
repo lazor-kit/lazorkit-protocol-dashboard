@@ -153,6 +153,15 @@ describe('Dashboard states', () => {
     expect(page).toContain('gh workflow enable indexer.yml');
   });
 
+  it('developer details say what started the last indexer run, and tolerate payloads without it', () => {
+    const payload = FIXTURES['mainnet-30d']();
+    payload.freshness = { ...payload.freshness, lastWorkerTrigger: 'repository_dispatch' };
+    expect(text(render(payload, 'all', true))).toContain('Last run started by external cron (repository_dispatch)');
+    const older = FIXTURES['mainnet-30d']();
+    delete (older.freshness as Partial<typeof older.freshness>).lastWorkerTrigger; // a payload saved before the field existed
+    expect(text(render(older, 'all', true))).toContain('Last run started by –');
+  });
+
   it('before the first indexer run every program is "not checked yet", never "not deployed"', () => {
     const payload = FIXTURES['mainnet-30d']();
     for (const program of payload.programs) {

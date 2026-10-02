@@ -18,6 +18,7 @@ const baseFreshness = (overrides: Partial<Freshness>): Freshness => ({
   state: 'live',
   completeThrough: '2026-10-01T14:05:00Z',
   lastWorkerRunAt: '2026-10-01T18:40:00Z',
+  lastWorkerTrigger: 'schedule',
   workflow: { state: 'active', checkedAt: '2026-10-01T12:17:00Z', lastScheduledRunAt: null, lastConclusion: null },
   reasons: [],
   catchUp: [],
@@ -90,13 +91,13 @@ describe('selectBanner (spec §10.3 / §11.2 copy)', () => {
       programs,
       freshness: baseFreshness({
         state: 'delayed',
-        lastWorkerRunAt: '2026-10-01T12:50:00Z',
+        lastWorkerRunAt: '2026-10-01T18:50:00Z',
         reasons: [{ code: 'program_failing', programKey: 1, detail: 'v1 mainnet: 3 failed runs in a row' }],
       }),
     });
     expect(banner).toMatchObject({ tone: 'warning', label: 'Delayed' });
     expect(banner?.messages).toEqual([
-      'Updates are delayed. The last indexer run finished 9 h ago; figures are complete through 14:05 UTC.',
+      'Updates are delayed. The last indexer run finished 3 h ago; figures are complete through 14:05 UTC.',
       'v1 mainnet: 3 failed runs in a row',
     ]);
   });
