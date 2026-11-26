@@ -13,7 +13,7 @@ import {
   type ScopeKey,
   type SeriesPoint,
 } from '../types/dashboard';
-import { PROGRAMS, programByKey } from '../types/protocol';
+
 import { formatAge, formatBytes, formatInteger, formatUtc, shortHash, toBigInt } from '../lib/format';
 import type { VersionFilter } from './urlState';
 
@@ -25,9 +25,7 @@ export interface ClusterKeys {
 }
 
 export function clusterKeys(cluster: Cluster): ClusterKeys {
-  const v1 = PROGRAMS.find((program) => program.cluster === cluster && program.version === 1);
-  const v2 = PROGRAMS.find((program) => program.cluster === cluster && program.version === 2);
-  return { v1: v1?.programKey ?? (cluster === 'mainnet' ? 1 : 3), v2: v2?.programKey ?? (cluster === 'mainnet' ? 2 : 4) };
+  return cluster === 'mainnet' ? { v1: 1, v2: 2 } : { v1: 3, v2: 4 };
 }
 
 export function scopeForVersion(cluster: Cluster, version: VersionFilter): ScopeKey {
@@ -37,7 +35,7 @@ export function scopeForVersion(cluster: Cluster, version: VersionFilter): Scope
 }
 
 export function programLabel(programKey: number, programs: ProgramView[] = []): string {
-  return programs.find((program) => program.programKey === programKey)?.label ?? programByKey(programKey)?.label ?? `program ${programKey}`;
+  return programs.find((program) => program.programKey === programKey)?.label ?? `program ${programKey}`;
 }
 
 export function visiblePrograms(payload: DashboardPayload, version: VersionFilter): ProgramView[] {

@@ -119,6 +119,14 @@ function lanes(endpoint: ReturnType<typeof fakeEndpoint>) {
 const [V1M, V2M, V1D, V2D] = PROGRAMS.map((p) => p.programId);
 
 describe('worker run', () => {
+  it('indexes only the Protocol programs when the database still has other rows', async () => {
+    const endpoint = chain({ [V1M]: { deployed: false, signatures: [] }, [V1D]: { deployed: false, signatures: [] } });
+    const memory = db([1, 2, 3, 4]);
+    const result = await runWorker({ db: memory, lanes: lanes(endpoint), snapshot }, options({ protocolOnly: true }));
+    expect(result.programs.map(program => program.programKey)).toEqual([1, 3]);
+    expect(endpoint.calls).toHaveLength(2);
+  });
+
   it('a not-deployed program costs exactly one call and reports not_deployed', async () => {
     const endpoint = chain({ [V2M]: { deployed: false, signatures: [] } });
     const memory = db([2]);

@@ -107,13 +107,11 @@ function ActivityMix({ program, kpis, breakdowns, payload }: { program: ProgramV
         <dl className="statList compact">
           <StatRow label="Distinct payers" value={formatInteger(kpis?.payers ?? 0)} />
           <StatRow label="Network fees paid" value={formatLamports(kpis?.netFeeLamports ?? '0')} title={exactLamports(kpis?.netFeeLamports ?? '0')} />
-          {program.version === 2 ? (
-            <StatRow
+          <StatRow
               label="Transaction v1 (SIMD-0385)"
               value={formatPercent(txv1Share)}
               hint={kpis ? `${formatInteger(kpis.txv1)} of ${formatInteger(kpis.txs)}` : null}
-            />
-          ) : null}
+          />
         </dl>
       </div>
       <p className="detailFootnote">Activity figures cover the {windowLabel(payload.window)}.</p>
@@ -133,7 +131,6 @@ function StateBlock({ program, now }: { program: ProgramView; now: number }) {
           <StatRow label="Passkey owner" value={formatInteger(state.ownerTypes.passkeyWallets)} />
           <StatRow label="Ed25519 owner" value={formatInteger(state.ownerTypes.ed25519Wallets)} />
           <StatRow label="Both owner types" value={formatInteger(state.ownerTypes.mixedWallets)} />
-          {state.multiOwnerWallets !== null ? <StatRow label="Multi-owner (v2)" value={formatInteger(state.multiOwnerWallets)} /> : null}
           <StatRow label="Vault SOL" value={formatLamports(state.vaults.lamports)} title={exactLamports(state.vaults.lamports)} hint={`${formatInteger(state.vaults.funded)} funded`} />
         </dl>
       </div>
@@ -152,17 +149,20 @@ function StateBlock({ program, now }: { program: ProgramView; now: number }) {
         </dl>
       </div>
       <div className="detailBlock">
-        <h4>Sessions and deferred</h4>
+        <h4>Sessions and approvals</h4>
         <dl className="statList compact">
-          <StatRow label="Sessions live / expired" value={`${formatInteger(state.sessions.live)} / ${formatInteger(state.sessions.expired)}`} hint={`${formatInteger(state.sessions.withPolicy)} with a policy`} />
-          <StatRow label="Deferred pending / expired" value={`${formatInteger(state.deferred.pending)} / ${formatInteger(state.deferred.expired)}`} />
+          <StatRow label="Active sessions" value={formatInteger(state.sessions.live)} />
+          <StatRow label="Expired sessions" value={formatInteger(state.sessions.expired)} />
+          <StatRow label="Sessions with spending rules" value={formatInteger(state.sessions.withPolicy)} />
+          <StatRow label="Pending deferred approvals" value={formatInteger(state.deferred.pending)} />
+          <StatRow label="Expired deferred approvals" value={formatInteger(state.deferred.expired)} />
           <StatRow
-            label="Rent held by expired deferred"
+            label="Rent held by expired approvals"
             value={formatLamports(state.deferred.expiredLamports)}
             title={exactLamports(state.deferred.expiredLamports)}
           />
         </dl>
-        <p className="detailNote">Expired sessions and deferred executions stay on chain until someone closes them.</p>
+        <p className="detailNote">An expired account stays on chain until it is closed. The rent figure above covers expired deferred approvals.</p>
       </div>
       <p className="detailFootnote">
         Snapshot at slot {formatInteger(program.stateSlot ?? state.slot)}
@@ -177,16 +177,7 @@ function FeesBlock({ program, kpis }: { program: ProgramView; kpis: Kpis | null 
   const state = program.state;
   if (!state) return <p className="emptyLine">No on-chain snapshot yet.</p>;
   const config = state.config;
-  const configLabel =
-    config === null
-      ? program.version === 2
-        ? 'Fees not configured'
-        : 'No ProtocolConfig account'
-      : config.enabled
-        ? 'Fees on'
-        : program.version === 1
-          ? 'Fees off; wallets unaffected'
-          : 'Fees off';
+  const configLabel = !config ? 'Fees not configured' : config.enabled ? 'Fees on' : 'Fees off';
   const treasury = program.treasury;
   const shardRent = toBigInt(state.rentMinimum8) * BigInt(state.treasury.shards);
   const feeRecords = program.stateDetail?.feeRecords ?? state.feeRecords.top;
@@ -202,7 +193,8 @@ function FeesBlock({ program, kpis }: { program: ProgramView; kpis: Kpis | null 
             <StatRow label="Status" value={configLabel} />
             {config ? (
               <>
-                <StatRow label="Creation / execution fee" value={`${formatLamports(config.creationFee)} / ${formatLamports(config.executionFee)}`} />
+                <StatRow label="Create wallet fee" value={formatLamports(config.creationFee)} title={exactLamports(config.creationFee)} />
+                <StatRow label="Execute fee" value={formatLamports(config.executionFee)} title={exactLamports(config.executionFee)} />
                 <StatRow label="Treasury shards" value={formatInteger(config.numShards)} />
                 <StatRow label="Admin" value={<AddressLink address={config.admin} cluster={program.cluster} label="admin" copy />} />
                 <StatRow label="Treasury" value={<AddressLink address={config.treasury} cluster={program.cluster} label="treasury" copy />} />
@@ -211,8 +203,8 @@ function FeesBlock({ program, kpis }: { program: ProgramView; kpis: Kpis | null 
               </>
             ) : null}
           </dl>
-          {program.version === 1 && config && !config.enabled ? (
-            <p className="detailNote">The lenient v1 build keeps wallets working when fees are off; it is not a pause.</p>
+          {config && !config.enabled ? (
+            <p className="detailNote">Wallet operations continue while fees are off.</p>
           ) : null}
         </div>
         <div className="detailBlock">
@@ -241,16 +233,14 @@ function FeesBlock({ program, kpis }: { program: ProgramView; kpis: Kpis | null 
           <dl className="statList compact">
             <StatRow label="Records" value={formatInteger(state.feeRecords.count)} />
             <StatRow
-              label={program.version === 1 ? 'Fees recorded (lower bound)' : 'Lifetime fees (exact)'}
+              label="Fees recorded (lower bound)"
               value={formatLamports(state.feeRecords.totalFeesPaid)}
               title={exactLamports(state.feeRecords.totalFeesPaid)}
             />
             <StatRow label="Transactions / wallets" value={`${formatInteger(state.feeRecords.txCount)} / ${formatInteger(state.feeRecords.walletCount)}`} />
           </dl>
           <p className="detailNote">
-            {program.version === 1
-              ? 'v1 FeeRecords count registered payers only, so they are a lower bound; fee history above comes from transactions.'
-              : 'v2 FeeRecords count every fee-paying transaction: exact lifetime fees.'}
+            Fee records cover registered payers. The fee history above includes all observed payments.
           </p>
         </div>
         <div className="detailBlock">
@@ -259,16 +249,12 @@ function FeesBlock({ program, kpis }: { program: ProgramView; kpis: Kpis | null 
             <StatRow label="Fee-eligible operations" value={formatInteger(kpis?.feeEligibleOk ?? 0)} />
             <StatRow label="Fee-paying events" value={formatInteger(kpis?.feeEvents ?? 0)} />
             <StatRow label="Unpaid share" value={formatPercent(unpaidShare)} />
-            {program.version === 1 ? (
-              <StatRow label="Fee suffix adoption" value={formatPercent(suffixShare)} hint={kpis ? `${formatInteger(kpis.feeSuffixOk)} of ${formatInteger(kpis.feeEligibleOk)}` : null} />
-            ) : (
-              <StatRow label="Fee suffix" value="mandatory in v2" />
-            )}
+            <StatRow label="Fee suffix adoption" value={formatPercent(suffixShare)} hint={kpis ? `${formatInteger(kpis.feeSuffixOk)} of ${formatInteger(kpis.feeEligibleOk)}` : null} />
           </dl>
         </div>
       </div>
       <ShardTable cluster={program.cluster} shards={program.stateDetail?.shards ?? []} rentMinimum={state.rentMinimum8} />
-      <FeeRecordTable cluster={program.cluster} rows={feeRecords} total={state.feeRecords.count} lowerBound={program.version === 1} />
+      <FeeRecordTable cluster={program.cluster} rows={feeRecords} total={state.feeRecords.count} lowerBound />
     </>
   );
 }

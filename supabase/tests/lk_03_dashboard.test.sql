@@ -33,25 +33,25 @@ select pg_temp.one(2, pg_temp.ev('X', 0, 10, now() - interval '1 day', 0, true, 
          '{"shared": true, "ref": "V2VAULT", "fee_lamports": 5000, "payer": "RELAY"}'));
 select pg_temp.one(2, pg_temp.ev('Y', 0, 11, now() - interval '1 day', 4, false, 'V2W',
          '{"fail_class": "lazorkit", "payer": "RELAY"}'));
-select is((public.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,txs}')::int, 2,
+select is((lk.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,txs}')::int, 2,
           'C1: the shared transaction counts once in the cluster (X + Y)');
-select is((public.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,signatures}')::int, 2, 'C1: signatures too');
-select is((public.lk_dashboard('mainnet', 'all') #>> '{kpis,1,current,txs}')::int +
-          (public.lk_dashboard('mainnet', 'all') #>> '{kpis,2,current,txs}')::int, 3, 'C1: per program it counts in both');
-select is(public.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,feeLamports}', '5000', 'C1: fees are summed');
-select is((public.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,activeWallets}')::int, 2,
+select is((lk.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,signatures}')::int, 2, 'C1: signatures too');
+select is((lk.lk_dashboard('mainnet', 'all') #>> '{kpis,1,current,txs}')::int +
+          (lk.lk_dashboard('mainnet', 'all') #>> '{kpis,2,current,txs}')::int, 3, 'C1: per program it counts in both');
+select is(lk.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,feeLamports}', '5000', 'C1: fees are summed');
+select is((lk.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,activeWallets}')::int, 2,
           'C1: active wallets are summed (disjoint v1/v2 PDAs)');
-select is((public.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,payers}')::int, 1,
+select is((lk.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,payers}')::int, 1,
           'C1: payers are distinct across programs');
-select is((public.lk_dashboard('mainnet', '7d') #>> '{kpis,cluster,current,txs}')::int, 2, 'C1: the 7d window de-duplicates too');
-select is((public.lk_dashboard('mainnet', '24h') #>> '{kpis,cluster,current,txs}')::int, 0, 'C1: nothing in the last 24h');
-select is((public.lk_dashboard('mainnet', 'all') #>> '{migration,totals,migrations}')::int, 1, 'C1: migration totals');
-select is((public.lk_dashboard('mainnet', 'all') #>> '{migration,status}'), 'active', 'C1: migration active once migrations > 0');
-select is((public.lk_dashboard('mainnet', 'all') #>> '{migration,v2WalletsFromMigration}')::int, 1,
+select is((lk.lk_dashboard('mainnet', '7d') #>> '{kpis,cluster,current,txs}')::int, 2, 'C1: the 7d window de-duplicates too');
+select is((lk.lk_dashboard('mainnet', '24h') #>> '{kpis,cluster,current,txs}')::int, 0, 'C1: nothing in the last 24h');
+select is((lk.lk_dashboard('mainnet', 'all') #>> '{migration,totals,migrations}')::int, 1, 'C1: migration totals');
+select is((lk.lk_dashboard('mainnet', 'all') #>> '{migration,status}'), 'active', 'C1: migration active once migrations > 0');
+select is((lk.lk_dashboard('mainnet', 'all') #>> '{migration,v2WalletsFromMigration}')::int, 1,
           'C1: the v2 wallet whose vault received a migration counts as migrated');
-select is((select count(*)::int from jsonb_array_elements(public.lk_dashboard('mainnet', 'all') -> 'latest')), 3,
+select is((select count(*)::int from jsonb_array_elements(lk.lk_dashboard('mainnet', 'all') -> 'latest')), 3,
           'C1: latest lists one row per (program, signature)');
-select is((public.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,failByClass,lazorkit}')::int, 1,
+select is((lk.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,failByClass,lazorkit}')::int, 1,
           'C1: failures by class');
 
 -- ------------------------------------------------------------------------------------------------ C2
@@ -61,25 +61,25 @@ select pg_temp.one(4, pg_temp.ev('d6', 0, 21, lk.day_start(current_date - 6) + i
 select pg_temp.one(4, pg_temp.ev('d7', 0, 22, lk.day_start(current_date - 7), 4, true, 'C'));
 select pg_temp.one(4, pg_temp.ev('d13', 0, 23, lk.day_start(current_date - 13) + interval '1 minute', 4, true, 'D'));
 select pg_temp.one(4, pg_temp.ev('d14', 0, 24, lk.day_start(current_date - 14) + interval '1 minute', 4, true, 'E'));
-select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,4,current,txs}')::int, 2, 'C2: 7d = 7 calendar days incl. today');
-select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,4,previous,txs}')::int, 2,
+select is((lk.lk_dashboard('devnet', '7d') #>> '{kpis,4,current,txs}')::int, 2, 'C2: 7d = 7 calendar days incl. today');
+select is((lk.lk_dashboard('devnet', '7d') #>> '{kpis,4,previous,txs}')::int, 2,
           'C2: previous 7d = the 7 days before, up to the same time of day');
-select is((public.lk_dashboard('devnet', '7d') #>> '{range,start}')::timestamptz, lk.day_start(current_date - 6), 'C2: range start');
-select is((select count(*)::int from jsonb_array_elements(public.lk_dashboard('devnet', '7d') -> 'series') s
+select is((lk.lk_dashboard('devnet', '7d') #>> '{range,start}')::timestamptz, lk.day_start(current_date - 6), 'C2: range start');
+select is((select count(*)::int from jsonb_array_elements(lk.lk_dashboard('devnet', '7d') -> 'series') s
             where s ->> 'scope' = 'cluster'), 7, 'C2: 7 daily points per scope');
-select is((select count(*)::int from jsonb_array_elements(public.lk_dashboard('devnet', '30d') -> 'series') s
+select is((select count(*)::int from jsonb_array_elements(lk.lk_dashboard('devnet', '30d') -> 'series') s
             where s ->> 'scope' = '4'), 30, 'C2: 30 daily points for a program');
-select is((public.lk_dashboard('devnet', '30d') #>> '{kpis,4,current,txs}')::int, 5, 'C2: 30d holds all five');
-select is((public.lk_dashboard('devnet', '30d') #>> '{kpis,cluster,current,activeWallets}')::int, 5, 'C2: distinct wallets over 30d');
-select is((select count(*)::int from jsonb_array_elements(public.lk_dashboard('devnet', '24h') -> 'series') s
+select is((lk.lk_dashboard('devnet', '30d') #>> '{kpis,4,current,txs}')::int, 5, 'C2: 30d holds all five');
+select is((lk.lk_dashboard('devnet', '30d') #>> '{kpis,cluster,current,activeWallets}')::int, 5, 'C2: distinct wallets over 30d');
+select is((select count(*)::int from jsonb_array_elements(lk.lk_dashboard('devnet', '24h') -> 'series') s
             where s ->> 'scope' = 'cluster'), 24, 'C2: 24h = 24 hourly buckets');
-select is(public.lk_dashboard('devnet', '24h') #>> '{range,bucket}', 'hour', 'C2: 24h buckets are hours');
-select is(public.lk_dashboard('devnet', 'all') #>> '{range,previousStart}', null, 'C2: all has no previous period');
-select is(public.lk_dashboard('devnet', 'all') -> 'kpis' -> 'cluster' -> 'previous', 'null'::jsonb, 'C2: all previous is null');
-select is((public.lk_dashboard('devnet', 'all') #>> '{range,start}')::timestamptz, lk.day_start(current_date - 14),
+select is(lk.lk_dashboard('devnet', '24h') #>> '{range,bucket}', 'hour', 'C2: 24h buckets are hours');
+select is(lk.lk_dashboard('devnet', 'all') #>> '{range,previousStart}', null, 'C2: all has no previous period');
+select is(lk.lk_dashboard('devnet', 'all') -> 'kpis' -> 'cluster' -> 'previous', 'null'::jsonb, 'C2: all previous is null');
+select is((lk.lk_dashboard('devnet', 'all') #>> '{range,start}')::timestamptz, lk.day_start(current_date - 14),
           'C2: all starts at the first active day');
-select throws_like($$ select public.lk_dashboard('localnet', '7d') $$, '%unsupported cluster%', 'C2: localnet refused');
-select throws_like($$ select public.lk_dashboard('devnet', '90d') $$, '%unsupported window%', 'C2: unknown window refused');
+select throws_like($$ select lk.lk_dashboard('localnet', '7d') $$, '%unsupported cluster%', 'C2: localnet refused');
+select throws_like($$ select lk.lk_dashboard('devnet', '90d') $$, '%unsupported window%', 'C2: unknown window refused');
 
 -- ------------------------------------------------------------------------------------------------ C3
 -- The previous period covers the same elapsed span as the current one: it ends exactly one period before now.
@@ -91,21 +91,21 @@ select pg_temp.one(4, pg_temp.ev('w_out', 0, 31,
          now() - interval '7 days' + (lk.day_start(current_date + 1) - now()) / 2, 4, true, 'WOUT', '{"app": "b.example"}'));
 select pg_temp.one(4, pg_temp.ev('h_in', 0, 32, now() - interval '24 hours' - interval '1 second', 4, true, 'HIN'));
 select pg_temp.one(4, pg_temp.ev('h_out', 0, 33, now() - interval '24 hours' + interval '1 second', 4, true, 'HOUT'));
-select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,4,previous,txs}')::int, 1,
+select is((lk.lk_dashboard('devnet', '7d') #>> '{kpis,4,previous,txs}')::int, 1,
           'C3: previous 7d stops at the same time of day 7 days ago (the later part of that day is excluded)');
-select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,4,previous,activeWallets}')::int, 1,
+select is((lk.lk_dashboard('devnet', '7d') #>> '{kpis,4,previous,activeWallets}')::int, 1,
           'C3: distinct wallets of the partial day come from its events');
-select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,cluster,previous,apps}')::int, 1,
+select is((lk.lk_dashboard('devnet', '7d') #>> '{kpis,cluster,previous,apps}')::int, 1,
           'C3: cluster apps of the partial day too');
-select is((public.lk_dashboard('devnet', '7d') #>> '{range,previousEnd}')::timestamptz, now() - interval '7 days',
+select is((lk.lk_dashboard('devnet', '7d') #>> '{range,previousEnd}')::timestamptz, now() - interval '7 days',
           'C3: range.previousEnd = now - 7 days');
-select is((public.lk_dashboard('devnet', '30d') #>> '{range,previousEnd}')::timestamptz, now() - interval '30 days',
+select is((lk.lk_dashboard('devnet', '30d') #>> '{range,previousEnd}')::timestamptz, now() - interval '30 days',
           'C3: range.previousEnd = now - 30 days');
-select is((public.lk_dashboard('devnet', '24h') #>> '{kpis,4,previous,txs}')::int, 1,
+select is((lk.lk_dashboard('devnet', '24h') #>> '{kpis,4,previous,txs}')::int, 1,
           'C3: previous 24h ends exactly 24 hours before now');
-select is((public.lk_dashboard('devnet', '24h') #>> '{range,previousEnd}')::timestamptz, now() - interval '24 hours',
+select is((lk.lk_dashboard('devnet', '24h') #>> '{range,previousEnd}')::timestamptz, now() - interval '24 hours',
           'C3: range.previousEnd = now - 24 hours');
-select is(public.lk_dashboard('devnet', 'all') #>> '{range,previousEnd}', null, 'C3: all has no previous end');
+select is(lk.lk_dashboard('devnet', 'all') #>> '{range,previousEnd}', null, 'C3: all has no previous end');
 
 -- ------------------------------------------------------------------------------------------------ C4
 -- Integrators: the 10 biggest by created + ops, whatever their names. 12 apps over two days (a day keeps its top
@@ -120,12 +120,12 @@ select pg_temp.one(4, pg_temp.ev('big' || n, 0, 60 + n, now() - interval '2 days
 select pg_temp.one(4, pg_temp.ev('small', 0, 70, now() - interval '2 days', 4, true, 'WS', '{"app": "l.example"}'));
 select is((select count(*)::int from jsonb_object_keys(lk.window_metrics(4, 1, '-infinity', lk.day_start(current_date + 1), false)
             -> 'by_app')), 12, 'C4: 12 apps in the window');
-select is(public.lk_dashboard('devnet', 'all') #>> '{breakdowns,4,byApp,0,app}', 'zz-biggest.example',
+select is(lk.lk_dashboard('devnet', 'all') #>> '{breakdowns,4,byApp,0,app}', 'zz-biggest.example',
           'C4: the biggest integrator is first even though it sorts last by name');
-select is((public.lk_dashboard('devnet', 'all') #>> '{breakdowns,4,byApp,0,ops}')::int, 3, 'C4: with its 3 operations');
-select is(jsonb_array_length(public.lk_dashboard('devnet', 'all') #> '{breakdowns,cluster,byApp}'), 10,
+select is((lk.lk_dashboard('devnet', 'all') #>> '{breakdowns,4,byApp,0,ops}')::int, 3, 'C4: with its 3 operations');
+select is(jsonb_array_length(lk.lk_dashboard('devnet', 'all') #> '{breakdowns,cluster,byApp}'), 10,
           'C4: still 10 entries');
-select is(public.lk_dashboard('devnet', 'all') #>> '{breakdowns,cluster,byApp,0,app}', 'zz-biggest.example',
+select is(lk.lk_dashboard('devnet', 'all') #>> '{breakdowns,cluster,byApp,0,app}', 'zz-biggest.example',
           'C4: cluster scope too');
 
 -- ------------------------------------------------------------------------------------------------ C5
@@ -134,11 +134,11 @@ select pg_temp.reset();
 select pg_temp.one(3, pg_temp.ev('old-v1', 0, 80, now() - interval '3 days', 4, true, 'W1'));
 select pg_temp.one(4, pg_temp.ev('v2-' || n, 0, 100 + n, now() - interval '1 hour' + n * interval '1 second', 4, true, 'W2'))
   from generate_series(1, 60) as n;
-select is((select count(*)::int from jsonb_array_elements(public.lk_dashboard('devnet', '7d') -> 'latest') l
+select is((select count(*)::int from jsonb_array_elements(lk.lk_dashboard('devnet', '7d') -> 'latest') l
             where l ->> 'version' = '1'), 1, 'C5: the v1 transaction is listed despite 60 newer v2 ones');
-select is((select count(*)::int from jsonb_array_elements(public.lk_dashboard('devnet', '7d') -> 'latest') l
+select is((select count(*)::int from jsonb_array_elements(lk.lk_dashboard('devnet', '7d') -> 'latest') l
             where l ->> 'version' = '2'), 50, 'C5: 50 per program');
-select is(public.lk_dashboard('devnet', '7d') #>> '{latest,0,signature}', 'v2-60', 'C5: newest first');
+select is(lk.lk_dashboard('devnet', '7d') #>> '{latest,0,signature}', 'v2-60', 'C5: newest first');
 
 -- ------------------------------------------------------------------------------------------------ C6
 -- A shared failed transaction keeps the class of the program whose instruction failed in the cluster total.
@@ -158,13 +158,13 @@ select pg_temp.one(3, pg_temp.ev('sf3', 0, 92, now() - interval '2 days', 17, fa
          '{"shared": true, "fail_class": "limits"}'));
 select pg_temp.one(4, pg_temp.ev('sf3', 0, 92, now() - interval '2 days', 0, false, 'V2W',
          '{"shared": true, "fail_class": "limits"}'));
-select is(public.lk_dashboard('devnet', '7d') #> '{kpis,cluster,current,failByClass}', '{"lazorkit": 2, "limits": 1}'::jsonb,
+select is(lk.lk_dashboard('devnet', '7d') #> '{kpis,cluster,current,failByClass}', '{"lazorkit": 2, "limits": 1}'::jsonb,
           'C6: cluster classes: the failing program''s class, other_ix dropped, limits once');
-select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,cluster,current,txsFailed}')::int, 3, 'C6: three failed transactions');
-select is(public.lk_dashboard('devnet', '7d') #> '{kpis,4,current,failByClass}',
+select is((lk.lk_dashboard('devnet', '7d') #>> '{kpis,cluster,current,txsFailed}')::int, 3, 'C6: three failed transactions');
+select is(lk.lk_dashboard('devnet', '7d') #> '{kpis,4,current,failByClass}',
           '{"lazorkit": 1, "other_ix": 1, "limits": 1}'::jsonb, 'C6: per program, each copy keeps its own class');
-select is(public.lk_dashboard('devnet', '24h') #> '{kpis,cluster,current,failByClass}', '{}'::jsonb, 'C6: nothing in 24h');
-select is(public.lk_dashboard('devnet', 'all') #> '{breakdowns,cluster,byFail}', '{"lazorkit": 2, "limits": 1}'::jsonb,
+select is(lk.lk_dashboard('devnet', '24h') #> '{kpis,cluster,current,failByClass}', '{}'::jsonb, 'C6: nothing in 24h');
+select is(lk.lk_dashboard('devnet', 'all') #> '{breakdowns,cluster,byFail}', '{"lazorkit": 2, "limits": 1}'::jsonb,
           'C6: the cluster breakdown matches');
 
 -- ------------------------------------------------------------------------------------------------ I
@@ -196,7 +196,7 @@ select is((public.lk_report_run(4, 1, jsonb_build_object('run_id', 'r1', 'starte
           'status', 'ok', 'progress', true)) ->> 'status'), 'ok', 'I: lk_report_run reports ok with an empty queue');
 select is((select c ->> 'ok' from lk.programs p, jsonb_array_elements(p.checks) c where p.program_key = 4 and c ->> 'id' = 'I1'),
           'false', 'I: lk_report_run stores the checks');
-select is((select count(*)::int from jsonb_array_elements(public.lk_dashboard('devnet', '7d') -> 'programs') p
+select is((select count(*)::int from jsonb_array_elements(lk.lk_dashboard('devnet', '7d') -> 'programs') p
             where p ->> 'programKey' = '4' and jsonb_array_length(p -> 'checks') > 0), 1, 'I: checks reach the payload');
 
 -- report_run: no progress on a non-empty queue for 3 runs fails the program
@@ -210,12 +210,12 @@ select is((select consecutive_failures from lk.programs where program_key = 4), 
 select ok((select at is not null from lk.heartbeats where source = 'worker'), 'I: lk_report_run writes the worker heartbeat');
 
 -- ------------------------------------------------------------------------------------------------ payload shape
-select ok(public.lk_dashboard('devnet', '30d') ?& array['dbSchemaVersion', 'cluster', 'window', 'generatedAt', 'range',
+select ok(lk.lk_dashboard('devnet', '30d') ?& array['dbSchemaVersion', 'cluster', 'window', 'generatedAt', 'range',
           'programs', 'kpis', 'series', 'breakdowns', 'migration', 'binaries', 'latest', 'runs', 'heartbeats'],
           'payload: every top-level key of the contract');
-select is((select count(*)::int from jsonb_array_elements(public.lk_dashboard('mainnet', '7d') -> 'binaries')), 3,
+select is((select count(*)::int from jsonb_array_elements(lk.lk_dashboard('mainnet', '7d') -> 'binaries')), 3,
           'payload: mainnet known binaries (v1 full, v1 sunset, v2 release)');
-select is(public.lk_dashboard('devnet', '7d') #>> '{programs,0,version}', '1', 'payload: programs ordered v1, v2');
+select is(lk.lk_dashboard('devnet', '7d') #>> '{programs,0,version}', '1', 'payload: programs ordered v1, v2');
 select is(public.lk_health() ->> 'schemaVersion', '1', 'payload: lk_health reports the schema version');
 select ok(public.lk_health() -> 'heartbeats' ? 'worker', 'payload: lk_health carries heartbeats');
 
@@ -225,13 +225,13 @@ select public.lk_set_deployment(2, '{"status": "not_deployed"}');
 select is((select deploy_status from lk.programs where program_key = 2), 'not_deployed', 'deploy: not deployed');
 select public.lk_set_deployment(2, '{"status": "live", "programdata": "PD", "deploy_slot": 7, "upgrade_authority": "AUTH",
   "sha256": "4cb8030466d269efa867f0ab2bc989cccd1857c2a753e67578267e4a6b144b12", "elf_size": 150776, "kind": "v2-full"}');
-select is(public.lk_dashboard('mainnet', '7d') #>> '{programs,1,deployment,releaseMatch,feature}', 'mainnet',
+select is(lk.lk_dashboard('mainnet', '7d') #>> '{programs,1,deployment,releaseMatch,feature}', 'mainnet',
           'deploy: v2 mainnet matches the mainnet release hash');
 select is((select count(*)::int from lk.deploys where program_key = 2 and op = 'observed'), 1, 'deploy: observed deploy recorded');
 select public.lk_set_deployment(2, '{"status": "not_deployed"}');
 select is((select deploy_status from lk.programs where program_key = 2), 'closed', 'deploy: a live program that disappears is closed');
 select public.lk_set_deployment(1, '{"status": "live", "deploy_slot": 9, "sha256": "ffff", "elf_size": 45000, "kind": "unknown"}');
-select is(public.lk_dashboard('mainnet', '7d') #>> '{programs,0,deployment,binaryLabel}', 'unrecognised build (sunset-sized)',
+select is(lk.lk_dashboard('mainnet', '7d') #>> '{programs,0,deployment,binaryLabel}', 'unrecognised build (sunset-sized)',
           'deploy: an unknown small binary is labelled sunset-sized');
 
 select * from finish();

@@ -1,35 +1,29 @@
-import { RefreshCw } from 'lucide-react';
+import { ArrowUpRight, RefreshCw } from 'lucide-react';
 import type { Cluster, DashboardWindow, Freshness } from '../types/dashboard';
 import { FRESHNESS_LABELS, FRESHNESS_TONES } from '../app/selectors';
-import type { VersionFilter as Version } from '../app/urlState';
 import { formatAge, formatUtc } from '../lib/format';
 import { ClusterSelector } from './ClusterSelector';
 import { ThemeToggle } from './ThemeToggle';
 import { TimeWindowSelector } from './TimeWindowSelector';
 import { Pill } from './ui';
-import { VersionFilter } from './VersionFilter';
 
 export function DashboardHeader({
   cluster,
   window,
-  version,
   freshness,
   loading,
   now,
   onCluster,
   onWindow,
-  onVersion,
   onRefresh,
 }: {
   cluster: Cluster;
   window: DashboardWindow;
-  version: Version;
   freshness: Freshness | null;
   loading: boolean;
   now: number;
   onCluster: (cluster: Cluster) => void;
   onWindow: (window: DashboardWindow) => void;
-  onVersion: (version: Version) => void;
   onRefresh: () => void;
 }) {
   return (
@@ -38,6 +32,7 @@ export function DashboardHeader({
         <img src="/lazorkit-logo.png" alt="" className="brandLogo" width={42} height={42} />
         <div>
           <h1>LazorKit Protocol Dashboard</h1>
+          <p className="dashboardIntro">Wallet activity, transactions, and fees for LazorKit Protocol v1 on Solana.</p>
           <p className="freshnessLine">
             {freshness ? (
               <>
@@ -58,7 +53,6 @@ export function DashboardHeader({
       </div>
       <div className="publicControls">
         <ClusterSelector cluster={cluster} onChange={onCluster} />
-        <VersionFilter version={version} onChange={onVersion} />
         <TimeWindowSelector window={window} onChange={onWindow} />
         <div className="iconGroup">
           <button
@@ -72,6 +66,9 @@ export function DashboardHeader({
             <RefreshCw size={16} className={loading ? 'spin' : undefined} aria-hidden="true" />
           </button>
           <ThemeToggle />
+          <a className="dashboardDocsLink" href="https://docs.lazorkit.com/">
+            Docs <ArrowUpRight size={14} aria-hidden="true" />
+          </a>
         </div>
       </div>
     </header>

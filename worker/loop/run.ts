@@ -22,6 +22,7 @@ export interface Lane {
 }
 
 export interface WorkerOptions {
+  protocolOnly?: boolean;
   mode: WorkerMode;
   program: number | null;
   cluster: 'mainnet' | 'devnet' | 'all';
@@ -161,6 +162,9 @@ export async function runWorker(deps: WorkerDeps, options: WorkerOptions): Promi
 
   if (options.mode === 'rebuild') {
     if (options.program === null) throw new Error('mode=rebuild needs a program');
+    if (options.protocolOnly && !ctx.programs.some(program => program.programKey === options.program && program.version === 1)) {
+      throw new Error('Choose a Protocol v1 program for rebuild');
+    }
     const gen = await deps.db.startBuild(options.program, options.parserVersion);
     log(`[run] started building generation ${gen} for program ${options.program}`);
     ctx = await deps.db.workerContext();
@@ -168,6 +172,7 @@ export async function runWorker(deps: WorkerDeps, options: WorkerOptions): Promi
 
   const selected = ctx.programs.filter(
     (program) =>
+      (!options.protocolOnly || program.version === 1) &&
       (options.cluster === 'all' || program.cluster === options.cluster) &&
       (options.program === null || program.programKey === options.program),
   );

@@ -1,7 +1,6 @@
 import { memo, useMemo } from 'react';
 import { Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { BinSize, ChartRow } from '../app/selectors';
-import type { VersionFilter } from '../app/urlState';
 import { exactLamports, formatInteger, formatLamports, formatSolAxis } from '../lib/format';
 
 export type ValueKind = 'count' | 'lamports';
@@ -64,32 +63,18 @@ interface TooltipProps {
   label?: string | number;
   size: BinSize;
   kind: ValueKind;
-  version: VersionFilter;
   showFailed: boolean;
-  totalLabel: string;
 }
 
-function ChartTooltip({ active, payload, label, size, kind, version, showFailed, totalLabel }: TooltipProps) {
+function ChartTooltip({ active, payload, label, size, kind, showFailed }: TooltipProps) {
   const row = payload?.[0]?.payload;
   if (!active || !row || label === undefined) return null;
   return (
     <div className="chartTooltip">
       <strong>{formatBucket(String(label), size, true)}</strong>
-      {version !== '2' ? (
-        <span>
-          <i className="seriesSwatch seriesSwatch-v1" aria-hidden="true" />v1: {formatValue(row.v1, kind)}
-        </span>
-      ) : null}
-      {version !== '1' ? (
-        <span>
-          <i className="seriesSwatch seriesSwatch-v2" aria-hidden="true" />v2: {formatValue(row.v2, kind)}
-        </span>
-      ) : null}
-      {version === 'all' ? (
-        <span title={kind === 'lamports' ? exactLamports(row.total) : undefined}>
-          {totalLabel}: {formatValue(row.total, kind)}
-        </span>
-      ) : null}
+      <span title={kind === 'lamports' ? exactLamports(row.total) : undefined}>
+        {formatValue(row.total, kind)}
+      </span>
       {showFailed ? (
         <span>
           <i className="seriesSwatch seriesSwatch-failed" aria-hidden="true" />Failed: {formatInteger(row.failed)}
@@ -100,8 +85,7 @@ function ChartTooltip({ active, payload, label, size, kind, version, showFailed,
 }
 
 /**
- * A stacked-by-version column chart (v1 blue, v2 orange; validated palette in both themes), optionally with the
- * failed-transaction line on the same axis. Colors come from CSS variables so light/dark switch without re-render.
+ * Protocol activity by time bucket, with an optional failed-transaction line on the same axis.
  */
 export const ChartPanel = memo(function ChartPanel({
   title,
@@ -109,23 +93,19 @@ export const ChartPanel = memo(function ChartPanel({
   rows,
   size,
   kind,
-  version,
   showFailed = false,
   summary,
-  totalLabel = 'Total',
 }: {
   title: string;
   subtitle: string;
   rows: ChartRow[];
   size: BinSize;
   kind: ValueKind;
-  version: VersionFilter;
   showFailed?: boolean;
   summary: string;
-  totalLabel?: string;
 }) {
   const max = useMemo(
-    () => Math.max(0, ...rows.map((row) => Math.max(row.v1 + row.v2, row.total, showFailed ? row.failed : 0))),
+    () => Math.max(0, ...rows.map((row) => Math.max(row.total, showFailed ? row.failed : 0))),
     [rows, showFailed],
   );
   const ticks = useMemo(() => axisTicks(kind === 'lamports' ? max / 1e9 : max, kind), [max, kind]);
@@ -134,13 +114,11 @@ export const ChartPanel = memo(function ChartPanel({
   const data = useMemo(
     () =>
       rows.map((row) =>
-        kind === 'lamports' ? { ...row, v1Plot: row.v1 / 1e9, v2Plot: row.v2 / 1e9 } : { ...row, v1Plot: row.v1, v2Plot: row.v2 },
+        ({ ...row, plotted: kind === 'lamports' ? row.total / 1e9 : row.total }),
       ),
     [rows, kind],
   );
-  const showV1 = version !== '2';
-  const showV2 = version !== '1';
-  const empty = rows.every((row) => row.total === 0 && row.v1 === 0 && row.v2 === 0);
+  const empty = rows.every((row) => row.total === 0);
 
   return (
     <section className="chartPanel" aria-label={title}>
@@ -151,25 +129,12 @@ export const ChartPanel = memo(function ChartPanel({
         </div>
         <span className="chartSummary">{summary}</span>
       </div>
-      <ul className="chartLegend" aria-label="Legend">
-        {showV1 ? (
-          <li>
-            <i className="seriesSwatch seriesSwatch-v1" aria-hidden="true" />
-            v1
-          </li>
-        ) : null}
-        {showV2 ? (
-          <li>
-            <i className="seriesSwatch seriesSwatch-v2" aria-hidden="true" />
-            v2
-          </li>
-        ) : null}
-        {showFailed ? (
-          <li>
-            <i className="seriesSwatch seriesSwatch-failed seriesSwatch-line" aria-hidden="true" />✕ Failed
-          </li>
-        ) : null}
-      </ul>
+      {showFailed ? (
+        <ul className="chartLegend" aria-label="Legend">
+          <li><i className="seriesSwatch seriesSwatch-v1" aria-hidden="true" />Total</li>
+          <li><i className="seriesSwatch seriesSwatch-failed seriesSwatch-line" aria-hidden="true" />Failed</li>
+        </ul>
+      ) : null}
       <div className="chartCanvas">
         {empty ? <p className="chartEmpty">No activity in this window</p> : null}
         <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 200 }}>
@@ -198,34 +163,18 @@ export const ChartPanel = memo(function ChartPanel({
             <Tooltip
               cursor={{ fill: 'var(--chart-cursor)' }}
               isAnimationActive={false}
-              content={<ChartTooltip size={size} kind={kind} version={version} showFailed={showFailed} totalLabel={totalLabel} />}
+              content={<ChartTooltip size={size} kind={kind} showFailed={showFailed} />}
             />
-            {showV1 ? (
-              <Bar
-                dataKey="v1Plot"
-                name="v1"
-                stackId="version"
-                fill="var(--series-v1)"
-                stroke="var(--surface)"
-                strokeWidth={1}
-                maxBarSize={24}
-                radius={showV2 ? 0 : [4, 4, 0, 0]}
-                isAnimationActive={false}
-              />
-            ) : null}
-            {showV2 ? (
-              <Bar
-                dataKey="v2Plot"
-                name="v2"
-                stackId="version"
-                fill="var(--series-v2)"
-                stroke="var(--surface)"
-                strokeWidth={1}
-                maxBarSize={24}
-                radius={[4, 4, 0, 0]}
-                isAnimationActive={false}
-              />
-            ) : null}
+            <Bar
+              dataKey="plotted"
+              name={title}
+              fill="var(--series-v1)"
+              stroke="var(--surface)"
+              strokeWidth={1}
+              maxBarSize={24}
+              radius={[4, 4, 0, 0]}
+              isAnimationActive={false}
+            />
             {showFailed ? (
               <Line
                 dataKey="failed"
@@ -248,9 +197,7 @@ export const ChartPanel = memo(function ChartPanel({
             <thead>
               <tr>
                 <th scope="col">{size === 'hour' ? 'Hour (UTC)' : size === 'day' ? 'Day (UTC)' : size === 'week' ? 'Week of' : 'Month'}</th>
-                {showV1 ? <th scope="col">v1</th> : null}
-                {showV2 ? <th scope="col">v2</th> : null}
-                {version === 'all' ? <th scope="col">{totalLabel}</th> : null}
+                <th scope="col">Total</th>
                 {showFailed ? <th scope="col">Failed</th> : null}
               </tr>
             </thead>
@@ -258,9 +205,7 @@ export const ChartPanel = memo(function ChartPanel({
               {[...rows].reverse().map((row) => (
                 <tr key={row.bucket}>
                   <td>{formatBucket(row.bucket, size, true)}</td>
-                  {showV1 ? <td className="num">{formatValue(row.v1, kind)}</td> : null}
-                  {showV2 ? <td className="num">{formatValue(row.v2, kind)}</td> : null}
-                  {version === 'all' ? <td className="num">{formatValue(row.total, kind)}</td> : null}
+                  <td className="num">{formatValue(row.total, kind)}</td>
                   {showFailed ? <td className="num">{formatInteger(row.failed)}</td> : null}
                 </tr>
               ))}

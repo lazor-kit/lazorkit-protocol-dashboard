@@ -1,5 +1,6 @@
 // GET /api/protocol-stats?cluster= : compatibility alias returning each program's current on-chain state.
 
+import { protocolScope } from '../src/lib/protocolScope.js';
 import { isCluster } from '../src/types/dashboard.js';
 import { first, methodNotAllowed, type ApiRequest, type ApiResponse } from './_lib/http.js';
 import type { RawDashboard } from './_lib/payload.js';
@@ -15,7 +16,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     return response.status(200).json({
       cluster,
       setupRequired: false,
-      programs: raw.programs.map((program) => ({
+      programs: raw.programs.filter(program => program.version === 1 && program.programKey === Number(protocolScope(cluster))).map((program) => ({
         programKey: program.programKey,
         version: program.version,
         programId: program.programId,

@@ -4,7 +4,7 @@ import { AppShell } from '../components/AppShell';
 import { DashboardHeader } from '../components/DashboardHeader';
 import type { Cluster, DashboardWindow, Freshness } from '../types/dashboard';
 import { Dashboard } from './Dashboard';
-import { defaultCluster, parseUrlState, serializeUrlState, type UrlState, type VersionFilter } from './urlState';
+import { defaultCluster, parseUrlState, serializeUrlState, type UrlState } from './urlState';
 import { viewFromResult } from './view';
 
 const AUTO_REFRESH_MS = 5 * 60_000;
@@ -64,16 +64,14 @@ export function App() {
       <DashboardHeader
         cluster={state.cluster}
         window={state.window}
-        version={state.version}
         freshness={freshness}
         loading={loading}
         now={now}
         onCluster={(cluster: Cluster) => setState((current) => ({ ...current, cluster }))}
         onWindow={(window: DashboardWindow) => setState((current) => ({ ...current, window }))}
-        onVersion={(version: VersionFilter) => setState((current) => ({ ...current, version }))}
         onRefresh={refresh}
       />
-      <Dashboard view={view} version={state.version} now={now} expandAll={expandAll} onRetry={refresh} />
+      <Dashboard view={view} now={now} expandAll={expandAll} onRetry={refresh} />
     </AppShell>
   );
 }
