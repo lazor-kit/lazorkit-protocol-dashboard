@@ -44,7 +44,7 @@ on:
         options: [incremental, reparse, rebuild, verify]
         default: incremental
       program:
-        description: 'Program for rebuild: 1 v1 mainnet, 2 v2 mainnet, 3 v1 devnet, 4 v2 devnet (or all)'
+        description: 'Protocol v1 program key: 1 for mainnet, 3 for devnet, or all'
         type: string
         default: all
       budget_minutes:

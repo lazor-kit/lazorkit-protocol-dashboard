@@ -6,49 +6,40 @@ import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { FreshnessBanner } from '../components/FreshnessBanner';
 import { LatestTransactionsTable } from '../components/LatestTransactionsTable';
-import { MigrationPanel } from '../components/MigrationPanel';
 import { OverviewKpis } from '../components/OverviewKpis';
 import { ProgramCards } from '../components/ProgramCards';
 import { ProgramDetail } from '../components/ProgramDetail';
 import { deploymentNote, isDeployed, visiblePrograms, windowLabel } from './selectors';
-import type { VersionFilter } from './urlState';
 import type { DashboardView } from './view';
 
-function versionText(version: VersionFilter): string {
-  return version === 'all' ? 'all protocol versions' : `protocol v${version}`;
-}
-
-function DataSections({ payload, version, now, expandAll }: { payload: DashboardPayload; version: VersionFilter; now: number; expandAll: boolean }) {
+function DataSections({ payload, now, expandAll }: { payload: DashboardPayload; now: number; expandAll: boolean }) {
+  const version = '1';
   const inView = visiblePrograms(payload, version);
   const anyDeployed = inView.some(isDeployed);
   const cluster = payload.cluster === 'mainnet' ? 'Mainnet' : 'Devnet';
   return (
     <>
       <h2 className="sectionTitle">
-        Overview <span>· {cluster} · {versionText(version)} · {windowLabel(payload.window)}</span>
+        Overview <span>· {cluster} · {windowLabel(payload.window)}</span>
       </h2>
       {anyDeployed ? (
-        <OverviewKpis payload={payload} version={version} now={now} />
+        <OverviewKpis payload={payload} now={now} />
       ) : inView.length > 0 && inView.every((program) => program.deployment.status === 'unknown') ? (
         <EmptyState
           title="Waiting for the first indexer run"
           body="Figures appear after the indexer's first run. The first run checks every program, then pages each one's history back to its deploy transaction; until that backfill completes the banner shows its progress."
         />
-      ) : version === 'all' || inView.length === 0 ? (
+      ) : inView.length === 0 ? (
         <EmptyState title={`No LazorKit program is live on ${payload.cluster}`} body="Program status and history appear here once a tracked program is deployed." />
       ) : (
         <EmptyState title={`Protocol v${version} is not deployed on ${payload.cluster} yet`} body={deploymentNote(inView[0], payload.binaries)} />
       )}
-      <ProgramCards payload={payload} version={version} now={now} />
       {anyDeployed ? (
         <>
           <h2 className="sectionTitle">Activity over time</h2>
-          <ActivityCharts payload={payload} version={version} />
-          <ProgramDetail key={`${payload.cluster}-${version}`} payload={payload} version={version} now={now} />
+          <ActivityCharts payload={payload} />
         </>
       ) : null}
-      <BinaryPanel payload={payload} now={now} expandAll={expandAll} />
-      <MigrationPanel payload={payload} />
       {anyDeployed ? (
         <LatestTransactionsTable
           key={`${payload.cluster}-${version}`}
@@ -59,6 +50,20 @@ function DataSections({ payload, version, now, expandAll }: { payload: Dashboard
           now={now}
         />
       ) : null}
+      <details className="technicalDetails" id="on-chain-details" open={expandAll}>
+        <summary>
+          <div className="technicalSummaryMain">
+            <span>On-chain details<small>Wallets, sessions, fees, treasury, and deployment history</small></span>
+          </div>
+          <span className="technicalSummaryAction">
+            <span className="showLabel">Show details</span>
+            <span className="hideLabel">Hide details</span>
+          </span>
+        </summary>
+        <ProgramCards payload={payload} version={version} now={now} />
+        {anyDeployed ? <ProgramDetail key={`${payload.cluster}-${version}`} payload={payload} version={version} now={now} /> : null}
+        <BinaryPanel payload={payload} now={now} expandAll={expandAll} />
+      </details>
       <DeveloperDetails payload={payload} now={now} open={expandAll} />
     </>
   );
@@ -82,13 +87,11 @@ function LoadingSkeleton() {
 /** Everything below the header (spec §11.2 items 2-10), as a pure function of the view. */
 export function Dashboard({
   view,
-  version,
   now,
   expandAll = false,
   onRetry,
 }: {
   view: DashboardView;
-  version: VersionFilter;
   now: number;
   expandAll?: boolean;
   onRetry?: () => void;
@@ -101,7 +104,7 @@ export function Dashboard({
         <FreshnessBanner banner={view.banner} />
         <EmptyState
           title="Waiting for the database upgrade"
-          body="This version of the dashboard reads a new set of tables. They are created by one additive migration (supabase/migrations/20261002000100_lk_event_log.sql); once it is applied and the indexer has run, protocol v1 and v2 figures appear here. The current production data is not touched."
+          body="Protocol v1 figures will appear once the database is configured and the first indexer run finishes."
         />
       </>
     );
@@ -117,7 +120,7 @@ export function Dashboard({
   return (
     <>
       {view.banner ? <FreshnessBanner banner={view.banner} /> : null}
-      <DataSections payload={view.payload} version={version} now={now} expandAll={expandAll} />
+      <DataSections payload={view.payload} now={now} expandAll={expandAll} />
     </>
   );
 }

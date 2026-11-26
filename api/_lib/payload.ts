@@ -11,6 +11,7 @@ import {
   type Heartbeats,
   type ProgramView,
 } from '../../src/types/dashboard.js';
+import { protocolData } from '../../src/lib/protocolScope.js';
 import { computeFreshness, fixedFreshness, type FreshnessProgram } from './freshness.js';
 
 export type RawDashboard = Omit<DashboardPayload, 'apiVersion' | 'freshness'> & { heartbeats: Heartbeats };
@@ -34,10 +35,11 @@ export function dashboardFromRaw(raw: RawDashboard, now: Date): DashboardPayload
   if (schemaVersion === null || schemaVersion < EXPECTED_DB_SCHEMA_VERSION) {
     return setupRequiredDashboard(raw.cluster, raw.window, now, `database schema version ${schemaVersion ?? 'none'}`);
   }
+  const scoped = protocolData(rest);
   return {
     apiVersion: DASHBOARD_API_VERSION,
-    ...rest,
-    freshness: computeFreshness({ now, programs: freshnessProgramsFromViews(raw.programs), heartbeats }),
+    ...scoped,
+    freshness: computeFreshness({ now, programs: freshnessProgramsFromViews(scoped.programs), heartbeats }),
   };
 }
 
@@ -102,10 +104,11 @@ export function healthFromRaw(raw: RawHealth, now: Date): HealthPayload {
       programs: [],
     };
   }
+  const programs = raw.programs.filter(program => program.version === 1);
   const freshness = computeFreshness({
     now,
     heartbeats: raw.heartbeats,
-    programs: raw.programs.map((program) => ({
+    programs: programs.map((program) => ({
       programKey: program.programKey,
       label: program.label,
       live: program.deployStatus === 'live',
@@ -126,6 +129,6 @@ export function healthFromRaw(raw: RawHealth, now: Date): HealthPayload {
     lastWorkerTrigger: freshness.lastWorkerTrigger,
     workflowState: freshness.workflow.state,
     freshness,
-    programs: raw.programs,
+    programs,
   };
 }

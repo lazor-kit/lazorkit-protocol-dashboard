@@ -1196,6 +1196,7 @@ code,
 /* ---------------------------------------------------------------------------------------------- tables */
 
 .tableWrap {
+  position: relative;
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -1638,5 +1639,54 @@ tbody tr:hover td {
   .skeletonText,
   .skeletonInline {
     animation: none;
+  }
+}
+
+/* Keep network controls and the first useful numbers above the detailed tables. */
+.publicHeader {
+  background: linear-gradient(110deg, var(--accent-wash), var(--surface) 54%);
+}
+
+.publicHeader h1 {
+  font-size: clamp(26px, 3vw, 36px);
+  letter-spacing: -.025em;
+}
+
+.dashboardIntro {
+  max-width: 45rem;
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.dashboardDocsLink {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.dashboardDocsLink:hover {
+  background: var(--accent-wash);
+}
+
+#on-chain-details .programGrid:has(> :only-child) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 720px) {
+  .publicControls .iconGroup {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .dashboardDocsLink {
+    margin-left: auto;
   }
 }

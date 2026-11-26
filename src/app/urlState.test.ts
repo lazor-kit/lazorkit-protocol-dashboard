@@ -1,21 +1,20 @@
 import { defaultCluster, parseUrlState, serializeUrlState } from './urlState';
 
 describe('URL state', () => {
-  it('parses valid values and falls back on anything else', () => {
-    expect(parseUrlState('?cluster=devnet&window=7d&version=2', 'mainnet')).toEqual({ cluster: 'devnet', window: '7d', version: '2' });
-    expect(parseUrlState('', 'mainnet')).toEqual({ cluster: 'mainnet', window: '30d', version: 'all' });
-    expect(parseUrlState('cluster=localnet&window=90d&version=3', 'devnet')).toEqual({ cluster: 'devnet', window: '30d', version: 'all' });
+  it('parses the cluster and time window, including old shared links', () => {
+    expect(parseUrlState('?cluster=devnet&window=7d&version=2', 'mainnet')).toEqual({ cluster: 'devnet', window: '7d' });
+    expect(parseUrlState('', 'mainnet')).toEqual({ cluster: 'mainnet', window: '30d' });
+    expect(parseUrlState('cluster=localnet&window=90d', 'devnet')).toEqual({ cluster: 'devnet', window: '30d' });
   });
 
-  it('serializes every key and keeps unrelated parameters', () => {
-    expect(serializeUrlState({ cluster: 'mainnet', window: 'all', version: '1' })).toBe('?cluster=mainnet&window=all&version=1');
-    expect(serializeUrlState({ cluster: 'devnet', window: '24h', version: 'all' }, '?utm=x&cluster=mainnet')).toBe(
-      '?utm=x&cluster=devnet&window=24h&version=all',
+  it('removes the old version filter and keeps unrelated parameters', () => {
+    expect(serializeUrlState({ cluster: 'devnet', window: '24h' }, '?utm=x&cluster=mainnet&version=all')).toBe(
+      '?utm=x&cluster=devnet&window=24h',
     );
   });
 
   it('round-trips', () => {
-    const state = { cluster: 'devnet', window: '7d', version: '2' } as const;
+    const state = { cluster: 'devnet', window: '7d' } as const;
     expect(parseUrlState(serializeUrlState(state), 'mainnet')).toEqual(state);
   });
 

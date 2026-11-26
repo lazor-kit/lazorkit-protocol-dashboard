@@ -8,6 +8,7 @@
 //   anything else         -> { kind: 'error' }
 
 import type { Cluster, DashboardPayload, DashboardWindow } from '../types/dashboard';
+import { protocolPayload } from '../lib/protocolScope';
 import { validateDashboardPayload } from '../types/validate';
 
 export interface CachedPayload {
@@ -50,7 +51,7 @@ export function readCached(storage: StorageLike | null, cluster: Cluster, window
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CachedPayload;
     if (!parsed || typeof parsed.savedAt !== 'string' || validateDashboardPayload(parsed.payload).length > 0) return null;
-    return parsed;
+    return { ...parsed, payload: protocolPayload(parsed.payload) };
   } catch {
     return null;
   }
@@ -130,10 +131,10 @@ export async function fetchDashboard(
     return { kind: 'setup_required', payload: body as DashboardPayload };
   }
   const problems = validateDashboardPayload(body);
-  if (problems.length > 0 && !(body && typeof body === 'object' && 'programs' in body && 'kpis' in body)) {
+  if (problems.length > 0) {
     return { kind: 'error', message: `Unexpected response from the dashboard API (${problems[0]}).`, cached: cached() };
   }
-  const payload = body as DashboardPayload;
-  if (problems.length === 0) writeCached(storage, payload);
+  const payload = protocolPayload(body as DashboardPayload);
+  writeCached(storage, payload);
   return { kind: 'ok', payload, problems };
 }

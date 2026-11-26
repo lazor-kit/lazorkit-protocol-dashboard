@@ -1,14 +1,13 @@
 # LazorKit Protocol Dashboard
 
-Public read-only dashboard for LazorKit protocol usage, fees and health, for **protocol v1 and v2** on mainnet
-and devnet.
+Public read-only dashboard for wallets, transactions, fees, and deployment status on LazorKit Protocol v1.
 
-| key | cluster | version | program id | today |
-|---|---|---|---|---|
-| 1 | mainnet | v1 | `LazorjRFNavitUaBu5m3WaNPjU1maipvSW2rZfAFAKi` | live (full v1); Phase B will upgrade it to the sunset build |
-| 2 | mainnet | v2 | `LazorFroiVuAjcwwQ2me83vTr5nc5NRxSaTg3pmEXC8` | not deployed yet; picked up automatically on its first deploy |
-| 3 | devnet | v1 | `4h3XoNReAgEcHVxcZ8sw2aufi9MTr7BbvYYjzjWDyDxS` | live, dormant |
-| 4 | devnet | v2 | `57bTNWqtYTJbWuLWASKo6GqUTAK6oFDUR5c6hEc6V8nv` | live (release build) |
+| Network | Program ID |
+| --- | --- |
+| Mainnet | `LazorjRFNavitUaBu5m3WaNPjU1maipvSW2rZfAFAKi` |
+| Devnet | `4h3XoNReAgEcHVxcZ8sw2aufi9MTr7BbvYYjzjWDyDxS` |
+
+The UI, read endpoints and indexer track Protocol v1. Database migrations retain the existing event log.
 
 ## Architecture
 
@@ -38,7 +37,7 @@ Supabase (free project)
 src/          React/Vite frontend; src/types/ is the payload contract shared with the API and the worker
 api/          thin Vercel functions + local dev server (api/dev-server.ts)
 worker/       the indexer: rpc/ chain/ parse/ state/ loop/ db/ verify/ (+ tests and fixtures)
-supabase/     migrations (20261002000100_lk_event_log.sql is the v2 backend) and pgTAP tests
+supabase/     migrations (20261002000100_lk_event_log.sql defines the event log) and pgTAP tests
 it/           integration tests through a local PostgREST
 ```
 
@@ -81,14 +80,12 @@ compared with a whole one.
 | Wallets created | successful CreateWallet; passkey share from the owner type |
 | Active wallets | distinct wallets of successful wallet operations (kinds 0–7, 9, 17); exact for any window |
 | Executions by signer | Execute/ExecuteDeferred by passkey (precompile at i−1), session or Ed25519 (PDA match), deferred |
-| Protocol fees | the first direct-child System transfer of CreateWallet/Execute/ExecuteDeferred from the payer **to a canonical treasury shard** (a vault → payer transfer is not a fee; for a first-time payer v2 first creates the payer's FeeRecord with its own transfer, which is neither a fee nor something the wallet called). Fee events, eligible operations, suffix adoption (v1) |
+| Protocol fees | the first direct-child System transfer of CreateWallet, Execute or ExecuteDeferred from the payer to a canonical treasury shard. The dashboard shows fee events, eligible operations and fee suffix adoption. |
 | Treasury | shard funding (InitializeTreasuryShard), withdrawals (WithdrawTreasury); "unwithdrawn fees" from history vs "withdrawable now" from state (they differ by the excess rent left by the 2026 rent decrease) |
 | Integrators | passkey clientDataJSON `topOrigin ?? origin`, CreateWallet rpId (normalised host; Android apps as `android:<hash prefix>`); the top 10 by wallets created + operations |
 | Relayers | distinct instruction payers |
-| Migrations v1 → v2 | successful MigrateWallet at the v1 id (sunset build): count, SOL, token accounts; v2 wallets created by migration vs new |
 | Tx v1 (SIMD-0385) | real transactions with transaction version 1 |
-| Cluster totals | sum of the cluster's programs minus the v2 program's "shared" transactions (a transaction with real instructions of both programs is in both feeds); a shared failed transaction keeps the class of the program whose instruction failed; payers and apps distinct across programs |
-| State | wallets, authorities by role/type, owner key types, lifetime passkey operations, sessions live/expired, deferred pending/expired and stranded rent, fee config (v1 `enabled=0` means "fees off; wallets unaffected"), FeeRecords (v1: registered payers only, a lower bound; v2: exact), treasury, vault SOL |
+| State | wallets, authorities by role/type, owner key types, lifetime passkey operations, sessions live/expired, deferred pending/expired and stranded rent, fee config (v1 `enabled=0` means "fees off; wallets unaffected"), FeeRecords (registered payers only, a lower bound), treasury, vault SOL |
 
 ## Freshness and keep-alive
 
@@ -186,16 +183,15 @@ the dispatch request still answers 204. The daily heartbeat cron and the uptime 
    gh workflow enable indexer.yml -R lazor-kit/lazorkit-protocol-dashboard
    ```
 
-1. **Apply the migration.** Supabase dashboard → SQL Editor → paste
-   `supabase/migrations/20261002000100_lk_event_log.sql` → Run. It is additive (schema `lk` + `public.lk_*`
-   functions only; the legacy tables are untouched) and re-running it is harmless. Check:
+1. **Apply pending Supabase migrations in timestamp order.** The event log migration sets up `lk`.
+   The Protocol scope migration limits both public RPCs to Protocol v1. Check:
    `select public.lk_schema_version();` → `1`. The PR preview moves from "Backend upgrade pending" to
    "Catching up"; production is unchanged.
 2. **Run the first backfill from the PR branch** (the `enable` is a no-op if step 0 was done):
 
    ```bash
    gh workflow enable indexer.yml -R lazor-kit/lazorkit-protocol-dashboard
-   gh workflow run    indexer.yml -R lazor-kit/lazorkit-protocol-dashboard --ref rebuild/v1-v2 \
+   gh workflow run    indexer.yml -R lazor-kit/lazorkit-protocol-dashboard --ref main \
      -f mode=incremental -f budget_minutes=55
    ```
 
@@ -250,40 +246,24 @@ drop schema if exists lk cascade;
 Exit codes: `0` ok (or lagging with progress, or not deployed), `1` a program failed / made no progress for 3 runs /
 `lk_verify` mismatch, `2` the migration is missing.
 
-**v2 mainnet** needs no step: the first run after its deploy sees the program account, identifies the binary
-against `scripts/release-hashes.txt` (lazorkit-protocol) and backfills it. **Phase B** shows up as v1's binary
-kind changing to `v1-sunset`, and the migration panel starts counting MigrateWallet.
-
-**Adding a program** (e.g. the foundation devnet program): one `insert into lk.programs` and one
-`insert into lk.builds (program_key, gen, status, parser_version) values (<key>, 1, 'active', 1)`, plus an entry in
-`src/types/protocol.ts`.
-
 ## Dashboard UI
 
-One page, driven by the URL: `?cluster=mainnet|devnet&window=24h|7d|30d|all&version=all|1|2` (shareable; the
-default cluster comes from `VITE_DEFAULT_CLUSTER`). It makes one request, `GET /api/dashboard`, typed by
-`src/types/dashboard.ts`, and never talks to Solana RPC itself. Top to bottom:
+Share a view with `?cluster=mainnet|devnet&window=24h|7d|30d|all`. The default network comes from
+`VITE_DEFAULT_CLUSTER`. The browser reads `GET /api/dashboard` for the selected network and time window.
 
-| section | what it shows |
-|---|---|
-| Header | cluster, protocol version (All / v1 / v2) and time range; "data complete through" and "indexer checked … ago" (the request time is never shown as "last updated"); a status pill; theme toggle |
-| Freshness banner | blue *catching up* (backfill %, backlog), amber *delayed* (last run 2–12 h ago, or a program failing) or *setup required*, red *stale* (no run for 12 h, or with `gh workflow enable indexer.yml` when GitHub disabled the schedule) or *unavailable* (over the copy saved in this browser) |
-| Overview | transactions (success and protocol error rate), active wallets, wallets created (passkey share), protocol fees, wallets existing, vault SOL; a v1 · v2 split and the change against the previous period |
-| Programs | one card per program: Live, Building history, Not deployed yet (v2 mainnet, with the expected build), Retired: migration only (v1 sunset), Unrecognised build, Dormant (no transaction in 30 days) |
-| Activity | transactions (stacked by version, failed line), wallets created, active wallets (always per day/hour: distinct counts are never summed), protocol fees; `all` is re-binned to weeks (≤ 180 days of history) or months; each chart has a data table |
-| Program detail | per version: instruction mix, signers, failure classes, integrators, programs wallets call, relayers, SIMD-0385 share; on-chain state; fee config, treasury (unwithdrawn vs withdrawable now), fee records, shards, fee coverage |
-| Binaries and upgrades | deployed ELF sha256 and size, match against `release-hashes.txt` / known dumps, last deploy, upgrade authority, the expected next build (v1 sunset, v2 mainnet release), deploy history |
-| Migration v1 → v2 | before Phase B what is left on v1; once the sunset build is live, migrations per day and cumulative, SOL and token accounts moved, % migrated, leftovers, retired calls |
-| Latest activity | the 50 newest transactions with a LazorKit instruction of the selected version (the API sends 50 per program, so a quiet version is not crowded out), 10 per page, with explorer links (`?cluster=devnet` on devnet); it reads the event log, so it covers recent weeks, and an empty list says when the last transaction was |
-| Developer details | collapsed: sync per program, invariant checks, runs, heartbeats, what started the last run, workflow state, metric definitions |
+| Section | What it shows |
+| --- | --- |
+| Overview | Active wallets, transactions, fees, and new wallets for the selected period. Wallet accounts and vault SOL come from the latest on-chain snapshot. |
+| Activity over time | Transactions, wallet creation, active wallets and fees. Each chart has a data table. |
+| Latest activity | The 50 most recent Protocol transactions, with Solana Explorer links. |
+| On-chain details | Program deployment, session and deferred approval counts, fees, treasury and recent upgrades. |
+| Developer details | Indexer progress, checks and metric definitions. |
 
 The last good payload per (cluster, window) is kept in `localStorage` (newest four; every access in try/catch), so a
 paused database shows the saved copy under the red banner instead of an empty page. `setup_required` (migration not
 applied) renders a banner and an explanation, never an error page. Light and dark themes follow the OS until the
 viewer picks one. Lamports below 0.001 SOL are shown as lamports, larger amounts as SOL with at most four decimals;
 hovering shows the exact lamports. Opening the page with `#all-details` expands every collapsible section.
-
-Screenshots of every state, taken on the local stack: [`docs/preview/`](docs/preview/).
 
 ## Development
 

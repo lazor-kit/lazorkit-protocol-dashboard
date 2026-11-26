@@ -7,6 +7,7 @@ import protocolStatsHandler from './protocol-stats.js';
 import { createHeartbeatHandler } from './cron/heartbeat.js';
 import { computeFreshness, DELAYED_AFTER_MS, STALE_AFTER_MS, type FreshnessProgram } from './_lib/freshness.js';
 import type { Heartbeats } from '../src/types/dashboard.js';
+import { FIXTURES } from '../src/test/fixtures.js';
 
 function response() {
   const state = { code: 200, headers: new Map<string, string>(), body: undefined as unknown };
@@ -205,6 +206,31 @@ describe('GET /api/dashboard', () => {
     expect(result.state.body).toMatchObject({ freshness: { state: 'setup_required' } });
   });
 
+  it('only exposes Protocol v1 in both public data endpoints, even for a mixed index', async () => {
+    const data = FIXTURES['devnet-7d']();
+    expect(data.programs.map(program => program.version)).toEqual([1, 2]);
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ ...data, heartbeats: {} })));
+
+    const dashboard = response();
+    await dashboardHandler({ method: 'GET', query: { cluster: 'devnet', window: '7d' } }, dashboard.res);
+    expect(dashboard.state.code).toBe(200);
+    const body = dashboard.state.body as typeof data;
+    expect(body.programs.map(program => program.programKey)).toEqual([3]);
+    expect(body.kpis).toEqual({ '3': data.kpis['3'] });
+    expect(Object.keys(body.breakdowns)).toEqual(['3']);
+    expect(body.series.length).toBeGreaterThan(0);
+    expect(body.series.every(point => point.scope === '3')).toBe(true);
+    expect(body.latest.every(row => row.version === 1 && row.programKey === 3)).toBe(true);
+    expect(body.binaries.every(binary => binary.kind === 'v1-full')).toBe(true);
+    expect(body.migration).toBeNull();
+    expect(body.freshness.catchUp.every(entry => entry.programKey === 3)).toBe(true);
+
+    const stats = response();
+    await protocolStatsHandler({ method: 'GET', query: { cluster: 'devnet' } }, stats.res);
+    expect(stats.state.code).toBe(200);
+    expect(stats.state.body).toMatchObject({ programs: [{ programKey: 3, version: 1 }] });
+  });
+
   it('only GET', async () => {
     const result = response();
     await dashboardHandler({ method: 'POST', query: {} }, result.res);
@@ -323,6 +349,7 @@ describe('static guards', () => {
 
   it('vercel.json only registers the daily heartbeat cron', () => {
     const config = JSON.parse(readFileSync(join(process.cwd(), 'vercel.json'), 'utf8'));
-    expect(config).toEqual({ crons: [{ path: '/api/cron/heartbeat', schedule: '17 12 * * *' }] });
+    expect(config.crons).toEqual([{ path: '/api/cron/heartbeat', schedule: '17 12 * * *' }]);
+    expect(config.git.deploymentEnabled['review/protocol-v1-dashboard']).toBe(false);
   });
 });

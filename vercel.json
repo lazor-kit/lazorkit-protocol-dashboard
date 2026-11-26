@@ -1,3 +1,4 @@
 {
+  "git": { "deploymentEnabled": { "review/protocol-v1-dashboard": false } },
   "crons": [{ "path": "/api/cron/heartbeat", "schedule": "17 12 * * *" }]
 }

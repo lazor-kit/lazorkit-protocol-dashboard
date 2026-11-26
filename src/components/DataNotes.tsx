@@ -8,7 +8,7 @@ export const METRIC_NOTES: Array<{ term: string; definition: string }> = [
   {
     term: 'Transactions',
     definition:
-      'Signatures with at least one real LazorKit instruction (top level or called by another program), split into successful and failed. A transaction carrying both a v1 and a v2 instruction counts once in the all-versions total.',
+      'Signatures with at least one real LazorKit instruction (top level or called by another program), split into successful and failed.',
   },
   {
     term: 'Success rate / protocol error rate',
@@ -17,7 +17,7 @@ export const METRIC_NOTES: Array<{ term: string; definition: string }> = [
   {
     term: 'Active wallets',
     definition:
-      'Distinct wallets in successful wallet operations (create, authority changes, execute, sessions, authorize, deferred execute, migrate). Each wallet counts once per window; v1 and v2 wallets are different accounts, so the total is v1 + v2.',
+      'Distinct wallets in successful wallet operations (create, authority changes, execute, sessions, authorize, deferred execute). Each wallet counts once per window.',
   },
   { term: 'Wallets created', definition: 'Successful CreateWallet instructions; passkey share = those whose owner is a passkey.' },
   {
@@ -31,7 +31,7 @@ export const METRIC_NOTES: Array<{ term: string; definition: string }> = [
       'Fees minus withdrawals, from history; versus the shard balances above the rent-exempt minimum, from chain state. They differ by the rent that became excess when rent fell in 2026.',
   },
   {
-    term: 'Wallets existing / vault SOL',
+    term: 'Wallets on chain / SOL in vaults',
     definition:
       'Current on-chain accounts, from a getProgramAccounts snapshot taken on every indexer run. Vault SOL is native SOL only; token balances are not included.',
   },
@@ -40,8 +40,7 @@ export const METRIC_NOTES: Array<{ term: string; definition: string }> = [
     term: 'Integrators',
     definition: 'The passkey rpId at wallet creation, or the WebAuthn origin of later passkey operations, normalised to a host name.',
   },
-  { term: 'Transaction v1 (SIMD-0385)', definition: 'Real transactions sent with message version 1 (v2 devnet only so far).' },
-  { term: 'Migrations', definition: 'Successful MigrateWallet instructions on the v1 program; possible only once v1 runs the sunset build.' },
+  { term: 'Transaction v1 (SIMD-0385)', definition: 'Real transactions sent with message version 1.' },
   {
     term: 'Time ranges',
     definition:
@@ -50,7 +49,7 @@ export const METRIC_NOTES: Array<{ term: string; definition: string }> = [
   {
     term: 'Data complete through',
     definition:
-      'Every transaction of every deployed program up to this time has been ingested. The request time is never shown as “last updated”.',
+      'Protocol transactions through this time have been indexed. The request time is never shown as “last updated”.',
   },
 ];
 

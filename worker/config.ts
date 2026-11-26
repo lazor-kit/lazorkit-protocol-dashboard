@@ -49,8 +49,8 @@ export function loadConfig(env: NodeJS.ProcessEnv, argv: string[]): WorkerConfig
   if (!['incremental', 'reparse', 'rebuild', 'verify'].includes(mode)) throw new ConfigError(`unknown mode "${mode}"`);
   const programRaw = (flag(argv, 'program') ?? env.INDEXER_PROGRAM ?? '').trim();
   const program = programRaw === '' || programRaw === 'all' ? null : Number(programRaw);
-  if (program !== null && ![1, 2, 3, 4].includes(program)) throw new ConfigError(`program must be 1-4, got "${programRaw}"`);
-  if (mode === 'rebuild' && program === null) throw new ConfigError('mode=rebuild needs --program 1|2|3|4');
+  if (program !== null && ![1, 3].includes(program)) throw new ConfigError(`program must be 1 or 3, got "${programRaw}"`);
+  if (mode === 'rebuild' && program === null) throw new ConfigError('mode=rebuild needs --program 1|3');
   const cluster = (flag(argv, 'cluster') ?? env.INDEXER_CLUSTER ?? 'all').trim() as WorkerConfig['cluster'];
   if (!['mainnet', 'devnet', 'all'].includes(cluster)) throw new ConfigError(`unknown cluster "${cluster}"`);
 

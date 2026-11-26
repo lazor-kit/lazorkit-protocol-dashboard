@@ -107,7 +107,7 @@ async function main(): Promise<number> {
   };
   let mismatches = 0;
   const rows: string[] = [];
-  for (const program of PROGRAMS) {
+  for (const program of PROGRAMS.filter(program => program.version === 1)) {
     const counts = await db.rpc<VerifyCounts>('lk_verify_counts', { p_program: program.programKey });
     if (counts.deployStatus !== 'live') {
       log(`[verify] ${program.label}: ${counts.deployStatus}, skipped`);

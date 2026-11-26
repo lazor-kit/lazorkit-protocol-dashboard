@@ -1,4 +1,4 @@
-// Worker entry point: `npm run indexer -- [--mode incremental|reparse|rebuild|verify] [--program 1-4]
+// Worker entry point: `npm run indexer -- [--mode incremental|reparse|rebuild|verify] [--program 1|3]
 // [--cluster mainnet|devnet|all] [--budget-minutes N]`. Exit codes (spec §5.10): 0 ok / lagging with progress /
 // not deployed; 1 a program failed, made no progress for 3 runs, or lk_verify found a mismatch; 2 the database
 // schema is missing or too old.
@@ -92,6 +92,7 @@ async function main(): Promise<number> {
       {
         mode: config.mode,
         program: config.program,
+        protocolOnly: true,
         cluster: config.cluster,
         budgetMs: config.budgetMinutes * 60_000,
         reserveMs: Math.min(45_000, config.budgetMinutes * 60_000 * 0.2),

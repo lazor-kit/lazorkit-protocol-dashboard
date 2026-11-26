@@ -3,12 +3,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import type { DashboardPayload } from '../types/dashboard';
 import { FIXTURE_NOW, FIXTURES, setupRequiredPayload } from '../test/fixtures';
 import { Dashboard } from './Dashboard';
-import type { VersionFilter } from './urlState';
+import { protocolPayload } from '../lib/protocolScope';
 import { viewFromResult } from './view';
 
-const render = (payload: DashboardPayload, version: VersionFilter = 'all', expandAll = false) =>
+const render = (payload: DashboardPayload, expandAll = false) =>
   renderToStaticMarkup(
-    <Dashboard view={viewFromResult({ kind: 'ok', payload, problems: [] }, FIXTURE_NOW)} version={version} now={FIXTURE_NOW} expandAll={expandAll} />,
+    <Dashboard view={viewFromResult({ kind: 'ok', payload: protocolPayload(payload), problems: [] }, FIXTURE_NOW)} now={FIXTURE_NOW} expandAll={expandAll} />,
   );
 const ENTITIES: Record<string, string> = { amp: '&', quot: '"', lt: '<', gt: '>', '#x27': "'" };
 // Tags to spaces, then entities decoded in one pass (so "&amp;lt;" stays "&lt;"), then whitespace collapsed.
@@ -20,66 +20,46 @@ const text = (html: string) =>
 
 describe('Dashboard renders every fixture', () => {
   for (const [name, load] of Object.entries(FIXTURES)) {
-    for (const version of ['all', '1', '2'] as const) {
-      it(`${name}, version ${version}`, () => {
-        const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-        const html = render(load(), version, true);
+    it(name, () => {
+      const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      try {
+        const html = render(load(), true);
         expect(html.length).toBeGreaterThan(1000);
+        expect(html.match(/LazorFroi|57bTNWqt|Migration has not started/i)?.[0]).toBeUndefined();
+        expect(text(html).match(/\bv2\b/i)?.[0]).toBeUndefined();
         expect(errors).not.toHaveBeenCalled();
+      } finally {
         errors.mockRestore();
-      });
-    }
+      }
+    });
   }
 
-  it('mainnet: v2 is "not deployed yet" with the expected build, and nothing errors', () => {
+  it('shows current Protocol metrics and separates expired account types', () => {
     const page = text(render(FIXTURES['mainnet-30d']()));
-    expect(page).toContain('Not deployed yet');
-    expect(page).toContain('LazorFroi… has no account on mainnet. It will be picked up automatically on its first deploy');
-    expect(page).toContain('4cb80304…');
-    expect(page).toContain('Phase B: v1 sunset');
-    expect(page).toContain('Migration has not started: v1 still runs the full v1 build');
     expect(page).toContain('930,000 lamports');
+    expect(page).toContain('Expired sessions');
+    expect(page).toContain('Expired deferred approvals');
+    expect(page).toContain('Rent held by expired approvals');
     expect(page).not.toContain('Data status:');
   });
 
-  it('mainnet with the v2 filter shows the not-deployed state instead of zero KPIs', () => {
-    const page = text(render(FIXTURES['mainnet-30d'](), '2'));
-    expect(page).toContain('Protocol v2 is not deployed on mainnet yet');
-    expect(page).not.toContain('Latest activity');
-  });
-
-  it('devnet: v2 figures, SIMD-0385 share, release match and fees not configured', () => {
-    const html = render(FIXTURES['devnet-7d'](), '2');
+  it('devnet shows recent Protocol activity and cluster-specific Explorer links', () => {
+    const html = render(FIXTURES['devnet-7d']());
     const page = text(html);
-    expect(page).toContain('v2 devnet');
-    expect(page).toContain('Transaction v1 (SIMD-0385)');
-    expect(page).toContain('✓ matches release-hashes.txt · devnet');
-    expect(page).toContain('Fees not configured');
-    expect(html).toMatch(/href="https:\/\/explorer\.solana\.com\/tx\/[1-9A-HJ-NP-Za-km-z]{60,90}\?cluster=devnet"/);
-  });
-
-  it('devnet with the v1 filter lists v1 transactions even though v2 dominates recent traffic', () => {
-    const page = text(render(FIXTURES['devnet-7d'](), '1'));
     expect(page).toContain('Latest activity');
     expect(page).toContain('Newest 50 with a LazorKit instruction');
-    expect(page).not.toContain('No recent transactions');
-    expect(page).not.toContain('Transactions appear here');
+    expect(page).toContain('Transaction v1 (SIMD-0385)');
+    expect(html).toMatch(/href="https:\/\/explorer\.solana\.com\/tx\/[1-9A-HJ-NP-Za-km-z]{60,90}\?cluster=devnet"/);
   });
 
   it('a version without recent transactions says when its last one was, not that nothing was indexed', () => {
     const payload = FIXTURES['devnet-7d']();
     payload.latest = payload.latest.filter((row) => row.version !== 1);
-    const page = text(render(payload, '1'));
+    const page = text(render(payload));
     expect(page).toContain('No recent transactions');
     expect(page).toContain('The newest one was');
     expect(page).toContain('older activity is counted in the figures above');
     expect(page).not.toContain('after the indexer has ingested them');
-  });
-
-  it('all versions list the newest 50 of the cluster', () => {
-    const payload = FIXTURES['devnet-7d']();
-    expect(payload.latest.length).toBeGreaterThan(50);
-    expect(text(render(payload, 'all'))).toContain('Newest 50 with a LazorKit instruction');
   });
 
   it('explorer links on mainnet carry no cluster parameter', () => {
@@ -88,38 +68,13 @@ describe('Dashboard renders every fixture', () => {
     expect(html).not.toContain('cluster=devnet');
   });
 
-  it('an active migration renders progress, the per-day chart and leftovers', () => {
-    const payload = FIXTURES['mainnet-all']();
-    payload.migration = {
-      ...payload.migration!,
-      status: 'active',
-      v1BinaryKind: 'v1-sunset',
-      totals: { migrations: 46, migratedLamports: '1500000000', tokenAccounts: 12 },
-      series: [
-        { day: '2026-11-02', migrations: 30 },
-        { day: '2026-11-04', migrations: 16 },
-      ],
-      v1WalletsRemaining: 138,
-      percentMigrated: 25,
-      v2WalletsFromMigration: 46,
-      v2WalletsNew: 3,
-      retiredCalls: 7,
-    };
-    payload.programs[0].deployment.binaryKind = 'v1-sunset';
-    const page = text(render(payload));
-    expect(page).toContain('In progress');
-    expect(page).toContain('25%');
-    expect(page).toContain('46 of 184 v1 wallets');
-    expect(page).toContain('1.5 SOL');
-    expect(page).toContain('Retired: migration only');
-    expect(page).toContain('Migrations per day');
-  });
+
 });
 
 describe('Dashboard states', () => {
   it('setup required: banner and an empty state, never an error page', () => {
     const view = viewFromResult({ kind: 'setup_required', payload: setupRequiredPayload() }, FIXTURE_NOW);
-    const page = text(renderToStaticMarkup(<Dashboard view={view} version="all" now={FIXTURE_NOW} />));
+    const page = text(renderToStaticMarkup(<Dashboard view={view} now={FIXTURE_NOW} />));
     expect(page).toContain('Backend upgrade pending');
     expect(page).toContain('Production data is unaffected');
     expect(page).not.toContain('Unable to load');
@@ -129,7 +84,7 @@ describe('Dashboard states', () => {
     const cached = { savedAt: '2026-10-01T18:00:00Z', payload: FIXTURES['mainnet-30d']() };
     const view = viewFromResult({ kind: 'unavailable', detail: 'down', cached }, FIXTURE_NOW);
     expect(view.kind).toBe('data');
-    const page = text(renderToStaticMarkup(<Dashboard view={view} version="all" now={FIXTURE_NOW} />));
+    const page = text(renderToStaticMarkup(<Dashboard view={view} now={FIXTURE_NOW} />));
     expect(page).toContain('Unavailable');
     expect(page).toContain('Showing the copy saved in this browser from 2026-10-01 18:00 UTC');
     expect(page).toContain('Transactions');
@@ -137,7 +92,7 @@ describe('Dashboard states', () => {
 
   it('unavailable without a copy explains there is nothing to show', () => {
     const view = viewFromResult({ kind: 'unavailable', detail: 'down', cached: null }, FIXTURE_NOW);
-    const page = text(renderToStaticMarkup(<Dashboard view={view} version="all" now={FIXTURE_NOW} />));
+    const page = text(renderToStaticMarkup(<Dashboard view={view} now={FIXTURE_NOW} />));
     expect(page).toContain('no copy saved in this browser');
   });
 
@@ -156,10 +111,10 @@ describe('Dashboard states', () => {
   it('developer details say what started the last indexer run, and tolerate payloads without it', () => {
     const payload = FIXTURES['mainnet-30d']();
     payload.freshness = { ...payload.freshness, lastWorkerTrigger: 'repository_dispatch' };
-    expect(text(render(payload, 'all', true))).toContain('Last run started by external cron (repository_dispatch)');
+    expect(text(render(payload, true))).toContain('Last run started by external cron (repository_dispatch)');
     const older = FIXTURES['mainnet-30d']();
     delete (older.freshness as Partial<typeof older.freshness>).lastWorkerTrigger; // a payload saved before the field existed
-    expect(text(render(older, 'all', true))).toContain('Last run started by –');
+    expect(text(render(older, true))).toContain('Last run started by –');
   });
 
   it('before the first indexer run every program is "not checked yet", never "not deployed"', () => {
@@ -176,7 +131,7 @@ describe('Dashboard states', () => {
 
   it('errors offer a retry', () => {
     const view = viewFromResult({ kind: 'error', message: 'The dashboard API answered HTTP 500.', cached: null }, FIXTURE_NOW);
-    const page = text(renderToStaticMarkup(<Dashboard view={view} version="all" now={FIXTURE_NOW} onRetry={() => undefined} />));
+    const page = text(renderToStaticMarkup(<Dashboard view={view} now={FIXTURE_NOW} onRetry={() => undefined} />));
     expect(page).toContain('Unable to load the dashboard');
     expect(page).toContain('Retry');
   });
