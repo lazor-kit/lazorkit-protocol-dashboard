@@ -322,8 +322,25 @@ code,
   width: 42px;
   height: 42px;
   flex: 0 0 auto;
-  border-radius: 9px;
-  box-shadow: 0 0 0 1px var(--border);
+}
+
+.brandLogoLight,
+:root[data-theme="light"] .brandLogoDark {
+  display: none;
+}
+
+:root[data-theme="light"] .brandLogoLight {
+  display: block;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .brandLogoDark {
+    display: none;
+  }
+
+  :root:not([data-theme="dark"]) .brandLogoLight {
+    display: block;
+  }
 }
 
 .publicHeader h1 {

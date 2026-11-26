@@ -29,7 +29,8 @@ export function DashboardHeader({
   return (
     <header className="publicHeader">
       <div className="brandHeader">
-        <img src="/lazorkit-logo.png" alt="" className="brandLogo" width={42} height={42} />
+        <img src="/brand/mark-dark.svg" alt="" className="brandLogo brandLogoDark" width={42} height={42} />
+        <img src="/brand/mark-light.svg" alt="" className="brandLogo brandLogoLight" width={42} height={42} />
         <div>
           <h1>LazorKit Protocol Dashboard</h1>
           <p className="dashboardIntro">Wallet activity, transactions, and fees for LazorKit Protocol v1 on Solana.</p>
