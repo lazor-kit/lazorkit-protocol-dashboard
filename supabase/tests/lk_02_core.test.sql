@@ -162,9 +162,9 @@ select is((select active_gen from lk.programs where program_key = 1), 2::smallin
 select is((select count(*)::int from lk.events where program_key = 1 and gen = 1) +
           (select count(*)::int from lk.daily where program_key = 1 and gen = 1), 0, 'T2: generation 1 rows are deleted');
 select is((select status from lk.builds where program_key = 1 and gen = 1), 'retired', 'T2: generation 1 is retired');
-select is(public.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,feeLamports}', '13000',
+select is(lk.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,feeLamports}', '13000',
           'T2: the cluster reads gen-2 v1 (6000) + v2 (7000)');
-select is((public.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,txs}')::int, 2, 'T2: cluster txs = 2');
+select is((lk.lk_dashboard('mainnet', 'all') #>> '{kpis,cluster,current,txs}')::int, 2, 'T2: cluster txs = 2');
 
 -- ------------------------------------------------------------------------------------------------ T3
 select pg_temp.reset();
@@ -175,8 +175,8 @@ select public.lk_ingest(4, 1, jsonb_build_array(pg_temp.ev('c1', 0, 300, now() -
 select is((select string_agg(actor, ',' order by actor) from lk.actor_days where program_key = 4 and role = 'w'),
           'RIGHT', 'T3: actor_days holds only the reparsed wallet');
 select is((select count(*)::int from lk.wallets where program_key = 4), 0, 'T3: no orphan wallet row');
-select is((public.lk_dashboard('devnet', '7d') #>> '{kpis,4,current,activeWallets}')::int, 1, 'T3: 7d active wallets = 1');
-select is((public.lk_dashboard('devnet', 'all') #>> '{kpis,4,current,activeWallets}')::int, 1, 'T3: all active wallets = 1');
+select is((lk.lk_dashboard('devnet', '7d') #>> '{kpis,4,current,activeWallets}')::int, 1, 'T3: 7d active wallets = 1');
+select is((lk.lk_dashboard('devnet', 'all') #>> '{kpis,4,current,activeWallets}')::int, 1, 'T3: all active wallets = 1');
 select is((select parser_version_min from lk.daily where program_key = 4), 2::smallint, 'T3: parser_version_min follows the reparse');
 -- a reparse that changes a CreateWallet's vault moves the wallet fact too
 select public.lk_ingest(4, 1, jsonb_build_array(pg_temp.ev('c2', 0, 301, now() - interval '1 day', 0, true, 'WX',
@@ -269,7 +269,7 @@ select lives_ok($$ select public.lk_ingest(4, 1, jsonb_build_array(pg_temp.ev('e
          4, false, 'WE', '{"fail_class": "other_ix", "err_code": 4294967295}')), array['e1']) $$,
          'E1: err_code 4294967295 (u32 max) is accepted');
 select is((select err_code from lk.events where signature = 'e1'), 4294967295::bigint, 'E1: and stored exactly');
-select is((public.lk_dashboard('devnet', '24h') #>> '{latest,0,errCode}')::bigint, 4294967295::bigint,
+select is((lk.lk_dashboard('devnet', '24h') #>> '{latest,0,errCode}')::bigint, 4294967295::bigint,
           'E1: and served in latest activity');
 select is((select data_type from information_schema.columns
             where table_schema = 'lk' and table_name = 'events' and column_name = 'err_code'), 'bigint',

@@ -124,6 +124,11 @@ describe.skipIf(!enabled)('integration: local PostgREST', () => {
     expect(Number(sql(`select (public.lk_verify(${P}, 1) ->> 'mismatches')`))).toBe(0);
   });
 
+  const historicalKpis = () => {
+    const raw = JSON.parse(sql("select lk.lk_dashboard('mainnet', 'all')")) as RawDashboard;
+    return raw.kpis['2']?.current;
+  };
+
   it('the TypeScript reference rollup equals the SQL daily rows and the lk_dashboard KPIs', async () => {
     resetProgram();
     await load(batches.map((b) => [b]));
@@ -141,8 +146,7 @@ describe.skipIf(!enabled)('integration: local PostgREST', () => {
         }
       }
     }
-    const raw = await db.rpc<RawDashboard>('lk_dashboard', { p_cluster: 'mainnet', p_window: 'all' });
-    const kpis = raw.kpis['2']?.current;
+    const kpis = historicalKpis();
     const sum = (key: string) =>
       [...reference.values()].reduce((total, d) => total + Number((d as unknown as Record<string, number>)[key]), 0);
     expect(kpis?.txs).toBe(sum('txs'));
@@ -161,19 +165,19 @@ describe.skipIf(!enabled)('integration: local PostgREST', () => {
     resetProgram();
     await load([batches.slice(0, 6)]);
     await db.enqueue(P, 1, [], { frontier_slot: 1, frontier_signature: null, frontier_block_time: null, discovered_at: new Date(Date.now() - 60_000).toISOString(), history_end: true });
-    const before = (await db.rpc<RawDashboard>('lk_dashboard', { p_cluster: 'mainnet', p_window: 'all' })).kpis['2']?.current;
+    const before = historicalKpis();
     const gen = await db.startBuild(P, 2);
     expect(gen).toBe(2);
     await expect(db.startBuild(P, 2)).rejects.toBeInstanceOf(DbError);
     await db.ingest(P, gen, batches.slice(0, 6).flatMap((b) => b.rows), batches.slice(0, 6).map((b) => b.signature));
     await expect(db.promoteBuild(P, gen)).rejects.toThrow('has not finished its backfill');
     // the dashboard still serves generation 1 meanwhile
-    expect((await db.rpc<RawDashboard>('lk_dashboard', { p_cluster: 'mainnet', p_window: 'all' })).kpis['2']?.current).toEqual(before);
+    expect(historicalKpis()).toEqual(before);
     await db.enqueue(P, gen, [], { frontier_slot: 1, frontier_signature: null, frontier_block_time: null, discovered_at: new Date().toISOString(), history_end: true });
     await db.promoteBuild(P, gen);
     expect(sql(`select active_gen from lk.programs where program_key = ${P}`)).toBe('2');
     expect(sql(`select count(*) from lk.events where program_key = ${P} and gen = 1`)).toBe('0');
-    expect((await db.rpc<RawDashboard>('lk_dashboard', { p_cluster: 'mainnet', p_window: 'all' })).kpis['2']?.current).toEqual(before);
+    expect(historicalKpis()).toEqual(before);
   });
 
   it('a Custom error code above 2^31 (u32) is stored over HTTP; a data error is classed as a rejection', async () => {
@@ -195,6 +199,10 @@ describe.skipIf(!enabled)('integration: local PostgREST', () => {
     for (const cluster of ['mainnet', 'devnet'] as const) {
       for (const window of ['24h', '7d', '30d', 'all'] as const) {
         const raw = await db.rpc<RawDashboard>('lk_dashboard', { p_cluster: cluster, p_window: window });
+        const key = cluster === 'mainnet' ? 1 : 3;
+        expect(raw.programs.map((program) => program.programKey)).toEqual([key]);
+        expect(Object.keys(raw.kpis)).toEqual([String(key)]);
+        expect(raw.migration).toBeNull();
         const payload = dashboardFromRaw(raw, new Date());
         expect(validateDashboardPayload(payload), `${cluster} ${window}`).toEqual([]);
       }
